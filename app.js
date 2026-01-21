@@ -9,8 +9,12 @@ const app = {
     moodInterval: null,
     onlineInterval: null,
     onlineUsers: [],
+    firebaseEnabled: false, // 🆕 Controle do Firebase
     
     init() {
+        // TESTAR FIREBASE PRIMEIRO
+        this.verificarFirebase();
+        
         // GARANTIR que começa na tela de login
         document.getElementById('login-screen').classList.remove('hidden');
         document.getElementById('main-content').classList.add('hidden');
@@ -69,6 +73,48 @@ const app = {
         setTimeout(() => {
             emailApp.init();
         }, 500);
+    },
+    
+    // 🆕 VERIFICAR SE FIREBASE ESTÁ FUNCIONANDO
+    verificarFirebase() {
+        if (window.db && typeof db.collection === 'function') {
+            this.firebaseEnabled = true;
+            console.log("✅ Firebase está habilitado!");
+            
+            // Testar conexão
+            db.collection("conexao_teste").doc("teste").set({
+                teste: "Conexão estabelecida",
+                hora: new Date().toISOString()
+            }).then(() => {
+                console.log("✅ Conexão Firestore confirmada!");
+                
+                // Mostrar indicador visual
+                const indicator = document.createElement('div');
+                indicator.id = 'firebase-status';
+                indicator.style.cssText = `
+                    position: fixed;
+                    bottom: 10px;
+                    right: 10px;
+                    background: #27ae60;
+                    color: white;
+                    padding: 5px 10px;
+                    border-radius: 4px;
+                    font-size: 12px;
+                    z-index: 9999;
+                    display: flex;
+                    align-items: center;
+                    gap: 5px;
+                `;
+                indicator.innerHTML = '<i class="fas fa-cloud"></i> Online';
+                document.body.appendChild(indicator);
+            }).catch(error => {
+                console.warn("⚠️ Firebase conectado mas com erro:", error);
+                this.firebaseEnabled = false;
+            });
+        } else {
+            console.warn("⚠️ Firebase NÃO disponível. Usando localStorage.");
+            this.firebaseEnabled = false;
+        }
     },
     
     setupEventListeners() {
@@ -214,6 +260,38 @@ const app = {
         }
         
         this.salvarSessao();
+        
+        // 🆕 SINCRONIZAR COM FIREBASE SE ESTIVER HABILITADO
+        if (this.firebaseEnabled && this.currentUser) {
+            this.sincronizarOnlineFirebase();
+        }
+    },
+    
+    // 🆕 SINCRONIZAR STATUS ONLINE COM FIREBASE
+    sincronizarOnlineFirebase() {
+        if (!this.firebaseEnabled || !this.currentUser) return;
+        
+        try {
+            const operadorRef = db.collection("operadores_online").doc(this.currentUser.user);
+            
+            operadorRef.set({
+                nome: this.currentUser.nome,
+                role: this.currentUser.role,
+                user: this.currentUser.user,
+                turno: this.currentUser.turno,
+                mood: this.getMoodAtual(),
+                online: true,
+                lastActivity: firebase.firestore.FieldValue.serverTimestamp(),
+                loginDate: this.currentUser.loginDate,
+                loginHour: this.currentUser.loginHour
+            }, { merge: true }).then(() => {
+                console.log("✅ Status online sincronizado com Firebase");
+            }).catch(error => {
+                console.warn("⚠️ Erro ao sincronizar status online:", error);
+            });
+        } catch (error) {
+            console.warn("⚠️ Erro no Firebase durante sincronização:", error);
+        }
     },
     
     // 📋 FUNÇÃO ATUALIZADA: renderOnlineUsersList CORRIGIDA
@@ -296,6 +374,7 @@ const app = {
             <br>
             <small style="font-size: 0.7rem; color: #999;">
                 Atualizado: ${new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})}
+                ${this.firebaseEnabled ? '<br><i class="fas fa-cloud" style="color:#27ae60"></i> Sincronizado' : '<br><i class="fas fa-laptop" style="color:#f39c12"></i> Local'}
             </small>
         `;
         
@@ -385,6 +464,22 @@ const app = {
         
         this.lastLogoffTime = new Date().toISOString();
         localStorage.setItem('porter_last_logoff', this.lastLogoffTime);
+        
+        // 🆕 REGISTRAR LOGOFF NO FIREBASE
+        if (this.firebaseEnabled) {
+            try {
+                const operadorRef = db.collection("operadores_online").doc(this.currentUser.user);
+                operadorRef.update({
+                    online: false,
+                    lastLogoff: firebase.firestore.FieldValue.serverTimestamp(),
+                    logoffTime: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})
+                }).catch(error => {
+                    console.warn("⚠️ Erro ao registrar logoff no Firebase:", error);
+                });
+            } catch (error) {
+                console.warn("⚠️ Erro no Firebase durante logoff:", error);
+            }
+        }
         
         // Limpar intervalos
         if (this.chatInterval) {
@@ -558,6 +653,11 @@ const app = {
         if (moods.length > 500) moods = moods.slice(0, 500);
         localStorage.setItem('porter_moods', JSON.stringify(moods));
         
+        // 🆕 SINCRONIZAR COM FIREBASE
+        if (this.firebaseEnabled) {
+            this.sincronizarMoodFirebase(moodData);
+        }
+        
         const resultDiv = document.getElementById('mood-result');
         resultDiv.innerHTML = `
             <i class="fas fa-check-circle"></i>
@@ -578,6 +678,26 @@ const app = {
             resultDiv.classList.add('hidden');
             this.verificarMoodHoje();
         }, 5000);
+    },
+    
+    // 🆕 SINCRONIZAR MOOD COM FIREBASE
+    sincronizarMoodFirebase(moodData) {
+        if (!this.firebaseEnabled) return;
+        
+        try {
+            const moodRef = db.collection("moods").doc(`${moodData.user}_${moodData.dataISO}`);
+            
+            moodRef.set({
+                ...moodData,
+                firebaseTimestamp: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true }).then(() => {
+                console.log("✅ Mood sincronizado com Firebase");
+            }).catch(error => {
+                console.warn("⚠️ Erro ao sincronizar mood:", error);
+            });
+        } catch (error) {
+            console.warn("⚠️ Erro no Firebase durante sincronização do mood:", error);
+        }
     },
     
     verificarMoodHoje() {
@@ -1111,6 +1231,11 @@ const app = {
         if (atas.length > 200) atas = atas.slice(0, 200);
         localStorage.setItem('porter_atas', JSON.stringify(atas));
         
+        // 🆕 SINCRONIZAR COM FIREBASE
+        if (this.firebaseEnabled) {
+            this.sincronizarAtaFirebase(novaAta);
+        }
+        
         this.criarNotificacao(condo, tipo, desc);
         
         // Limpar formulário
@@ -1121,6 +1246,31 @@ const app = {
         this.showMessage('Registro salvo com sucesso!', 'success');
         this.renderAll();
         this.updateNotificationBadges();
+    },
+    
+    // 🆕 SINCRONIZAR ATA COM FIREBASE
+    sincronizarAtaFirebase(ataData) {
+        if (!this.firebaseEnabled) return;
+        
+        try {
+            const ataRef = db.collection("atas").doc(ataData.id.toString());
+            
+            const firebaseAta = {
+                ...ataData,
+                firebaseTimestamp: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            
+            // Remover o campo id para evitar duplicação
+            delete firebaseAta.id;
+            
+            ataRef.set(firebaseAta, { merge: true }).then(() => {
+                console.log("✅ ATA sincronizada com Firebase");
+            }).catch(error => {
+                console.warn("⚠️ Erro ao sincronizar ATA:", error);
+            });
+        } catch (error) {
+            console.warn("⚠️ Erro no Firebase durante sincronização da ATA:", error);
+        }
     },
     
     criarNotificacao(condo, tipo, desc) {
@@ -1567,6 +1717,11 @@ const app = {
         if (osList.length > 100) osList = osList.slice(0, 100);
         localStorage.setItem('porter_os', JSON.stringify(osList));
         
+        // 🆕 SINCRONIZAR COM FIREBASE
+        if (this.firebaseEnabled) {
+            this.sincronizarOSFirebase(novaOS);
+        }
+        
         this.criarNotificacao(condo, 'Ordem de Serviço', `Nova OS: ${gravidade} - ${desc.substring(0, 50)}...`);
         
         document.getElementById('os-desc').value = "";
@@ -1586,6 +1741,31 @@ const app = {
                 this.showMessage(`✅ OS registrada! ${emails.length} e-mail(s) agendado(s)`, 'success');
                 this.mostrarDetalhesEmailOS(novaOS, emails);
             }, 500);
+        }
+    },
+    
+    // 🆕 SINCRONIZAR OS COM FIREBASE
+    sincronizarOSFirebase(osData) {
+        if (!this.firebaseEnabled) return;
+        
+        try {
+            const osRef = db.collection("ordens_servico").doc(osData.id.toString());
+            
+            const firebaseOS = {
+                ...osData,
+                firebaseTimestamp: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            
+            // Remover o campo id para evitar duplicação
+            delete firebaseOS.id;
+            
+            osRef.set(firebaseOS, { merge: true }).then(() => {
+                console.log("✅ OS sincronizada com Firebase");
+            }).catch(error => {
+                console.warn("⚠️ Erro ao sincronizar OS:", error);
+            });
+        } catch (error) {
+            console.warn("⚠️ Erro no Firebase durante sincronização da OS:", error);
         }
     },
     
@@ -2270,6 +2450,7 @@ E-mail automático - Não responda
         `).join('');
     },
     
+    // 🆕 FUNÇÃO ATUALIZADA: sendChatMessage COM FIREBASE
     sendChatMessage() {
         const input = document.getElementById('chat-input');
         const message = input.value.trim();
@@ -2290,6 +2471,7 @@ E-mail automático - Não responda
             sender: this.currentUser.nome,
             senderRole: this.currentUser.role,
             senderMood: this.getMoodAtual(),
+            senderUser: this.currentUser.user,
             message: message,
             time: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
             timestamp: new Date().toISOString(),
@@ -2297,14 +2479,22 @@ E-mail automático - Não responda
             notificationId: `chat_${Date.now()}_${this.currentUser.user}`
         };
         
+        // ✅ SEMPRE salvar no localStorage primeiro
         let chat = JSON.parse(localStorage.getItem('porter_chat') || '[]');
         chat.unshift(chatMessage);
-        
-        if (chat.length > 100) {
-            chat = chat.slice(0, 100);
-        }
-        
+        if (chat.length > 100) chat = chat.slice(0, 100);
         localStorage.setItem('porter_chat', JSON.stringify(chat));
+        
+        // ✅ TENTAR salvar no Firebase também
+        if (this.firebaseEnabled) {
+            this.sincronizarChatFirebase(chatMessage)
+                .then(firebaseId => {
+                    console.log("✅ Mensagem sincronizada com Firebase, ID:", firebaseId);
+                })
+                .catch(error => {
+                    console.log("⚠️ Mensagem salva apenas localmente:", error);
+                });
+        }
         
         this.criarNotificacaoChatComAcao(chatMessage);
         input.value = '';
@@ -2318,6 +2508,36 @@ E-mail automático - Não responda
         this.updateTabCounts();
     },
     
+    // 🆕 SINCRONIZAR CHAT COM FIREBASE
+    sincronizarChatFirebase(chatMessage) {
+        if (!this.firebaseEnabled) return Promise.reject("Firebase não habilitado");
+        
+        return new Promise((resolve, reject) => {
+            try {
+                const chatRef = db.collection("chat_messages").doc(chatMessage.id.toString());
+                
+                const firebaseMessage = {
+                    ...chatMessage,
+                    firebaseTimestamp: firebase.firestore.FieldValue.serverTimestamp()
+                };
+                
+                // Remover o campo id para evitar duplicação
+                delete firebaseMessage.id;
+                
+                chatRef.set(firebaseMessage, { merge: true })
+                    .then(() => {
+                        resolve(chatMessage.id);
+                    })
+                    .catch(error => {
+                        reject(error);
+                    });
+            } catch (error) {
+                reject(error);
+            }
+        });
+    },
+    
+    // 🆕 FUNÇÃO ATUALIZADA: loadChat COM FIREBASE
     loadChat() {
         const container = document.getElementById('chat-messages');
         const chat = JSON.parse(localStorage.getItem('porter_chat') || '[]');
@@ -2373,6 +2593,70 @@ E-mail automático - Não responda
         container.scrollTop = container.scrollHeight;
         this.registrarVisualizacaoChat();
         this.atualizarBadgeChat();
+        
+        // 🆕 TENTAR SINCRONIZAR COM FIREBASE
+        if (this.firebaseEnabled) {
+            this.sincronizarChatDoFirebase();
+        }
+    },
+    
+    // 🆕 SINCRONIZAR CHAT DO FIREBASE
+    sincronizarChatDoFirebase() {
+        if (!this.firebaseEnabled) return;
+        
+        try {
+            db.collection("chat_messages")
+                .orderBy("firebaseTimestamp", "desc")
+                .limit(50)
+                .get()
+                .then(snapshot => {
+                    if (snapshot.empty) {
+                        console.log("📭 Nenhuma mensagem no Firebase");
+                        return;
+                    }
+                    
+                    let chatLocal = JSON.parse(localStorage.getItem('porter_chat') || '[]');
+                    let atualizou = false;
+                    
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        const msgId = parseInt(doc.id);
+                        
+                        // Verificar se já existe localmente
+                        const existeLocal = chatLocal.some(msg => msg.id === msgId);
+                        
+                        if (!existeLocal && data.sender && data.message) {
+                            // Adicionar mensagem do Firebase
+                            chatLocal.unshift({
+                                id: msgId,
+                                sender: data.sender,
+                                senderRole: data.senderRole,
+                                senderMood: data.senderMood,
+                                message: data.message,
+                                time: data.time,
+                                date: data.date,
+                                timestamp: data.firebaseTimestamp?.toDate?.()?.toISOString() || new Date().toISOString()
+                            });
+                            atualizou = true;
+                        }
+                    });
+                    
+                    if (atualizou) {
+                        // Manter limite de 100 mensagens
+                        if (chatLocal.length > 100) {
+                            chatLocal = chatLocal.slice(0, 100);
+                        }
+                        
+                        localStorage.setItem('porter_chat', JSON.stringify(chatLocal));
+                        console.log("🔄 Chat sincronizado com Firebase");
+                    }
+                })
+                .catch(error => {
+                    console.warn("⚠️ Erro ao sincronizar chat do Firebase:", error);
+                });
+        } catch (error) {
+            console.warn("⚠️ Erro no Firebase durante sincronização do chat:", error);
+        }
     },
 
     mostrarVistoPor(container) {
@@ -2410,6 +2694,7 @@ E-mail automático - Não responda
                 </div>
                 <div style="font-size: 0.75rem; color: #888;">
                     <i class="far fa-clock"></i> Última visualização: ${tempoUltima}
+                    ${this.firebaseEnabled ? '<br><i class="fas fa-cloud" style="color:#27ae60"></i> Sincronizado' : '<br><i class="fas fa-laptop" style="color:#f39c12"></i> Local'}
                 </div>
             `;
         } else {
@@ -2511,6 +2796,9 @@ E-mail automático - Não responda
             </div>
             
             <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #eee;">
+                <div style="margin-bottom: 15px; padding: 10px; background: ${this.firebaseEnabled ? '#d4edda' : '#f8d7da'}; border-radius: 6px;">
+                    <strong>Status Firebase:</strong> ${this.firebaseEnabled ? '<span style="color: #155724;">✅ CONECTADO</span>' : '<span style="color: #721c24;">❌ DESCONECTADO</span>'}
+                </div>
                 <button class="btn btn-warning" onclick="app.exportBackup()">
                     <i class="fas fa-download"></i> Exportar Backup
                 </button>
@@ -2603,7 +2891,8 @@ E-mail automático - Não responda
             os_emails: JSON.parse(localStorage.getItem('porter_os_emails') || '[]'),
             emails_history: JSON.parse(localStorage.getItem('porter_emails_history') || '[]'),
             exportDate: new Date().toISOString(),
-            exportBy: this.currentUser.nome
+            exportBy: this.currentUser.nome,
+            firebaseEnabled: this.firebaseEnabled
         };
         
         const dataStr = JSON.stringify(backup, null, 2);
