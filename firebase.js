@@ -1,17 +1,39 @@
+// firebase.js - Versão simplificada
 const firebaseConfig = {
-  apiKey: "AIzaSyAzfPWTcBtJk3UyOYdLIeSK3PlfjYKJAHI",
-  authDomain: "site-universal-29a2b.firebaseapp.com",
-  projectId: "site-universal-29a2b",
-  storageBucket: "site-universal-29a2b.firebasestorage.app",
-  messagingSenderId: "793824632619",
-  appId: "1:793824632619:web:e035c64e33969a40932f6e"
+    // SUAS CREDENCIAIS AQUI - Pegue do console do Firebase
+    apiKey: "AIzaSyD...",
+    authDomain: "porter-sistema.firebaseapp.com",
+    projectId: "porter-sistema",
+    storageBucket: "porter-sistema.appspot.com",
+    messagingSenderId: "123456789",
+    appId: "1:123456789:web:abcd1234"
 };
 
-// Inicializa o Firebase
-firebase.initializeApp(firebaseConfig);
-
-// Cria a variável global do banco
-window.db = firebase.firestore();
-
-
-
+// Verificar se Firebase já está carregado
+if (typeof firebase !== 'undefined') {
+    try {
+        // Inicializar apenas se ainda não foi inicializado
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        window.db = firebase.firestore();
+        console.log("✅ Firebase configurado!");
+        
+        // Configuração para melhor performance
+        db.settings({
+            cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED
+        });
+        
+    } catch (error) {
+        console.error("❌ Erro no Firebase:", error);
+        // Fallback: criar db fake para não quebrar o sistema
+        window.db = {
+            collection: () => ({
+                add: () => Promise.reject("Firebase não configurado"),
+                doc: () => ({ set: () => Promise.reject("Firebase não configurado") })
+            })
+        };
+    }
+} else {
+    console.warn("⚠️ Firebase não carregado. Verifique os scripts no HTML.");
+}
