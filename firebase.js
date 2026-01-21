@@ -1,28 +1,50 @@
-// firebase.js - Coloque na mesma pasta que index.html
+// firebase.js - Firebase Modular v10.7.1
+// Coloque este código NO LUGAR do atual
+
+// SUAS CREDENCIAIS
 const firebaseConfig = {
-    apiKey: "SUA_API_KEY_AQUI",
-    authDomain: "SEU_PROJETO.firebaseapp.com",
-    projectId: "SEU_PROJETO_ID",
-    storageBucket: "SEU_PROJETO.appspot.com",
-    messagingSenderId: "SEU_NUMERO",
-    appId: "SEU_APP_ID"
+  apiKey: "AIzaSyARRqLJJFdaHpcmUtrSStqmx90ZYm8ERe8",
+  authDomain: "ata-porter-2026-new-98c61.firebaseapp.com",
+  projectId: "ata-porter-2026-new-98c61",
+  storageBucket: "ata-porter-2026-new-98c61.firebasestorage.app",
+  messagingSenderId: "196023937983",
+  appId: "1:196023937983:web:090b010284141d2edecf0a"
 };
 
 // Inicializar Firebase
 try {
-    // Evitar inicializar múltiplas vezes
-    if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-    }
-    window.db = firebase.firestore();
-    console.log("✅ Firebase configurado!");
+  // Verifica se já foi inicializado
+  if (!firebase.apps || firebase.apps.length === 0) {
+    console.log("🔥 Inicializando Firebase...");
+    firebase.initializeApp(firebaseConfig);
+  } else {
+    console.log("✅ Firebase já inicializado");
+  }
+  
+  // Inicializar Firestore
+  window.db = firebase.firestore();
+  
+  // Configurações do Firestore
+  db.settings({
+    cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED
+  });
+  
+  // Tentar habilitar persistência offline
+  firebase.firestore().enablePersistence()
+    .catch(err => {
+      if (err.code === 'failed-precondition') {
+        console.log("Persistência offline não disponível em múltiplas abas");
+      } else if (err.code === 'unimplemented') {
+        console.log("Navegador não suporta persistência offline");
+      }
+    });
+  
+  console.log("✅ Firebase configurado com sucesso!");
+  console.log("📌 Projeto:", firebase.app().options.projectId);
+  console.log("🗄️ Firestore pronto para uso");
+  
 } catch (error) {
-    console.error("❌ Erro no Firebase:", error);
-    // Criar db fake para não quebrar
-    window.db = {
-        collection: () => ({ 
-            add: () => Promise.reject("Firebase offline"),
-            doc: () => ({ set: () => Promise.reject("Firebase offline") })
-        })
-    };
+  console.error("❌ Erro crítico no Firebase:", error);
+  alert(`ERRO NO FIREBASE: ${error.message}\n\nVerifique o console.`);
 }
+
