@@ -9,15 +9,14 @@ const app = {
     moodInterval: null,
     onlineInterval: null,
     onlineUsers: [],
-    firebaseEnabled: false, // 🆕 Controle do Firebase
+    firebaseEnabled: false,
     filtrosAtas: { condo: '', dataInicio: '', dataFim: '', tipo: '', status: '' },
     filtrosPresenca: { operador: '', dataInicio: '', dataFim: '', turno: '' },
+    privateChats: new Map(), // 🆕 Armazenar chats privados
     
     init() {
-        // TESTAR FIREBASE PRIMEIRO
         this.verificarFirebase();
         
-        // GARANTIR que começa na tela de login
         if (document.getElementById('login-screen')) {
             document.getElementById('login-screen').classList.remove('hidden');
         }
@@ -25,7 +24,6 @@ const app = {
             document.getElementById('main-content').classList.add('hidden');
         }
         
-        // Limpar auto-preenchimento dos campos de login
         setTimeout(() => {
             if (document.getElementById('login-user')) {
                 document.getElementById('login-user').value = '';
@@ -46,7 +44,6 @@ const app = {
         this.setupOSPreview();
         this.setupResponsive();
         
-        // Configurar datas padrão
         const hoje = new Date();
         const umaSemanaAtras = new Date();
         umaSemanaAtras.setDate(umaSemanaAtras.getDate() - 7);
@@ -67,7 +64,6 @@ const app = {
             document.getElementById('os-data').value = hoje.toISOString().split('T')[0];
         }
         
-        // Preencher datas do relatório
         if (document.getElementById('report-data-inicio')) {
             document.getElementById('report-data-inicio').value = umaSemanaAtras.toISOString().split('T')[0];
         }
@@ -77,7 +73,9 @@ const app = {
         
         this.carregarFiltrosSalvos();
         
-        // Configurar clique fora da lista de online
+        // 🆕 Configurar chats privados
+        this.inicializarChatsPrivados();
+        
         document.addEventListener('click', (e) => {
             const onlineList = document.getElementById('online-users-list');
             const onlineDropdown = document.getElementById('online-users');
@@ -88,7 +86,6 @@ const app = {
             }
         });
         
-        // Configurar clique fora das notificações
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.notification-bell') && !e.target.closest('.notifications-panel')) {
                 const panel = document.getElementById('notifications-panel');
@@ -96,85 +93,83 @@ const app = {
             }
         });
         
-        // Inicializar sistema de e-mail se existir
         setTimeout(() => {
             if (typeof emailApp !== 'undefined' && emailApp.init) {
                 emailApp.init();
             }
         }, 500);
         
-        // 🔧 ADICIONAR BOTÃO DE SINCRONIZAÇÃO VERCEL
         setTimeout(() => {
             this.adicionarBotaoSincronizacaoVercel();
         }, 1000);
         
-        // 🔧 CORRIGIR DADOS EXISTENTES
         setTimeout(() => {
             this.corrigirDadosExistentes();
         }, 1500);
     },
     
-    // 🔧 FUNÇÃO PARA CORRIGIR DADOS EXISTENTES
+    // 🆕 INICIALIZAR CHATS PRIVADOS
+    inicializarChatsPrivados() {
+        // Carregar chats privados do localStorage
+        const chatsPrivados = JSON.parse(localStorage.getItem('porter_private_chats') || '{}');
+        Object.entries(chatsPrivados).forEach(([key, chat]) => {
+            this.privateChats.set(key, chat);
+        });
+        
+        // Atualizar a lista de online com botões de chat privado
+        this.atualizarListaOnlineComChatsPrivados();
+    },
+    
     corrigirDadosExistentes() {
         console.log("🔧 Corrigindo dados existentes...");
         
-        // Corrigir ATAs
         const atas = JSON.parse(localStorage.getItem('porter_atas') || '[]');
         if (atas.length > 0) {
-            const atasCorrigidas = atas.map((ata, index) => {
-                // Garantir campos obrigatórios
-                return {
-                    id: ata.id || `vercel_${Date.now()}_${index}`,
-                    condo: ata.condo || "Não especificado",
-                    cidade: ata.cidade || "",
-                    tipo: ata.tipo || "Ocorrência",
-                    status: ata.status || "Em andamento",
-                    desc: ata.desc || "",
-                    operador: ata.operador || "Operador desconhecido",
-                    user: ata.user || "anonimo",
-                    turno: ata.turno || "Diurno",
-                    data: ata.data || new Date().toLocaleDateString('pt-BR'),
-                    dataISO: ata.dataISO || new Date().toISOString().split('T')[0],
-                    hora: ata.hora || new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
-                    timestamp: ata.timestamp || new Date().toISOString(),
-                    comentarios: Array.isArray(ata.comentarios) ? ata.comentarios : [],
-                    fixa: ata.fixa || false
-                };
-            });
+            const atasCorrigidas = atas.map((ata, index) => ({
+                id: ata.id || `vercel_${Date.now()}_${index}`,
+                condo: ata.condo || "Não especificado",
+                cidade: ata.cidade || "",
+                tipo: ata.tipo || "Ocorrência",
+                status: ata.status || "Em andamento",
+                desc: ata.desc || "",
+                operador: ata.operador || "Operador desconhecido",
+                user: ata.user || "anonimo",
+                turno: ata.turno || "Diurno",
+                data: ata.data || new Date().toLocaleDateString('pt-BR'),
+                dataISO: ata.dataISO || new Date().toISOString().split('T')[0],
+                hora: ata.hora || new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
+                timestamp: ata.timestamp || new Date().toISOString(),
+                comentarios: Array.isArray(ata.comentarios) ? ata.comentarios : [],
+                fixa: ata.fixa || false
+            }));
             
             localStorage.setItem('porter_atas', JSON.stringify(atasCorrigidas));
             console.log(`✅ ${atasCorrigidas.length} ATAs corrigidas`);
         }
         
-        // Corrigir Chat
         const chat = JSON.parse(localStorage.getItem('porter_chat') || '[]');
         if (chat.length > 0) {
-            const chatCorrigido = chat.map((msg, index) => {
-                return {
-                    id: msg.id || `chat_${Date.now()}_${index}`,
-                    sender: msg.sender || msg.nome || "Usuário",
-                    senderRole: msg.senderRole || msg.role || "OPERADOR",
-                    senderMood: msg.senderMood || msg.mood || "😐",
-                    senderUser: msg.senderUser || msg.user || "anonimo",
-                    message: msg.message || "(mensagem vazia)",
-                    time: msg.time || new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
-                    timestamp: msg.timestamp || new Date().toISOString(),
-                    date: msg.date || new Date().toLocaleDateString('pt-BR')
-                };
-            });
+            const chatCorrigido = chat.map((msg, index) => ({
+                id: msg.id || `chat_${Date.now()}_${index}`,
+                sender: msg.sender || msg.nome || "Usuário",
+                senderRole: msg.senderRole || msg.role || "OPERADOR",
+                senderMood: msg.senderMood || msg.mood || "😐",
+                senderUser: msg.senderUser || msg.user || "anonimo",
+                message: msg.message || "(mensagem vazia)",
+                time: msg.time || new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
+                timestamp: msg.timestamp || new Date().toISOString(),
+                date: msg.date || new Date().toLocaleDateString('pt-BR')
+            }));
             
             localStorage.setItem('porter_chat', JSON.stringify(chatCorrigido));
             console.log(`✅ ${chatCorrigido.length} mensagens de chat corrigidas`);
         }
     },
     
-    // 🔧 FUNÇÃO PARA ADICIONAR BOTÃO DE SINCRONIZAÇÃO VERCEL
     adicionarBotaoSincronizacaoVercel() {
-        // Remover botão antigo se existir
         const btnAntigo = document.getElementById('btn-sync-vercel');
         if (btnAntigo) btnAntigo.remove();
         
-        // Criar novo botão
         const btnSync = document.createElement('button');
         btnSync.id = 'btn-sync-vercel';
         btnSync.innerHTML = '🔄 Sincronizar Agora';
@@ -201,7 +196,6 @@ const app = {
             gap: 8px;
         `;
         
-        // Efeitos hover
         btnSync.onmouseover = () => {
             btnSync.style.transform = 'scale(1.05)';
             btnSync.style.boxShadow = '0 8px 25px rgba(0,0,0,0.4)';
@@ -212,14 +206,11 @@ const app = {
             btnSync.style.boxShadow = '0 6px 20px rgba(0,0,0,0.3)';
         };
         
-        // Ação do botão
         btnSync.onclick = () => {
             if (confirm("🔄 SINCRONIZAR COM SERVIDOR CENTRAL?\n\nIsso atualizará todos os dados com as informações mais recentes da equipe.")) {
-                // Mostrar loading
                 btnSync.innerHTML = '⏳ Sincronizando...';
                 btnSync.disabled = true;
                 
-                // Sincronizar com Firebase se disponível
                 if (typeof db !== 'undefined') {
                     Promise.all([
                         db.collection("atas").get(),
@@ -227,14 +218,12 @@ const app = {
                         db.collection("ordens_servico").get()
                     ])
                     .then(([atasSnapshot, chatSnapshot, osSnapshot]) => {
-                        // Atualizar ATAs
                         const atasServidor = [];
                         atasSnapshot.forEach(doc => {
                             const data = doc.data();
                             atasServidor.push({ 
                                 id: doc.id, 
                                 ...data,
-                                // Garantir campos obrigatórios
                                 condo: data.condo || "Não especificado",
                                 desc: data.desc || "",
                                 operador: data.operador || "Operador desconhecido"
@@ -242,21 +231,18 @@ const app = {
                         });
                         localStorage.setItem('porter_atas', JSON.stringify(atasServidor));
                         
-                        // Atualizar Chat
                         const chatServidor = [];
                         chatSnapshot.forEach(doc => {
                             const data = doc.data();
                             chatServidor.push({ 
                                 id: doc.id, 
                                 ...data,
-                                // Garantir campos obrigatórios
                                 sender: data.sender || "Usuário",
                                 message: data.message || "(mensagem vazia)"
                             });
                         });
                         localStorage.setItem('porter_chat', JSON.stringify(chatServidor));
                         
-                        // Atualizar OS
                         const osServidor = [];
                         osSnapshot.forEach(doc => {
                             osServidor.push({ id: doc.id, ...doc.data() });
@@ -265,14 +251,12 @@ const app = {
                         
                         console.log(`✅ ${atasServidor.length} ATAs, ${chatServidor.length} mensagens e ${osServidor.length} OS sincronizadas`);
                         
-                        // Recarregar dados
                         if (typeof app !== 'undefined') {
                             if (typeof app.renderAta === 'function') app.renderAta();
                             if (typeof app.loadChat === 'function') app.loadChat();
                             if (typeof app.renderOS === 'function') app.renderOS();
                         }
                         
-                        // Restaurar botão
                         setTimeout(() => {
                             btnSync.innerHTML = '🔄 Sincronizado!';
                             setTimeout(() => {
@@ -290,7 +274,6 @@ const app = {
                         }, 2000);
                     });
                 } else {
-                    // Se não houver Firebase, apenas recarrega a página
                     console.log("ℹ️ Firebase não disponível, recarregando página...");
                     location.reload();
                 }
@@ -301,20 +284,17 @@ const app = {
         console.log("✅ Botão de sincronização Vercel adicionado");
     },
     
-    // 🆕 VERIFICAR SE FIREBASE ESTÁ FUNCIONANDO
     verificarFirebase() {
         if (window.db && typeof db.collection === 'function') {
             this.firebaseEnabled = true;
             console.log("✅ Firebase está habilitado!");
             
-            // Testar conexão
             db.collection("conexao_teste").doc("teste").set({
                 teste: "Conexão estabelecida",
                 hora: new Date().toISOString()
             }).then(() => {
                 console.log("✅ Conexão Firestore confirmada!");
                 
-                // Mostrar indicador visual
                 const indicator = document.createElement('div');
                 indicator.id = 'firebase-status';
                 indicator.style.cssText = `
@@ -334,7 +314,6 @@ const app = {
                 indicator.innerHTML = '<i class="fas fa-cloud"></i> Online';
                 document.body.appendChild(indicator);
                 
-                // 🔧 CONFIGURAR SINCRONIZAÇÃO AUTOMÁTICA
                 this.configurarSincronizacaoAutomatica();
             }).catch(error => {
                 console.warn("⚠️ Firebase conectado mas com erro:", error);
@@ -346,16 +325,13 @@ const app = {
         }
     },
     
-    // 🔧 CONFIGURAR SINCRONIZAÇÃO AUTOMÁTICA
     configurarSincronizacaoAutomatica() {
         console.log("⚡ Configurando sincronização automática...");
         
-        // Sincronizar a cada 2 minutos
         setInterval(() => {
             if (this.firebaseEnabled && navigator.onLine && this.currentUser) {
                 console.log("🔄 Sincronização automática em andamento...");
                 
-                // Sincronizar ATAs
                 db.collection("atas")
                     .orderBy("timestamp", "desc")
                     .limit(50)
@@ -368,14 +344,12 @@ const app = {
                         
                         localStorage.setItem('porter_atas', JSON.stringify(atasAtualizadas));
                         
-                        // Atualizar interface se necessário
                         if (typeof app.renderAta === 'function') {
                             setTimeout(() => app.renderAta(), 500);
                         }
                     })
                     .catch(err => console.log("⚠️ Erro ao sincronizar ATAs:", err));
                     
-                // Sincronizar Chat
                 db.collection("chat_messages")
                     .orderBy("timestamp", "desc")
                     .limit(50)
@@ -388,20 +362,18 @@ const app = {
                         
                         localStorage.setItem('porter_chat', JSON.stringify(chatAtualizado));
                         
-                        // Atualizar interface se necessário
                         if (typeof app.loadChat === 'function') {
                             setTimeout(() => app.loadChat(), 500);
                         }
                     })
                     .catch(err => console.log("⚠️ Erro ao sincronizar chat:", err));
             }
-        }, 120000); // 2 minutos
+        }, 120000);
         
         console.log("✅ Sincronização automática configurada (a cada 2 minutos)");
     },
     
     setupEventListeners() {
-        // Enter no login
         const loginPass = document.getElementById('login-pass');
         if (loginPass) {
             loginPass.addEventListener('keypress', (e) => {
@@ -409,7 +381,6 @@ const app = {
             });
         }
         
-        // Enter no chat
         const chatInput = document.getElementById('chat-input');
         if (chatInput) {
             chatInput.addEventListener('keypress', (e) => {
@@ -420,14 +391,12 @@ const app = {
             });
         }
         
-        // Salvar logoff quando a página for fechada
         window.addEventListener('beforeunload', () => {
             if (this.currentUser) {
                 this.registrarLogoff();
             }
         });
         
-        // Operadores online
         const onlineUsers = document.getElementById('online-users');
         if (onlineUsers) {
             onlineUsers.addEventListener('click', (e) => {
@@ -462,14 +431,12 @@ const app = {
     },
     
     setupOnlineTracking() {
-        // Atualizar a cada 30 segundos
         this.onlineInterval = setInterval(() => {
             if (this.currentUser) {
                 this.updateOnlineUsers();
             }
         }, 30000);
         
-        // Inicializar imediamente
         this.updateOnlineUsers();
     },
     
@@ -484,16 +451,12 @@ const app = {
         return statusMap[mood] || 'Não avaliado';
     },
     
-    // 📋 FUNÇÃO ATUALIZADA: updateOnlineUsers CORRIGIDA - MOSTRA APENAS USUÁRIOS REAIS
     updateOnlineUsers() {
         if (!this.currentUser) return;
         
         const agora = new Date();
-        
-        // Buscar usuários realmente online do localStorage
         let usuariosOnline = [];
         
-        // Adicionar usuário atual
         const moodAtual = this.getMoodAtual();
         const statusMood = this.getMoodStatusTexto(moodAtual);
         
@@ -505,7 +468,6 @@ const app = {
             isCurrentUser: true
         });
         
-        // Verificar se há outros usuários com sessão ativa (últimos 5 minutos)
         try {
             const sessaoSalva = localStorage.getItem('porter_last_session');
             if (sessaoSalva) {
@@ -515,13 +477,12 @@ const app = {
                     const diferencaMinutos = (agora - tempoSessao) / (1000 * 60);
                     
                     if (diferencaMinutos < 5) {
-                        // Este é um usuário que está "online"
                         const outroUsuario = DATA.funcionarios.find(f => f.user === sessao.user);
                         if (outroUsuario) {
                             usuariosOnline.push({
                                 ...outroUsuario,
                                 lastActivity: sessao.lastActivity,
-                                mood: '😐', // Mood padrão para usuários não ativos
+                                mood: '😐',
                                 moodStatus: 'Online há ' + Math.floor(diferencaMinutos) + ' min',
                                 isCurrentUser: false,
                                 turno: sessao.turno || 'Diurno'
@@ -534,11 +495,9 @@ const app = {
             console.log('Erro ao buscar sessões:', e);
         }
         
-        // 🔧 BUSCAR USUÁRIOS ONLINE DO FIREBASE
         if (this.firebaseEnabled) {
             this.buscarUsuariosOnlineFirebase().then(firebaseUsers => {
                 firebaseUsers.forEach(fbUser => {
-                    // Verificar se já está na lista
                     const jaExiste = usuariosOnline.some(u => u.user === fbUser.user);
                     if (!jaExiste) {
                         usuariosOnline.push({
@@ -559,13 +518,11 @@ const app = {
         
         this.salvarSessao();
         
-        // 🆕 SINCRONIZAR COM FIREBASE SE ESTIVER HABILITADO
         if (this.firebaseEnabled && this.currentUser) {
             this.sincronizarOnlineFirebase();
         }
     },
     
-    // 🔧 BUSCAR USUÁRIOS ONLINE DO FIREBASE
     buscarUsuariosOnlineFirebase() {
         return new Promise((resolve) => {
             if (!this.firebaseEnabled) {
@@ -583,7 +540,6 @@ const app = {
                         
                         snapshot.forEach(doc => {
                             const data = doc.data();
-                            // Verificar se está online há menos de 10 minutos
                             const lastActivity = data.lastActivity?.toDate ? data.lastActivity.toDate() : new Date();
                             const diferencaMinutos = (agora - lastActivity) / (1000 * 60);
                             
@@ -610,9 +566,7 @@ const app = {
         });
     },
     
-    // 🔧 ATUALIZAR LISTA ONLINE
     atualizarListaOnline() {
-        // Atualizar contador
         const onlineCount = document.getElementById('online-count');
         if (onlineCount) {
             const usuariosReais = this.onlineUsers.filter(u => u.user !== this.currentUser?.user);
@@ -625,14 +579,12 @@ const app = {
             }
         }
         
-        // Se a lista estiver visível, atualizar
         const onlineList = document.getElementById('online-users-list');
         if (onlineList && onlineList.style.display === 'block') {
             this.renderOnlineUsersList();
         }
     },
     
-    // 🆕 SINCRONIZAR STATUS ONLINE COM FIREBASE
     sincronizarOnlineFirebase() {
         if (!this.firebaseEnabled || !this.currentUser) return;
         
@@ -659,12 +611,10 @@ const app = {
         }
     },
     
-    // 📋 FUNÇÃO ATUALIZADA: renderOnlineUsersList CORRIGIDA
     renderOnlineUsersList() {
         const list = document.getElementById('online-users-list');
         if (!list) return;
         
-        // Limpar lista anterior
         list.innerHTML = '';
         
         if (this.onlineUsers.length === 0) {
@@ -678,7 +628,6 @@ const app = {
             return;
         }
         
-        // Ordenar: admin primeiro, depois por nome
         const usuariosOrdenados = [...this.onlineUsers].sort((a, b) => {
             if (a.role === 'ADMIN' && b.role !== 'ADMIN') return -1;
             if (b.role === 'ADMIN' && a.role !== 'ADMIN') return 1;
@@ -691,13 +640,17 @@ const app = {
             const userItem = document.createElement('div');
             userItem.className = 'online-user-item';
             
-            // Calcular tempo desde última atividade
             const tempoAtivo = user.lastActivity ? 
                 this.formatarTempoAtivo(new Date(user.lastActivity)) : 
                 'Agora mesmo';
             
-            // Definir cor do status baseado no humor
             const statusColor = this.getCorPorMood(user.mood);
+            
+            // 🆕 Adicionar botão de chat privado para outros usuários
+            const chatButton = !user.isCurrentUser ? 
+                `<button class="btn btn-sm btn-info" onclick="app.iniciarChatPrivado('${user.user}', '${user.nome}')" style="margin-top: 5px; padding: 4px 8px; font-size: 0.75rem;">
+                    <i class="fas fa-comment"></i> Chat Privado
+                </button>` : '';
             
             userItem.innerHTML = `
                 <div class="online-user-avatar" style="background: ${statusColor}; color: ${user.mood === '😐' ? '#333' : 'white'};">
@@ -714,6 +667,7 @@ const app = {
                         <div style="font-size: 0.7rem; color: #888; margin-top: 2px;">
                             <i class="far fa-clock"></i> ${tempoAtivo}
                         </div>
+                        ${chatButton}
                     </div>
                 </div>
                 <div class="online-status" style="background: ${user.isCurrentUser ? '#3498db' : '#2ecc71'};"></div>
@@ -722,7 +676,6 @@ const app = {
             list.appendChild(userItem);
         });
         
-        // Adicionar rodapé
         const rodape = document.createElement('div');
         rodape.style.cssText = `
             padding: 10px 15px;
@@ -746,24 +699,20 @@ const app = {
         list.appendChild(rodape);
     },
     
-    // 📋 FUNÇÃO ATUALIZADA: toggleOnlineUsers CORRIGIDA
     toggleOnlineUsers() {
         const list = document.getElementById('online-users-list');
         if (!list) return;
         
         const estaVisivel = list.style.display === 'block';
         
-        // Fechar notificações se estiverem abertas
         const notificationsPanel = document.getElementById('notifications-panel');
         if (notificationsPanel) notificationsPanel.classList.remove('show');
         
         if (estaVisivel) {
             list.style.display = 'none';
         } else {
-            // Atualizar lista ANTES de mostrar
             this.updateOnlineUsers();
             
-            // Posicionar corretamente
             const dropdown = document.getElementById('online-users');
             if (dropdown) {
                 const rect = dropdown.getBoundingClientRect();
@@ -776,7 +725,6 @@ const app = {
             list.style.display = 'block';
             list.style.zIndex = '10000';
             
-            // Garantir que o conteúdo será renderizado
             this.renderOnlineUsersList();
         }
     },
@@ -831,7 +779,6 @@ const app = {
         this.lastLogoffTime = new Date().toISOString();
         localStorage.setItem('porter_last_logoff', this.lastLogoffTime);
         
-        // 🆕 REGISTRAR LOGOFF NO FIREBASE
         if (this.firebaseEnabled) {
             try {
                 const operadorRef = db.collection("operadores_online").doc(this.currentUser.user);
@@ -847,7 +794,6 @@ const app = {
             }
         }
         
-        // Limpar intervalos
         if (this.chatInterval) {
             clearInterval(this.chatInterval);
             this.chatInterval = null;
@@ -863,7 +809,6 @@ const app = {
             this.onlineInterval = null;
         }
         
-        // Limpar sessão do usuário atual
         localStorage.removeItem('porter_last_session');
     },
     
@@ -1046,7 +991,6 @@ const app = {
         if (moods.length > 500) moods = moods.slice(0, 500);
         localStorage.setItem('porter_moods', JSON.stringify(moods));
         
-        // 🆕 SINCRONIZAR COM FIREBASE
         if (this.firebaseEnabled) {
             this.sincronizarMoodFirebase(moodData);
         }
@@ -1064,10 +1008,7 @@ const app = {
         const submitBtn = document.getElementById('mood-submit-btn');
         if (submitBtn) submitBtn.disabled = true;
         
-        // Atualizar lista de online
         this.updateOnlineUsers();
-        
-        // Atualizar a área do usuário
         this.updateUserInfo();
         
         setTimeout(() => {
@@ -1076,7 +1017,6 @@ const app = {
         }, 5000);
     },
     
-    // 🆕 SINCRONIZAR MOOD COM FIREBASE
     sincronizarMoodFirebase(moodData) {
         if (!this.firebaseEnabled) return;
         
@@ -1158,7 +1098,6 @@ const app = {
             };
             localStorage.setItem('porter_session', JSON.stringify(this.currentUser));
             
-            // Registrar login
             let presencas = JSON.parse(localStorage.getItem('porter_presencas') || '[]');
             presencas.unshift({
                 nome: user.nome,
@@ -1180,14 +1119,12 @@ const app = {
     },
     
     showApp() {
-        // Transição suave
         const loginScreen = document.getElementById('login-screen');
         const mainContent = document.getElementById('main-content');
         
         if (loginScreen) loginScreen.classList.add('hidden');
         if (mainContent) mainContent.classList.remove('hidden');
         
-        // MOSTRAR SIDEBAR APÓS LOGIN
         const sidebar = document.getElementById('sidebar');
         if (sidebar && window.innerWidth > 1200) {
             sidebar.style.display = 'block';
@@ -1206,32 +1143,30 @@ const app = {
         this.updateNotificationBadges();
         this.salvarSessao();
         
-        // 🆕 ATUALIZAR OPERADORES ONLINE IMEDIATAMENTE
         this.updateOnlineUsers();
         
-        // Se for admin, mostrar controles
         const adminControls = document.getElementById('admin-controls');
         if (adminControls && this.currentUser.role === 'ADMIN') {
             adminControls.style.display = 'flex';
         }
         
-        // Iniciar chat
         this.loadChat();
         this.chatInterval = setInterval(() => this.loadChat(), 5000);
         
-        // Iniciar tracking de online
         this.setupOnlineTracking();
         
-        // 🆕 Inicializar visto por
         this.registrarVisualizacaoChat();
         
-        // 🔧 CORRIGIR DADOS DE ATAS SE NECESSÁRIO
         setTimeout(() => {
             this.corrigirDadosAtas();
         }, 2000);
+        
+        // 🆕 Atualizar histórico de acesso para mostrar todos
+        setTimeout(() => {
+            this.renderPresenca();
+        }, 1000);
     },
     
-    // 🔧 CORRIGIR DADOS DE ATAS
     corrigirDadosAtas() {
         console.log("🔧 Corrigindo dados de ATAs...");
         
@@ -1240,7 +1175,6 @@ const app = {
             
             if (atas.length > 0) {
                 const atasCorrigidas = atas.map((ata, index) => {
-                    // Garantir que cada ATA tenha todos os campos obrigatórios
                     const ataCorrigida = {
                         id: ata.id || `vercel_${Date.now()}_${index}`,
                         condo: ata.condo || "Não especificado",
@@ -1259,7 +1193,6 @@ const app = {
                         fixa: ata.fixa || false
                     };
                     
-                    // Copiar outros campos
                     Object.keys(ata).forEach(key => {
                         if (!ataCorrigida.hasOwnProperty(key)) {
                             ataCorrigida[key] = ata[key];
@@ -1272,7 +1205,6 @@ const app = {
                 localStorage.setItem('porter_atas', JSON.stringify(atasCorrigidas));
                 console.log(`✅ ${atasCorrigidas.length} ATAs corrigidas`);
                 
-                // Renderizar ATAs novamente
                 if (typeof this.renderAta === 'function') {
                     setTimeout(() => this.renderAta(), 500);
                 }
@@ -1314,7 +1246,6 @@ const app = {
         if (confirm('Deseja realmente sair do sistema?')) {
             this.registrarLogoff();
             
-            // Limpar intervalos primeiro
             if (this.chatInterval) {
                 clearInterval(this.chatInterval);
                 this.chatInterval = null;
@@ -1330,21 +1261,17 @@ const app = {
                 this.onlineInterval = null;
             }
             
-            // Limpar sessão
             localStorage.removeItem('porter_session');
             localStorage.removeItem('porter_last_session');
             
             this.currentUser = null;
             
-            // Esconder aplicação
             const mainContent = document.getElementById('main-content');
             if (mainContent) mainContent.classList.add('hidden');
             
-            // Mostrar login com transição suave
             const loginScreen = document.getElementById('login-screen');
             if (loginScreen) loginScreen.classList.remove('hidden');
             
-            // Resetar formulário de login
             const loginUser = document.getElementById('login-user');
             const loginPass = document.getElementById('login-pass');
             if (loginUser) loginUser.value = '';
@@ -1361,7 +1288,6 @@ const app = {
         if (tabElement) tabElement.classList.remove('hidden');
         if (btn) btn.classList.add('active');
         
-        // Se for a aba de chat, carregar mensagens e marcar como visualizado
         if (tabId === 'tab-chat') {
             this.loadChat();
             this.marcarChatComoVisualizado();
@@ -1381,7 +1307,6 @@ const app = {
         if (tabCountFixas) tabCountFixas.textContent = fixas.length;
         if (tabCountOs) tabCountOs.textContent = os.length;
         
-        // 🆕 Usar função atualizarBadgeChat
         this.atualizarBadgeChat();
     },
     
@@ -1508,7 +1433,6 @@ const app = {
         this.currentCondoFilter = condoName;
         this.aplicarFiltrosAtas();
         
-        // Destacar item na sidebar
         document.querySelectorAll('.condo-item').forEach(item => {
             item.classList.remove('active');
         });
@@ -1517,7 +1441,6 @@ const app = {
             condoItem.classList.add('active');
         }
         
-        // Fechar sidebar em mobile
         if (window.innerWidth <= 1200) {
             this.toggleSidebar();
         }
@@ -1731,14 +1654,12 @@ const app = {
         if (atas.length > 200) atas = atas.slice(0, 200);
         localStorage.setItem('porter_atas', JSON.stringify(atas));
         
-        // 🆕 SINCRONIZAR COM FIREBASE
         if (this.firebaseEnabled) {
             this.sincronizarAtaFirebase(novaAta);
         }
         
         this.criarNotificacao(condo, tipo, desc);
         
-        // Limpar formulário
         const ataDesc = document.getElementById('ata-desc');
         const ataCondo = document.getElementById('ata-condo');
         const ataCidade = document.getElementById('ata-cidade');
@@ -1751,7 +1672,6 @@ const app = {
         this.updateNotificationBadges();
     },
     
-    // 🆕 SINCRONIZAR ATA COM FIREBASE
     sincronizarAtaFirebase(ataData) {
         if (!this.firebaseEnabled) return;
         
@@ -1763,7 +1683,6 @@ const app = {
                 firebaseTimestamp: firebase.firestore.FieldValue.serverTimestamp()
             };
             
-            // Remover o campo id para evitar duplicação
             delete firebaseAta.id;
             
             ataRef.set(firebaseAta, { merge: true }).then(() => {
@@ -1969,7 +1888,6 @@ const app = {
             }
         }
         
-        // Atualizar badges dos condomínios
         if (DATA.condominios && Array.isArray(DATA.condominios)) {
             DATA.condominios.forEach(condo => {
                 const condoNotificacoes = notificacoes.filter(n => n.condo === condo.n && !n.lida);
@@ -2032,6 +1950,7 @@ const app = {
         if (index !== -1) {
             if (!atas[index].comentarios) atas[index].comentarios = [];
             
+            // 🆕 Permitir que qualquer operador logado comente
             atas[index].comentarios.unshift({
                 id: Date.now(),
                 autor: this.currentUser.nome,
@@ -2154,7 +2073,15 @@ const app = {
         list.innerHTML = '';
         
         fixas.forEach(a => {
-            const podeExcluir = this.currentUser && (this.currentUser.role === 'ADMIN' || a.user === this.currentUser.user);
+            // 🆕 Corrigido: Admin pode excluir qualquer registro, operador só o seu próprio
+            const podeExcluir = this.currentUser && (
+                this.currentUser.role === 'ADMIN' || 
+                a.user === this.currentUser.user
+            );
+            
+            // 🆕 Qualquer operador pode comentar
+            const podeComentar = this.currentUser !== null;
+            
             const card = document.createElement('div');
             card.className = 'ata-card fixed fade-in';
             card.innerHTML = `
@@ -2174,9 +2101,11 @@ const app = {
                         <i class="fas fa-user-edit"></i> Operador: ${a.operador || ''}
                     </div>
                     <div style="display: flex; gap: 10px;">
-                        <button class="btn btn-info" onclick="app.abrirComentarios(${a.id})">
-                            <i class="fas fa-comments"></i> Comentários (${a.comentarios ? a.comentarios.length : 0})
-                        </button>
+                        ${podeComentar ? 
+                            `<button class="btn btn-info" onclick="app.abrirComentarios(${a.id})">
+                                <i class="fas fa-comments"></i> Comentários (${a.comentarios ? a.comentarios.length : 0})
+                            </button>` : ''
+                        }
                         ${podeExcluir ? 
                             `<button class="btn btn-danger" onclick="app.deleteAta(${a.id})">
                                 <i class="fas fa-trash"></i> Excluir
@@ -2236,7 +2165,6 @@ const app = {
         if (osList.length > 100) osList = osList.slice(0, 100);
         localStorage.setItem('porter_os', JSON.stringify(osList));
         
-        // 🆕 SINCRONIZAR COM FIREBASE
         if (this.firebaseEnabled) {
             this.sincronizarOSFirebase(novaOS);
         }
@@ -2269,7 +2197,6 @@ const app = {
         }
     },
     
-    // 🆕 SINCRONIZAR OS COM FIREBASE
     sincronizarOSFirebase(osData) {
         if (!this.firebaseEnabled) return;
         
@@ -2281,7 +2208,6 @@ const app = {
                 firebaseTimestamp: firebase.firestore.FieldValue.serverTimestamp()
             };
             
-            // Remover o campo id para evitar duplicação
             delete firebaseOS.id;
             
             osRef.set(firebaseOS, { merge: true }).then(() => {
@@ -2477,9 +2403,23 @@ E-mail automático - Não responda
         list.innerHTML = '';
         
         osList.forEach(os => {
-            const podeExcluir = this.currentUser && (this.currentUser.role === 'ADMIN' || os.user === this.currentUser.user);
+            // 🆕 Corrigido: Admin pode excluir qualquer OS, operador só o seu próprio
+            const podeExcluir = this.currentUser && (
+                this.currentUser.role === 'ADMIN' || 
+                os.user === this.currentUser.user
+            );
+            
             const card = document.createElement('div');
             card.className = 'ata-card os fade-in';
+            
+            // 🆕 Adicionar botão para ver detalhes completos
+            const verDetalhesBtn = `
+                <button class="btn btn-sm btn-info" onclick="app.verDetalhesCompletosOS(${os.id})" 
+                        style="margin-left: 10px; padding: 2px 8px; font-size: 0.8rem;">
+                    <i class="fas fa-eye"></i> Ver Detalhes
+                </button>
+            `;
+            
             card.innerHTML = `
                 <div class="ata-header">
                     <span><i class="far fa-calendar"></i> ${os.data || ''} | <i class="far fa-clock"></i> ${os.hora || ''}</span>
@@ -2508,10 +2448,16 @@ E-mail automático - Não responda
                         ${os.emails.length} destinatário(s)
                         <button class="btn btn-sm btn-info" onclick="app.verDetalhesEmailOS(${os.id})" 
                                 style="margin-left: 10px; padding: 2px 8px; font-size: 0.8rem;">
-                            <i class="fas fa-eye"></i> Ver detalhes
+                            <i class="fas fa-eye"></i> Ver e-mails
                         </button>
+                        ${verDetalhesBtn}
                     </div>
-                ` : ''}
+                ` : `
+                    <div style="margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 6px;">
+                        <i class="fas fa-info-circle"></i> Nenhum e-mail agendado
+                        ${verDetalhesBtn}
+                    </div>
+                `}
                 
                 <div style="white-space: pre-wrap; margin: 15px 0; padding: 15px; background: #d6eaf820; border-radius: 6px; line-height: 1.5;">
                     ${os.desc || ''}
@@ -2536,6 +2482,116 @@ E-mail automático - Não responda
     renderOS() {
         const osList = JSON.parse(localStorage.getItem('porter_os') || '[]');
         this.renderOSList(osList);
+    },
+    
+    // 🆕 FUNÇÃO PARA VER DETALHES COMPLETOS DA OS
+    verDetalhesCompletosOS(osId) {
+        let osList = JSON.parse(localStorage.getItem('porter_os') || '[]');
+        const os = osList.find(o => o.id === osId);
+        
+        if (!os) return;
+        
+        const modalContent = `
+            <div style="padding: 20px; max-width: 700px;">
+                <h3><i class="fas fa-file-alt"></i> Detalhes Completos da OS</h3>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0;">
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                        <h4><i class="fas fa-building"></i> Condomínio</h4>
+                        <p><strong>Nome:</strong> ${os.condo || ''}</p>
+                        <p><strong>Cidade:</strong> ${os.cidade || ''}</p>
+                    </div>
+                    
+                    <div style="background: #e8f4fc; padding: 15px; border-radius: 8px;">
+                        <h4><i class="fas fa-exclamation-triangle"></i> Prioridade</h4>
+                        <p><strong>Gravidade:</strong> ${os.gravidade || ''}</p>
+                        <p><strong>Prazo:</strong> ${os.prazoResposta || ''}</p>
+                        <p><strong>Status:</strong> ${os.status || 'Pendente'}</p>
+                    </div>
+                </div>
+                
+                <div style="margin: 20px 0;">
+                    <h4><i class="far fa-calendar"></i> Datas</h4>
+                    <div style="background: white; border: 1px solid #ddd; padding: 15px; border-radius: 6px;">
+                        <p><strong>Criação:</strong> ${os.data || ''} ${os.hora || ''}</p>
+                        <p><strong>Data da OS:</strong> ${os.dataOS || ''}</p>
+                        <p><strong>Turno:</strong> ${os.turno || ''}</p>
+                    </div>
+                </div>
+                
+                <div style="margin: 20px 0;">
+                    <h4><i class="fas fa-user"></i> Responsável</h4>
+                    <div style="background: white; border: 1px solid #ddd; padding: 15px; border-radius: 6px;">
+                        <p><strong>Operador:</strong> ${os.operador || ''}</p>
+                        <p><strong>Usuário:</strong> ${os.user || ''}</p>
+                    </div>
+                </div>
+                
+                <div style="margin: 20px 0;">
+                    <h4><i class="fas fa-align-left"></i> Descrição Completa</h4>
+                    <div style="background: white; border: 1px solid #ddd; padding: 15px; border-radius: 6px; white-space: pre-wrap;">
+                        ${os.desc || ''}
+                    </div>
+                </div>
+                
+                ${os.emails && os.emails.length > 0 ? `
+                    <div style="margin: 20px 0;">
+                        <h4><i class="fas fa-envelope"></i> E-mails</h4>
+                        <div style="background: white; border: 1px solid #ddd; padding: 15px; border-radius: 6px; max-height: 200px; overflow-y: auto;">
+                            ${os.emails.map(email => `<p>📧 ${email}</p>`).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+                
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button class="btn btn-primary" onclick="app.copiarDetalhesOS(${osId})">
+                        <i class="fas fa-copy"></i> Copiar Detalhes
+                    </button>
+                    <button class="btn btn-clear" onclick="app.fecharModalEmail()">
+                        Fechar
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        this.criarModal(`Detalhes da OS - ${os.condo}`, modalContent);
+    },
+    
+    // 🆕 FUNÇÃO PARA COPIAR DETALHES DA OS
+    copiarDetalhesOS(osId) {
+        let osList = JSON.parse(localStorage.getItem('porter_os') || '[]');
+        const os = osList.find(o => o.id === osId);
+        
+        if (!os) return;
+        
+        const detalhes = `
+            OS - ${os.condo}
+            Cidade: ${os.cidade || ''}
+            Gravidade: ${os.gravidade || ''}
+            Prazo: ${os.prazoResposta || ''}
+            Status: ${os.status || 'Pendente'}
+            Data: ${os.data || ''} ${os.hora || ''}
+            Data OS: ${os.dataOS || ''}
+            Turno: ${os.turno || ''}
+            Operador: ${os.operador || ''}
+            
+            Descrição:
+            ${os.desc || ''}
+            
+            ${os.emails && os.emails.length > 0 ? `E-mails: ${os.emails.join(', ')}` : ''}
+        `;
+        
+        navigator.clipboard.writeText(detalhes)
+            .then(() => this.showMessage('Detalhes copiados!', 'success'))
+            .catch(() => {
+                const textarea = document.createElement('textarea');
+                textarea.value = detalhes;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                this.showMessage('Detalhes copiados!', 'success');
+            });
     },
     
     verDetalhesEmailOS(osId) {
@@ -2604,6 +2660,7 @@ E-mail automático - Não responda
             return;
         }
         
+        // 🆕 Corrigido: Admin pode excluir qualquer OS, operador só o seu próprio
         const ehAutor = os.user === this.currentUser.user;
         const ehAdmin = this.currentUser.role === 'ADMIN';
         
@@ -2629,6 +2686,7 @@ E-mail automático - Não responda
             return;
         }
         
+        // 🆕 Corrigido: Admin pode excluir qualquer registro, operador só o seu próprio
         const ehAutor = ata.user === this.currentUser.user;
         const ehAdmin = this.currentUser.role === 'ADMIN';
         
@@ -2728,7 +2786,6 @@ E-mail automático - Não responda
             return;
         }
         
-        // Verificar se jsPDF está disponível
         if (typeof jsPDF === 'undefined') {
             alert('Biblioteca de PDF não carregada. Recarregue a página.');
             return;
@@ -2736,7 +2793,6 @@ E-mail automático - Não responda
         
         const doc = new jsPDF();
         
-        // Cabeçalho
         doc.setFillColor(26, 58, 95);
         doc.rect(0, 0, 210, 30, 'F');
         doc.setTextColor(255, 255, 255);
@@ -2745,20 +2801,16 @@ E-mail automático - Não responda
         doc.setFontSize(12);
         doc.text('Ata Operacional - 2026', 105, 22, { align: 'center' });
         
-        // Título do relatório
         doc.setTextColor(0, 0, 0);
         doc.setFontSize(16);
         doc.text(titulo, 105, 40, { align: 'center' });
         
-        // Filtros aplicados
         doc.setFontSize(10);
         let filtrosTexto = `Condomínio: ${condo || 'Todos'} | Período: ${dataInicio || 'Início'} a ${dataFim || 'Fim'}`;
         doc.text(filtrosTexto, 105, 50, { align: 'center' });
         
-        // Data de geração
         doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR')}`, 105, 55, { align: 'center' });
         
-        // Conteúdo
         let y = 70;
         dados.forEach((item, index) => {
             if (y > 270) {
@@ -2806,7 +2858,6 @@ E-mail automático - Não responda
             }
         });
         
-        // Rodapé
         doc.setFontSize(8);
         doc.setTextColor(100, 100, 100);
         doc.text(`Total de registros: ${dados.length}`, 105, 285, { align: 'center' });
@@ -2824,18 +2875,13 @@ E-mail automático - Não responda
         this.renderPresenca();
     },
     
-    // 🔧 FUNÇÃO RENDERATA MELHORADA E DEFINITIVA
     renderAta() {
         console.log("🎯 Executando renderAta definitiva...");
         
         try {
-            // Obter dados
             const atas = JSON.parse(localStorage.getItem('porter_atas') || '[]');
-            
-            // Filtrar apenas ATAs normais (não fixas)
             const atasNormais = atas.filter(a => !a.fixa);
             
-            // Aplicar filtros
             let atasFiltradas = [...atasNormais];
             
             if (this.filtrosAtas.condo) {
@@ -2858,7 +2904,6 @@ E-mail automático - Não responda
                 atasFiltradas = atasFiltradas.filter(a => a.status === this.filtrosAtas.status);
             }
             
-            // Encontrar ou criar container
             let container = document.getElementById('ata-lista');
             
             if (!container) {
@@ -2867,7 +2912,6 @@ E-mail automático - Não responda
                 container.id = 'ata-lista';
                 container.className = 'ata-lista';
                 
-                // Adicionar onde for apropriado
                 const atasSection = document.getElementById('tab-ata');
                 if (atasSection) {
                     atasSection.appendChild(container);
@@ -2876,7 +2920,6 @@ E-mail automático - Não responda
                 }
             }
             
-            // Atualizar informações
             const info = document.getElementById('resultados-info-ata');
             if (info) {
                 const totalAtas = atasNormais.length;
@@ -2892,7 +2935,6 @@ E-mail automático - Não responda
                 `;
             }
             
-            // Se não há ATAs
             if (atasFiltradas.length === 0) {
                 container.innerHTML = `
                     <div class="no-results">
@@ -2904,15 +2946,21 @@ E-mail automático - Não responda
                 return;
             }
             
-            // Renderizar ATAs
             container.innerHTML = '';
             
             atasFiltradas.forEach(ata => {
-                const podeExcluir = this.currentUser && (this.currentUser.role === 'ADMIN' || ata.user === this.currentUser.user);
+                // 🆕 Corrigido: Admin pode excluir qualquer ATA, operador só o seu próprio
+                const podeExcluir = this.currentUser && (
+                    this.currentUser.role === 'ADMIN' || 
+                    ata.user === this.currentUser.user
+                );
+                
+                // 🆕 Qualquer operador pode comentar
+                const podeComentar = this.currentUser !== null;
+                
                 const card = document.createElement('div');
                 card.className = 'ata-card fade-in';
                 
-                // Garantir dados seguros
                 const ataSegura = {
                     condo: ata.condo || "Não especificado",
                     cidade: ata.cidade || "",
@@ -2944,9 +2992,11 @@ E-mail automático - Não responda
                             <i class="fas fa-user-edit"></i> Operador: ${ataSegura.operador}
                         </div>
                         <div style="display: flex; gap: 10px;">
-                            <button class="btn btn-info" onclick="app.abrirComentarios(${ataSegura.id})">
-                                <i class="fas fa-comments"></i> Comentários (${ataSegura.comentarios.length})
-                            </button>
+                            ${podeComentar ? 
+                                `<button class="btn btn-info" onclick="app.abrirComentarios(${ataSegura.id})">
+                                    <i class="fas fa-comments"></i> Comentários (${ataSegura.comentarios.length})
+                                </button>` : ''
+                            }
                             ${podeExcluir ? 
                                 `<button class="btn btn-danger" onclick="app.deleteAta(${ataSegura.id})" title="Apenas autor ou admin pode excluir">
                                     <i class="fas fa-trash"></i> Excluir
@@ -2965,7 +3015,6 @@ E-mail automático - Não responda
         } catch (error) {
             console.error('❌ Erro em renderAta:', error);
             
-            // Fallback
             const container = document.getElementById('ata-lista') || document.body;
             container.innerHTML = `
                 <div style="text-align: center; padding: 40px; color: #666;">
@@ -2995,26 +3044,33 @@ E-mail automático - Não responda
         let presencas = JSON.parse(localStorage.getItem('porter_presencas') || '[]');
         let logoffs = JSON.parse(localStorage.getItem('porter_logoffs') || '[]');
         
+        // 🆕 Juntar presenças e logoffs de todos os usuários
         let historico = [];
         
+        // 🆕 Mostrar todas as presenças de todos os usuários
         presencas.forEach(p => {
             historico.push({
                 ...p,
                 tipo: 'login',
-                tipoDisplay: 'Login'
+                tipoDisplay: 'Login',
+                visivelParaTodos: true // 🆕 Marcar como visível para todos
             });
         });
         
+        // 🆕 Mostrar todos os logoffs de todos os usuários
         logoffs.forEach(l => {
             historico.push({
                 ...l,
                 tipo: 'logoff',
-                tipoDisplay: 'Logoff'
+                tipoDisplay: 'Logoff',
+                visivelParaTodos: true // 🆕 Marcar como visível para todos
             });
         });
         
+        // Ordenar por timestamp (mais recente primeiro)
         historico.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
         
+        // Aplicar filtros
         if (this.filtrosPresenca.operador) {
             historico = historico.filter(p => p.nome === this.filtrosPresenca.operador);
         }
@@ -3031,6 +3087,7 @@ E-mail automático - Não responda
             historico = historico.filter(p => p.turno === this.filtrosPresenca.turno);
         }
         
+        // Limitar a 50 registros
         historico = historico.slice(0, 50);
         
         if (historico.length === 0) {
@@ -3045,18 +3102,26 @@ E-mail automático - Não responda
             return;
         }
         
+        // 🆕 Renderizar histórico completo para todos verem
         list.innerHTML = historico.map(p => `
             <tr>
                 <td><i class="fas fa-user-circle"></i> ${p.nome || ''}</td>
                 <td><span style="padding: 4px 10px; background: ${p.turno === 'Diurno' ? '#fff3cd' : '#e8f4fc'}; border-radius: 4px;">${p.turno || ''}</span></td>
                 <td>${p.data || ''}</td>
-                <td>${p.tipo === 'login' ? `<i class="fas fa-sign-in-alt" style="color: #27ae60;"></i> ${p.hora || ''}` : ''}</td>
-                <td>${p.tipo === 'logoff' ? `<i class="fas fa-sign-out-alt" style="color: #e74c3c;"></i> ${p.hora || ''}` : ''}</td>
+                <td>
+                    ${p.tipo === 'login' ? 
+                        `<i class="fas fa-sign-in-alt" style="color: #27ae60;"></i> ${p.hora || ''}` : 
+                        `<i class="fas fa-sign-out-alt" style="color: #e74c3c;"></i> ${p.hora || ''}`
+                    }
+                    ${p.forçado ? '<br><small style="color: #e74c3c;">(Forçado)</small>' : ''}
+                </td>
+                <td>
+                    ${p.visivelParaTodos ? '<i class="fas fa-eye" style="color: #3498db;" title="Visível para todos"></i>' : ''}
+                </td>
             </tr>
         `).join('');
     },
     
-    // 🔧 FUNÇÃO SENDCHATMESSAGE CORRIGIDA
     sendChatMessage() {
         const input = document.getElementById('chat-input');
         const message = input?.value.trim();
@@ -3086,13 +3151,11 @@ E-mail automático - Não responda
             date: new Date().toLocaleDateString('pt-BR')
         };
         
-        // ✅ SEMPRE salvar no localStorage primeiro
         let chat = JSON.parse(localStorage.getItem('porter_chat') || '[]');
         chat.unshift(chatMessage);
         if (chat.length > 100) chat = chat.slice(0, 100);
         localStorage.setItem('porter_chat', JSON.stringify(chat));
         
-        // ✅ TENTAR salvar no Firebase também
         if (this.firebaseEnabled) {
             this.sincronizarChatFirebase(chatMessage)
                 .then(() => {
@@ -3117,7 +3180,6 @@ E-mail automático - Não responda
         this.updateTabCounts();
     },
     
-    // 🔧 SINCRONIZAR CHAT COM FIREBASE (CORRIGIDO)
     sincronizarChatFirebase(chatMessage) {
         if (!this.firebaseEnabled) return Promise.reject("Firebase não habilitado");
         
@@ -3143,7 +3205,6 @@ E-mail automático - Não responda
         });
     },
     
-    // 🔧 FUNÇÃO LOADCHAT CORRIGIDA
     loadChat() {
         const container = document.getElementById('chat-messages');
         if (!container) {
@@ -3153,23 +3214,18 @@ E-mail automático - Não responda
         
         const chat = JSON.parse(localStorage.getItem('porter_chat') || '[]');
         
-        // Corrigir dados do chat se necessário
-        const chatCorrigido = chat.map(msg => {
-            // Garantir que todos os campos obrigatórios existam
-            return {
-                id: msg.id || `chat_${Date.now()}`,
-                sender: msg.sender || "Usuário",
-                senderRole: msg.senderRole || "OPERADOR",
-                senderMood: msg.senderMood || "😐",
-                senderUser: msg.senderUser || "anonimo",
-                message: msg.message || "(mensagem vazia)",
-                time: msg.time || new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
-                timestamp: msg.timestamp || new Date().toISOString(),
-                date: msg.date || new Date().toLocaleDateString('pt-BR')
-            };
-        });
+        const chatCorrigido = chat.map(msg => ({
+            id: msg.id || `chat_${Date.now()}`,
+            sender: msg.sender || "Usuário",
+            senderRole: msg.senderRole || "OPERADOR",
+            senderMood: msg.senderMood || "😐",
+            senderUser: msg.senderUser || "anonimo",
+            message: msg.message || "(mensagem vazia)",
+            time: msg.time || new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
+            timestamp: msg.timestamp || new Date().toISOString(),
+            date: msg.date || new Date().toLocaleDateString('pt-BR')
+        }));
         
-        // Atualizar localStorage com dados corrigidos
         localStorage.setItem('porter_chat', JSON.stringify(chatCorrigido));
         
         if (this.currentUser && this.currentUser.role === 'ADMIN') {
@@ -3189,8 +3245,9 @@ E-mail automático - Não responda
             return;
         }
         
+        // 🆕 CORRIGIDO: Ordenar por timestamp (mais antigo primeiro para scroll natural)
         const chatOrdenado = [...chatCorrigido].sort((a, b) => 
-            new Date(a.timestamp) - new Date(b.timestamp)
+            new Date(b.timestamp) - new Date(a.timestamp) // Mais recentes primeiro
         );
         
         container.innerHTML = '';
@@ -3224,17 +3281,87 @@ E-mail automático - Não responda
         });
         
         this.mostrarVistoPor(container);
+        
+        // 🆕 CORRIGIDO: Scroll automático para baixo (mensagens mais recentes)
         container.scrollTop = container.scrollHeight;
+        
+        // 🆕 Adicionar funcionalidade de scroll infinito
+        this.configurarScrollInfinito(container);
+        
         this.registrarVisualizacaoChat();
         this.atualizarBadgeChat();
         
-        // 🔧 SINCRONIZAR COM FIREBASE
         if (this.firebaseEnabled) {
             this.sincronizarChatDoFirebase();
         }
     },
     
-    // 🔧 SINCRONIZAR CHAT DO FIREBASE (CORRIGIDO)
+    // 🆕 CONFIGURAR SCROLL INFINITO PARA CHAT
+    configurarScrollInfinito(container) {
+        let carregando = false;
+        let paginaAtual = 1;
+        const mensagensPorPagina = 20;
+        
+        container.addEventListener('scroll', () => {
+            if (carregando) return;
+            
+            // 🆕 Se estiver perto do topo (mensagens antigas), carregar mais
+            if (container.scrollTop < 100) {
+                carregarMaisMensagens();
+            }
+        });
+        
+        const carregarMaisMensagens = () => {
+            carregando = true;
+            paginaAtual++;
+            
+            // Simular carregamento de mais mensagens
+            setTimeout(() => {
+                const chat = JSON.parse(localStorage.getItem('porter_chat') || '[]');
+                const inicio = (paginaAtual - 1) * mensagensPorPagina;
+                const fim = inicio + mensagensPorPagina;
+                const mensagensAdicionais = chat.slice(inicio, fim);
+                
+                if (mensagensAdicionais.length > 0) {
+                    // Adicionar mensagens no topo (mais antigas)
+                    mensagensAdicionais.reverse().forEach(msg => {
+                        const isSent = msg.senderUser === this.currentUser?.user;
+                        const messageDiv = document.createElement('div');
+                        messageDiv.className = `chat-message ${isSent ? 'sent' : 'received'}`;
+                        messageDiv.dataset.id = msg.id;
+                        
+                        messageDiv.innerHTML = `
+                            <div class="chat-message-header">
+                                <span class="chat-message-sender">
+                                    <span style="font-size: 1.1rem; margin-right: 5px;">${msg.senderMood || '😐'}</span>
+                                    ${msg.sender} ${msg.senderRole === 'ADMIN' ? ' 👑' : ''}
+                                </span>
+                                <span class="chat-message-time">${msg.date} ${msg.time}</span>
+                            </div>
+                            <div class="chat-message-text">${msg.message}</div>
+                        `;
+                        
+                        container.insertBefore(messageDiv, container.firstChild);
+                    });
+                    
+                    // Manter a posição do scroll
+                    const primeiraMensagemAntiga = container.querySelector('.chat-message');
+                    if (primeiraMensagemAntiga) {
+                        const alturaMensagem = primeiraMensagemAntiga.offsetHeight;
+                        container.scrollTop = alturaMensagem * mensagensAdicionais.length;
+                    }
+                }
+                
+                carregando = false;
+                
+                // Se não há mais mensagens, remover o listener
+                if (mensagensAdicionais.length < mensagensPorPagina) {
+                    container.removeEventListener('scroll', () => {});
+                }
+            }, 500);
+        };
+    },
+    
     sincronizarChatDoFirebase() {
         if (!this.firebaseEnabled) return;
         
@@ -3255,11 +3382,9 @@ E-mail automático - Não responda
                         const data = doc.data();
                         const msgId = parseInt(doc.id);
                         
-                        // Verificar se já existe localmente
                         const existeLocal = chatLocal.some(msg => msg.id === msgId);
                         
                         if (!existeLocal && data.sender && data.message) {
-                            // Adicionar mensagem do Firebase
                             chatLocal.unshift({
                                 id: msgId,
                                 sender: data.sender,
@@ -3276,7 +3401,6 @@ E-mail automático - Não responda
                     });
                     
                     if (atualizou) {
-                        // Manter limite de 100 mensagens
                         if (chatLocal.length > 100) {
                             chatLocal = chatLocal.slice(0, 100);
                         }
@@ -3284,7 +3408,6 @@ E-mail automático - Não responda
                         localStorage.setItem('porter_chat', JSON.stringify(chatLocal));
                         console.log("🔄 Chat sincronizado com Firebase");
                         
-                        // Atualizar interface
                         setTimeout(() => {
                             if (typeof this.loadChat === 'function') {
                                 this.loadChat();
@@ -3394,6 +3517,175 @@ E-mail automático - Não responda
         }
     },
     
+    // 🆕 FUNÇÕES PARA CHAT PRIVADO
+    iniciarChatPrivado(userId, userName) {
+        if (!this.currentUser) return;
+        
+        // Criar ID único para o chat privado (ordenado para evitar duplicação)
+        const chatId = [this.currentUser.user, userId].sort().join('_');
+        
+        // Abrir modal de chat privado
+        this.abrirChatPrivadoModal(chatId, userId, userName);
+    },
+    
+    abrirChatPrivadoModal(chatId, userId, userName) {
+        // Criar modal para chat privado
+        const modalId = 'private-chat-modal';
+        let modal = document.getElementById(modalId);
+        
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = modalId;
+            modal.className = 'modal';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 600px;">
+                    <div class="modal-header">
+                        <h3><i class="fas fa-comments"></i> Chat Privado com ${userName}</h3>
+                        <button class="modal-close" onclick="app.fecharChatPrivado()">&times;</button>
+                    </div>
+                    <div id="private-chat-messages" style="height: 300px; overflow-y: auto; padding: 15px; background: #f8f9fa;"></div>
+                    <div style="padding: 15px; border-top: 1px solid #eee;">
+                        <div style="display: flex; gap: 10px;">
+                            <textarea id="private-chat-input" placeholder="Digite sua mensagem..." style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 6px; resize: none;"></textarea>
+                            <button class="btn btn-primary" onclick="app.enviarMensagemPrivada('${chatId}', '${userId}', '${userName}')">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+        
+        // Carregar mensagens do chat privado
+        this.carregarMensagensPrivadas(chatId, userId, userName);
+        
+        // Mostrar modal
+        modal.classList.add('show');
+        
+        // Configurar evento Enter para enviar
+        const input = document.getElementById('private-chat-input');
+        if (input) {
+            input.focus();
+            input.onkeypress = (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    this.enviarMensagemPrivada(chatId, userId, userName);
+                }
+            };
+        }
+    },
+    
+    carregarMensagensPrivadas(chatId, userId, userName) {
+        const container = document.getElementById('private-chat-messages');
+        if (!container) return;
+        
+        // Carregar mensagens do localStorage
+        const chatsPrivados = JSON.parse(localStorage.getItem('porter_private_chats') || '{}');
+        const mensagens = chatsPrivados[chatId] || [];
+        
+        if (mensagens.length === 0) {
+            container.innerHTML = `
+                <div style="text-align: center; padding: 2rem; color: #888;">
+                    <i class="fas fa-comment-slash"></i>
+                    <p>Nenhuma mensagem ainda. Inicie a conversa!</p>
+                </div>
+            `;
+            return;
+        }
+        
+        // Ordenar mensagens (mais antigas primeiro)
+        const mensagensOrdenadas = [...mensagens].sort((a, b) => 
+            new Date(a.timestamp) - new Date(b.timestamp)
+        );
+        
+        container.innerHTML = '';
+        
+        mensagensOrdenadas.forEach(msg => {
+            const isSent = msg.senderUser === this.currentUser.user;
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-message ${isSent ? 'sent' : 'received'}`;
+            messageDiv.style.maxWidth = '80%';
+            messageDiv.style.marginBottom = '10px';
+            
+            messageDiv.innerHTML = `
+                <div class="chat-message-header">
+                    <span class="chat-message-sender">
+                        ${isSent ? 'Você' : userName.split(' ')[0]}
+                    </span>
+                    <span class="chat-message-time">${msg.time || ''}</span>
+                </div>
+                <div class="chat-message-text">${msg.message || ''}</div>
+            `;
+            
+            container.appendChild(messageDiv);
+        });
+        
+        // Scroll para baixo
+        container.scrollTop = container.scrollHeight;
+    },
+    
+    enviarMensagemPrivada(chatId, userId, userName) {
+        const input = document.getElementById('private-chat-input');
+        const message = input?.value.trim();
+        
+        if (!message || !this.currentUser) return;
+        
+        const mensagemPrivada = {
+            id: Date.now(),
+            sender: this.currentUser.nome,
+            senderUser: this.currentUser.user,
+            receiverUser: userId,
+            message: message,
+            time: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
+            timestamp: new Date().toISOString(),
+            date: new Date().toLocaleDateString('pt-BR')
+        };
+        
+        // Salvar no localStorage
+        let chatsPrivados = JSON.parse(localStorage.getItem('porter_private_chats') || '{}');
+        if (!chatsPrivados[chatId]) {
+            chatsPrivados[chatId] = [];
+        }
+        chatsPrivados[chatId].push(mensagemPrivada);
+        localStorage.setItem('porter_private_chats', JSON.stringify(chatsPrivados));
+        
+        // Atualizar interface
+        input.value = '';
+        this.carregarMensagensPrivadas(chatId, userId, userName);
+        
+        // Criar notificação para o destinatário
+        this.criarNotificacaoChatPrivado(userId, userName, message);
+    },
+    
+    criarNotificacaoChatPrivado(userId, userName, mensagem) {
+        const notificacao = {
+            id: Date.now(),
+            condo: 'Chat Privado',
+            tipo: 'chat_privado',
+            desc: `Mensagem de ${this.currentUser.nome.split(' ')[0]}: ${mensagem.substring(0, 50)}${mensagem.length > 50 ? '...' : ''}`,
+            data: new Date().toLocaleDateString('pt-BR'),
+            hora: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
+            timestamp: new Date().toISOString(),
+            lida: false,
+            destinatario: userId,
+            sender: this.currentUser.user
+        };
+        
+        let notificacoes = JSON.parse(localStorage.getItem('porter_notificacoes') || '[]');
+        notificacoes.unshift(notificacao);
+        
+        if (notificacoes.length > 50) notificacoes.pop();
+        localStorage.setItem('porter_notificacoes', JSON.stringify(notificacoes));
+        
+        this.loadNotifications();
+    },
+    
+    fecharChatPrivado() {
+        const modal = document.getElementById('private-chat-modal');
+        if (modal) modal.classList.remove('show');
+    },
+    
     openAdminPanel() {
         const modalContent = document.getElementById('admin-modal-content');
         if (!modalContent) return;
@@ -3404,7 +3696,6 @@ E-mail automático - Não responda
             sessions.some(s => s.user === f.user && 
                 (new Date() - new Date(s.lastActivity)) < 300000));
         
-        // Carregar histórico de e-mails
         const emailsHistory = JSON.parse(localStorage.getItem('porter_emails_history') || '[]');
         
         modalContent.innerHTML = `
@@ -3533,6 +3824,7 @@ E-mail automático - Não responda
             remocoes: JSON.parse(localStorage.getItem('porter_remocoes') || '[]'),
             os_emails: JSON.parse(localStorage.getItem('porter_os_emails') || '[]'),
             emails_history: JSON.parse(localStorage.getItem('porter_emails_history') || '[]'),
+            private_chats: JSON.parse(localStorage.getItem('porter_private_chats') || '{}'),
             exportDate: new Date().toISOString(),
             exportBy: this.currentUser.nome,
             firebaseEnabled: this.firebaseEnabled
@@ -3596,13 +3888,11 @@ window.onload = () => {
 // 🔧 SISTEMA DE SINCRONIZAÇÃO AUTOMÁTICA
 // ============================================
 
-// Adicione isto ao final do seu app.js
 (function() {
     'use strict';
     
     console.log('⚡ Sistema Porter Vercel - Carregando sistema de sincronização...');
     
-    // Função para criar um arquivo de correções para download
     function criarArquivoCorrecoes() {
         const codigoCompleto = `// 🚀 SISTEMA PORTER VERCEL - CORREÇÕES PERMANENTES
 // Cole este código no final do seu app.js
@@ -3709,10 +3999,8 @@ setTimeout(() => {
         };
     }
     
-    // Executar quando o app carregar
     setTimeout(() => {
         console.log('✅ Sistema de sincronização carregado');
         
     }, 3000);
 })();
-
