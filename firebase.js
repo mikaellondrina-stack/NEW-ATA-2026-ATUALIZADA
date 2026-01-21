@@ -11,5 +11,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 
 // Cria a variável global do banco
-const db = firebase.firestore();
+window.db = firebase.firestore();
+
+
 
