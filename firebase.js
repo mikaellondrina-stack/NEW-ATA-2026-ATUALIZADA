@@ -1,6 +1,3 @@
-// firebase.js - Firebase Modular v10.7.1
-// Coloque este código NO LUGAR do atual
-
 // SUAS CREDENCIAIS
 const firebaseConfig = {
   apiKey: "AIzaSyARRqLJJFdaHpcmUtrSStqmx90ZYm8ERe8",
@@ -47,4 +44,5 @@ try {
   console.error("❌ Erro crítico no Firebase:", error);
   alert(`ERRO NO FIREBASE: ${error.message}\n\nVerifique o console.`);
 }
+
 
