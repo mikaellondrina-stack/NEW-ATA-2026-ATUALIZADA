@@ -2948,3 +2948,44 @@ E-mail automático - Não responda
 window.onload = () => {
     app.init();
 };
+// ============================================
+// SISTEMA DE SINCRONIZAÇÃO AUTOMÁTICA
+// ============================================
+
+// Adicione isto ao final do seu app.js
+
+// Configurar sincronização automática
+function configurarSincronizacaoAutomatica() {
+  console.log("⚡ Configurando sincronização automática...");
+  
+  // Sincronizar a cada 2 minutos
+  setInterval(() => {
+    if (typeof db !== 'undefined' && navigator.onLine) {
+      console.log("🔄 Sincronização automática em andamento...");
+      
+      // Sincronizar ATAs
+      db.collection("atas")
+        .orderBy("createdAt", "desc")
+        .limit(50)
+        .get()
+        .then(snapshot => {
+          const atasAtualizadas = [];
+          snapshot.forEach(doc => {
+            atasAtualizadas.push({ id: doc.id, ...doc.data() });
+          });
+          
+          localStorage.setItem('porter_atas', JSON.stringify(atasAtualizadas));
+          
+          // Atualizar interface se necessário
+          if (typeof app !== 'undefined' && app.renderAta) {
+            setTimeout(() => app.renderAta(), 500);
+          }
+        });
+    }
+  }, 120000); // 2 minutos
+  
+  console.log("✅ Sincronização automática configurada (a cada 2 minutos)");
+}
+
+// Executar quando o app carregar
+setTimeout(configurarSincronizacaoAutomatica, 5000);
