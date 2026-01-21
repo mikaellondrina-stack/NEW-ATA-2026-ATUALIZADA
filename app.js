@@ -3713,9 +3713,6 @@ setTimeout(() => {
     setTimeout(() => {
         console.log('✅ Sistema de sincronização carregado');
         
-        // Criar link para download das correções (opcional)
-        if (!document.querySelector('a[download*="correcoes"]')) {
-            criarArquivoCorrecoes();
-        }
     }, 3000);
 })();
+
