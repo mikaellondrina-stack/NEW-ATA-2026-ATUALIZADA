@@ -612,19 +612,23 @@
   </div>
 </div>
 
-<!-- Bibliotecas externas -->
+<!-- ==================== -->
+<!-- SCRIPTS NA ORDEM CORRETA -->
+<!-- ==================== -->
+
+<!-- 1. Firebase SDK (PRIMEIRO) -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<!-- 2. Outras bibliotecas -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 
-<!-- Firebase (compatível com HTML puro) -->
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-
-<!-- Inicialização Firebase -->
+<!-- 3. Sua configuração Firebase (SEGUNDO) -->
 <script src="firebase.js"></script>
 
-<!-- Seus scripts -->
+<!-- 4. Seus dados e scripts (TERCEIRO) -->
 <script src="data.js"></script>
 <script src="aplicativo-email.js"></script>
 <script src="app.js"></script>
