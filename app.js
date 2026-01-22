@@ -12,6 +12,11 @@ const app = {
     firebaseEnabled: false, // 🆕 Controle do Firebase
     filtrosAtas: { condo: '', dataInicio: '', dataFim: '', tipo: '', status: '' },
     filtrosPresenca: { operador: '', dataInicio: '', dataFim: '', turno: '' },
+    chatPrivado: {
+        ativo: false,
+        destinatario: null,
+        mensagens: {}
+    },
     
     init() {
         // TESTAR FIREBASE PRIMEIRO
@@ -45,6 +50,7 @@ const app = {
         this.setupAutoSave();
         this.setupOSPreview();
         this.setupResponsive();
+        this.setupChatPrivado(); // 🆕 Configurar chat privado
         
         // Configurar datas padrão
         const hoje = new Date();
@@ -114,6 +120,30 @@ const app = {
         }, 1500);
     },
     
+    // 🆕 CONFIGURAR CHAT PRIVADO
+    setupChatPrivado() {
+        // Carregar mensagens de chat privado do localStorage
+        const chatPrivadoSalvo = localStorage.getItem('porter_chat_privado');
+        if (chatPrivadoSalvo) {
+            try {
+                this.chatPrivado.mensagens = JSON.parse(chatPrivadoSalvo);
+            } catch (e) {
+                this.chatPrivado.mensagens = {};
+            }
+        }
+        
+        // 🆕 ADICIONAR CONTROLE DE CHAT PRIVADO NA INTERFACE
+        setTimeout(() => {
+            this.adicionarControlesChatPrivado();
+        }, 2000);
+    },
+    
+    // 🆕 ADICIONAR CONTROLES DE CHAT PRIVADO NA LISTA DE ONLINE
+    adicionarControlesChatPrivado() {
+        // Esta função será chamada quando a lista de online for renderizada
+        console.log("🆕 Controles de chat privado configurados");
+    },
+    
     // 🔧 FUNÇÃO PARA CORRIGIR DADOS EXISTENTES
     corrigirDadosExistentes() {
         console.log("🔧 Corrigindo dados existentes...");
@@ -165,6 +195,12 @@ const app = {
             
             localStorage.setItem('porter_chat', JSON.stringify(chatCorrigido));
             console.log(`✅ ${chatCorrigido.length} mensagens de chat corrigidas`);
+        }
+        
+        // 🆕 CORRIGIR PERMISSÕES DE ADMIN NAS OS
+        const osList = JSON.parse(localStorage.getItem('porter_os') || '[]');
+        if (osList.length > 0) {
+            console.log(`🔧 Verificando ${osList.length} OS para permissões de admin`);
         }
     },
     
@@ -505,31 +541,59 @@ const app = {
             isCurrentUser: true
         });
         
-        // Verificar se há outros usuários com sessão ativa (últimos 5 minutos)
+        // 🆕 BUSCAR TODAS AS SESSÕES ATIVAS (ÚLTIMOS 10 MINUTOS)
         try {
-            const sessaoSalva = localStorage.getItem('porter_last_session');
-            if (sessaoSalva) {
-                const sessao = JSON.parse(sessaoSalva);
-                if (sessao.user !== this.currentUser.user) {
-                    const tempoSessao = new Date(sessao.lastActivity);
-                    const diferencaMinutos = (agora - tempoSessao) / (1000 * 60);
-                    
-                    if (diferencaMinutos < 5) {
-                        // Este é um usuário que está "online"
-                        const outroUsuario = DATA.funcionarios.find(f => f.user === sessao.user);
-                        if (outroUsuario) {
-                            usuariosOnline.push({
-                                ...outroUsuario,
-                                lastActivity: sessao.lastActivity,
-                                mood: '😐', // Mood padrão para usuários não ativos
-                                moodStatus: 'Online há ' + Math.floor(diferencaMinutos) + ' min',
-                                isCurrentUser: false,
-                                turno: sessao.turno || 'Diurno'
-                            });
-                        }
-                    }
-                }
+            // Criar ou obter lista de sessões ativas
+            let todasSessoes = JSON.parse(localStorage.getItem('porter_todas_sessoes') || '[]');
+            const agoraISO = new Date().toISOString();
+            
+            // Adicionar/atualizar sessão atual
+            const sessaoAtualIndex = todasSessoes.findIndex(s => s.user === this.currentUser.user);
+            const sessaoAtual = {
+                user: this.currentUser.user,
+                nome: this.currentUser.nome,
+                role: this.currentUser.role,
+                turno: this.currentUser.turno,
+                lastActivity: agoraISO,
+                loginDate: this.currentUser.loginDate,
+                loginHour: this.currentUser.loginHour,
+                mood: moodAtual
+            };
+            
+            if (sessaoAtualIndex !== -1) {
+                todasSessoes[sessaoAtualIndex] = sessaoAtual;
+            } else {
+                todasSessoes.push(sessaoAtual);
             }
+            
+            // Filtrar sessões ativas (últimos 10 minutos)
+            const sessaoAtivaLimite = new Date(agora.getTime() - 10 * 60000).toISOString();
+            const sessoesAtivas = todasSessoes.filter(s => s.lastActivity >= sessaoAtivaLimite);
+            
+            // Remover sessões inativas do array principal
+            todasSessoes = sessoesAtivas;
+            
+            // Atualizar localStorage
+            localStorage.setItem('porter_todas_sessoes', JSON.stringify(todasSessoes));
+            
+            // Adicionar usuários ativos à lista de online
+            sessoesAtivas.forEach(sessao => {
+                if (sessao.user !== this.currentUser.user) {
+                    const diferencaMinutos = (new Date(agoraISO) - new Date(sessao.lastActivity)) / (1000 * 60);
+                    
+                    usuariosOnline.push({
+                        user: sessao.user,
+                        nome: sessao.nome,
+                        role: sessao.role,
+                        turno: sessao.turno,
+                        lastActivity: sessao.lastActivity,
+                        mood: sessao.mood || '😐',
+                        moodStatus: 'Online há ' + Math.floor(diferencaMinutos) + ' min',
+                        isCurrentUser: false
+                    });
+                }
+            });
+            
         } catch (e) {
             console.log('Erro ao buscar sessões:', e);
         }
@@ -659,7 +723,7 @@ const app = {
         }
     },
     
-    // 📋 FUNÇÃO ATUALIZADA: renderOnlineUsersList CORRIGIDA
+    // 📋 FUNÇÃO ATUALIZADA: renderOnlineUsersList CORRIGIDA COM CHAT PRIVADO
     renderOnlineUsersList() {
         const list = document.getElementById('online-users-list');
         if (!list) return;
@@ -688,6 +752,8 @@ const app = {
         });
         
         usuariosOrdenados.forEach(user => {
+            if (user.isCurrentUser) return; // Não mostrar botão de chat para si mesmo
+            
             const userItem = document.createElement('div');
             userItem.className = 'online-user-item';
             
@@ -707,7 +773,6 @@ const app = {
                     <div class="online-user-name">
                         ${user.nome.split(' ')[0]}
                         ${user.role === 'ADMIN' ? ' 👑' : ''}
-                        ${user.isCurrentUser ? '<span style="color: #3498db; font-size: 0.8rem;"> (Você)</span>' : ''}
                     </div>
                     <div class="online-user-role">
                         ${user.moodStatus || 'Online'}
@@ -716,11 +781,46 @@ const app = {
                         </div>
                     </div>
                 </div>
-                <div class="online-status" style="background: ${user.isCurrentUser ? '#3498db' : '#2ecc71'};"></div>
+                <div class="online-status" style="background: #2ecc71;"></div>
+                <button class="btn-chat-privado" title="Iniciar chat privado" 
+                        onclick="app.iniciarChatPrivado('${user.user}', '${user.nome}')"
+                        style="background: #3498db; color: white; border: none; border-radius: 4px; 
+                               padding: 4px 8px; font-size: 0.7rem; cursor: pointer; margin-left: 5px;">
+                    <i class="fas fa-comment"></i>
+                </button>
             `;
             
             list.appendChild(userItem);
         });
+        
+        // Adicionar item do usuário atual no final
+        const currentUser = this.onlineUsers.find(u => u.isCurrentUser);
+        if (currentUser) {
+            const currentUserItem = document.createElement('div');
+            currentUserItem.className = 'online-user-item';
+            currentUserItem.style.backgroundColor = '#f0f8ff';
+            
+            const statusColor = this.getCorPorMood(currentUser.mood);
+            
+            currentUserItem.innerHTML = `
+                <div class="online-user-avatar" style="background: ${statusColor}; color: ${currentUser.mood === '😐' ? '#333' : 'white'};">
+                    ${currentUser.mood || '😐'}
+                </div>
+                <div class="online-user-info">
+                    <div class="online-user-name">
+                        ${currentUser.nome.split(' ')[0]}
+                        ${currentUser.role === 'ADMIN' ? ' 👑' : ''}
+                        <span style="color: #3498db; font-size: 0.8rem;"> (Você)</span>
+                    </div>
+                    <div class="online-user-role">
+                        ${currentUser.moodStatus || 'Online'}
+                    </div>
+                </div>
+                <div class="online-status" style="background: #3498db;"></div>
+            `;
+            
+            list.appendChild(currentUserItem);
+        }
         
         // Adicionar rodapé
         const rodape = document.createElement('div');
@@ -744,6 +844,237 @@ const app = {
         `;
         
         list.appendChild(rodape);
+    },
+    
+    // 🆕 INICIAR CHAT PRIVADO
+    iniciarChatPrivado(userId, userName) {
+        if (!this.currentUser) {
+            alert('Você precisa estar logado para iniciar um chat privado.');
+            return;
+        }
+        
+        if (userId === this.currentUser.user) {
+            alert('Você não pode iniciar um chat privado consigo mesmo.');
+            return;
+        }
+        
+        // Ativar modo chat privado
+        this.chatPrivado.ativo = true;
+        this.chatPrivado.destinatario = {
+            user: userId,
+            nome: userName
+        };
+        
+        // Atualizar interface do chat
+        this.atualizarInterfaceChatPrivado();
+        
+        // Carregar mensagens do chat privado
+        this.carregarChatPrivado();
+        
+        // Fechar lista de online
+        const onlineList = document.getElementById('online-users-list');
+        if (onlineList) onlineList.style.display = 'none';
+        
+        // Ir para aba do chat
+        this.switchTab('tab-chat');
+        
+        // Mostrar mensagem de confirmação
+        this.showMessage(`Chat privado iniciado com ${userName}`, 'success');
+    },
+    
+    // 🆕 ATUALIZAR INTERFACE DO CHAT PRIVADO
+    atualizarInterfaceChatPrivado() {
+        const chatHeader = document.getElementById('chat-header');
+        const chatInput = document.getElementById('chat-input');
+        const chatSendBtn = document.getElementById('chat-send-btn');
+        
+        if (this.chatPrivado.ativo && this.chatPrivado.destinatario) {
+            // Atualizar cabeçalho
+            if (chatHeader) {
+                chatHeader.innerHTML = `
+                    <i class="fas fa-comments"></i> Chat Privado com ${this.chatPrivado.destinatario.nome}
+                    <button class="btn btn-sm btn-warning" onclick="app.voltarChatGeral()" 
+                            style="margin-left: 10px; padding: 2px 8px; font-size: 0.8rem;">
+                        <i class="fas fa-arrow-left"></i> Voltar ao Chat Geral
+                    </button>
+                `;
+            }
+            
+            // Atualizar placeholder do input
+            if (chatInput) {
+                chatInput.placeholder = `Mensagem privada para ${this.chatPrivado.destinatario.nome}...`;
+            }
+        } else {
+            // Restaurar chat geral
+            if (chatHeader) {
+                chatHeader.innerHTML = `<i class="fas fa-comments"></i> Chat Geral da Equipe`;
+            }
+            
+            if (chatInput) {
+                chatInput.placeholder = "Digite sua mensagem para a equipe...";
+            }
+        }
+    },
+    
+    // 🆕 VOLTAR AO CHAT GERAL
+    voltarChatGeral() {
+        this.chatPrivado.ativo = false;
+        this.chatPrivado.destinatario = null;
+        this.atualizarInterfaceChatPrivado();
+        this.loadChat(); // Recarregar chat geral
+        this.showMessage('Retornado ao chat geral', 'info');
+    },
+    
+    // 🆕 CARREGAR CHAT PRIVADO
+    carregarChatPrivado() {
+        if (!this.chatPrivado.ativo || !this.chatPrivado.destinatario) {
+            return;
+        }
+        
+        const container = document.getElementById('chat-messages');
+        if (!container) return;
+        
+        // Gerar ID único para a conversa (ordem alfabética para garantir unicidade)
+        const users = [this.currentUser.user, this.chatPrivado.destinatario.user].sort();
+        const chatId = `privado_${users[0]}_${users[1]}`;
+        
+        // Obter mensagens deste chat
+        let mensagens = [];
+        if (this.chatPrivado.mensagens[chatId]) {
+            mensagens = this.chatPrivado.mensagens[chatId];
+        }
+        
+        if (mensagens.length === 0) {
+            container.innerHTML = `
+                <div style="text-align: center; padding: 2rem; color: var(--gray);">
+                    <i class="fas fa-comment-medical" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+                    <p>Nenhuma mensagem privada ainda.</p>
+                    <p style="font-size: 0.9rem;">Inicie a conversa com ${this.chatPrivado.destinatario.nome}!</p>
+                </div>
+            `;
+            return;
+        }
+        
+        // Ordenar mensagens por timestamp
+        const mensagensOrdenadas = [...mensagens].sort((a, b) => 
+            new Date(a.timestamp) - new Date(b.timestamp)
+        );
+        
+        container.innerHTML = '';
+        
+        mensagensOrdenadas.forEach(msg => {
+            const isSent = msg.senderUser === this.currentUser.user;
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-message ${isSent ? 'sent' : 'received'}`;
+            
+            messageDiv.innerHTML = `
+                <div class="chat-message-header">
+                    <span class="chat-message-sender">
+                        <span style="font-size: 1.1rem; margin-right: 5px;">${msg.senderMood || '😐'}</span>
+                        ${msg.sender} ${msg.senderRole === 'ADMIN' ? ' 👑' : ''}
+                        <span style="font-size: 0.8rem; color: #666; margin-left: 5px;">
+                            <i class="fas fa-lock"></i> Privado
+                        </span>
+                    </span>
+                    <span class="chat-message-time">${msg.date} ${msg.time}</span>
+                </div>
+                <div class="chat-message-text">${msg.message}</div>
+            `;
+            
+            container.appendChild(messageDiv);
+        });
+        
+        // Rolar para baixo
+        container.scrollTop = container.scrollHeight;
+    },
+    
+    // 🆕 ENVIAR MENSAGEM PRIVADA
+    enviarMensagemPrivada() {
+        if (!this.chatPrivado.ativo || !this.chatPrivado.destinatario) {
+            // Se não está em chat privado, enviar mensagem normal
+            this.sendChatMessage();
+            return;
+        }
+        
+        const input = document.getElementById('chat-input');
+        const message = input?.value.trim();
+        
+        if (!message) return;
+        if (!this.currentUser) return;
+        
+        // Gerar ID único para a conversa
+        const users = [this.currentUser.user, this.chatPrivado.destinatario.user].sort();
+        const chatId = `privado_${users[0]}_${users[1]}`;
+        
+        const chatMessage = {
+            id: Date.now(),
+            sender: this.currentUser.nome,
+            senderRole: this.currentUser.role,
+            senderMood: this.getMoodAtual(),
+            senderUser: this.currentUser.user,
+            receiverUser: this.chatPrivado.destinatario.user,
+            receiverName: this.chatPrivado.destinatario.nome,
+            message: message,
+            time: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
+            timestamp: new Date().toISOString(),
+            date: new Date().toLocaleDateString('pt-BR'),
+            isPrivate: true
+        };
+        
+        // Inicializar array de mensagens se não existir
+        if (!this.chatPrivado.mensagens[chatId]) {
+            this.chatPrivado.mensagens[chatId] = [];
+        }
+        
+        // Adicionar mensagem
+        this.chatPrivado.mensagens[chatId].push(chatMessage);
+        
+        // Limitar histórico
+        if (this.chatPrivado.mensagens[chatId].length > 100) {
+            this.chatPrivado.mensagens[chatId] = this.chatPrivado.mensagens[chatId].slice(-100);
+        }
+        
+        // Salvar no localStorage
+        localStorage.setItem('porter_chat_privado', JSON.stringify(this.chatPrivado.mensagens));
+        
+        // Limpar input
+        if (input) input.value = '';
+        
+        // Recarregar chat privado
+        this.carregarChatPrivado();
+        
+        // Criar notificação para o destinatário
+        this.criarNotificacaoChatPrivado(chatMessage);
+    },
+    
+    // 🆕 CRIAR NOTIFICAÇÃO DE CHAT PRIVADO
+    criarNotificacaoChatPrivado(chatMessage) {
+        const notificacao = {
+            id: Date.now(),
+            condo: 'Chat Privado',
+            tipo: 'chat_privado',
+            desc: `Nova mensagem privada de ${chatMessage.sender}: ${chatMessage.message.substring(0, 50)}${chatMessage.message.length > 50 ? '...' : ''}`,
+            data: new Date().toLocaleDateString('pt-BR'),
+            hora: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
+            timestamp: new Date().toISOString(),
+            lida: false,
+            acao: {
+                tipo: 'ir_para_chat_privado',
+                mensagemId: chatMessage.id,
+                sender: chatMessage.sender,
+                senderUser: chatMessage.senderUser
+            },
+            destaque: true
+        };
+        
+        let notificacoes = JSON.parse(localStorage.getItem('porter_notificacoes') || '[]');
+        notificacoes.unshift(notificacao);
+        
+        if (notificacoes.length > 50) notificacoes.pop();
+        localStorage.setItem('porter_notificacoes', JSON.stringify(notificacoes));
+        
+        this.loadNotifications();
+        this.updateNotificationBadges();
     },
     
     // 📋 FUNÇÃO ATUALIZADA: toggleOnlineUsers CORRIGIDA
@@ -770,7 +1101,7 @@ const app = {
                 list.style.top = `${rect.bottom + 5}px`;
                 list.style.right = '10px';
                 list.style.left = 'auto';
-                list.style.width = '300px';
+                list.style.width = '350px'; // 🆕 Aumentado para botões de chat
             }
             
             list.style.display = 'block';
@@ -847,6 +1178,15 @@ const app = {
             }
         }
         
+        // 🆕 REMOVER DA LISTA DE SESSÕES ATIVAS
+        try {
+            let todasSessoes = JSON.parse(localStorage.getItem('porter_todas_sessoes') || '[]');
+            todasSessoes = todasSessoes.filter(s => s.user !== this.currentUser.user);
+            localStorage.setItem('porter_todas_sessoes', JSON.stringify(todasSessoes));
+        } catch (e) {
+            console.log('Erro ao remover sessão:', e);
+        }
+        
         // Limpar intervalos
         if (this.chatInterval) {
             clearInterval(this.chatInterval);
@@ -879,6 +1219,38 @@ const app = {
         };
         
         localStorage.setItem('porter_last_session', JSON.stringify(sessionData));
+        
+        // 🆕 SALVAR NA LISTA GERAL DE SESSÕES
+        try {
+            let todasSessoes = JSON.parse(localStorage.getItem('porter_todas_sessoes') || '[]');
+            const index = todasSessoes.findIndex(s => s.user === this.currentUser.user);
+            
+            if (index !== -1) {
+                todasSessoes[index] = {
+                    ...todasSessoes[index],
+                    lastActivity: new Date().toISOString()
+                };
+            } else {
+                todasSessoes.push({
+                    user: this.currentUser.user,
+                    nome: this.currentUser.nome,
+                    role: this.currentUser.role,
+                    turno: this.currentUser.turno,
+                    lastActivity: new Date().toISOString(),
+                    loginDate: this.currentUser.loginDate,
+                    loginHour: this.currentUser.loginHour,
+                    mood: this.getMoodAtual()
+                });
+            }
+            
+            // Manter apenas sessões ativas (últimos 30 minutos)
+            const limite = new Date(new Date().getTime() - 30 * 60000).toISOString();
+            todasSessoes = todasSessoes.filter(s => s.lastActivity >= limite);
+            
+            localStorage.setItem('porter_todas_sessoes', JSON.stringify(todasSessoes));
+        } catch (e) {
+            console.log('Erro ao salvar sessão geral:', e);
+        }
     },
     
     loadCondos() {
@@ -1363,7 +1735,11 @@ const app = {
         
         // Se for a aba de chat, carregar mensagens e marcar como visualizado
         if (tabId === 'tab-chat') {
-            this.loadChat();
+            if (this.chatPrivado.ativo) {
+                this.carregarChatPrivado();
+            } else {
+                this.loadChat();
+            }
             this.marcarChatComoVisualizado();
         }
     },
@@ -1887,11 +2263,12 @@ const app = {
             if (notif.tipo === 'chat') icon = '💬';
             if (notif.tipo === 'Ordem de Serviço') icon = '🔧';
             if (notif.tipo === 'email') icon = '📧';
+            if (notif.tipo === 'chat_privado') icon = '🔒';
             
-            const acaoRapida = notif.tipo === 'chat_mensagem' && notif.acao?.mensagemId ? 
+            const acaoRapida = notif.acao ? 
                 `<button class="btn btn-sm btn-success" style="margin-top: 8px; padding: 4px 10px; font-size: 0.8rem;" 
                         onclick="app.irParaChatAgora(event, ${notif.acao.mensagemId})">
-                    <i class="fas fa-comment"></i> Ver no Chat
+                    <i class="fas fa-comment"></i> ${notif.acao.tipo === 'ir_para_chat_privado' ? 'Chat Privado' : 'Ver no Chat'}
                 </button>` : '';
             
             item.innerHTML = `
@@ -1900,6 +2277,7 @@ const app = {
                 <div class="notification-time">${notif.data || ''} ${notif.hora || ''}</div>
                 ${acaoRapida}
             `;
+            
             list.appendChild(item);
         });
         
@@ -1913,6 +2291,9 @@ const app = {
             switch(notificacao.acao.tipo) {
                 case 'ir_para_chat':
                     this.irParaChat(notificacao.acao.mensagemId);
+                    break;
+                case 'ir_para_chat_privado':
+                    this.iniciarChatPrivado(notificacao.acao.senderUser, notificacao.acao.sender);
                     break;
             }
         }
@@ -1932,7 +2313,12 @@ const app = {
             }
         }
         
-        this.loadChat();
+        if (this.chatPrivado.ativo) {
+            this.carregarChatPrivado();
+        } else {
+            this.loadChat();
+        }
+        
         this.marcarChatComoVisualizado();
         
         if (mensagemId) {
@@ -2023,8 +2409,13 @@ const app = {
         this.loadNotifications();
     },
     
+    // 🔧 FUNÇÃO ATUALIZADA: OPERADORES PODEM COMENTAR EM TODOS OS REGISTROS
     adicionarComentario(ataId, texto) {
         if (!texto.trim()) return;
+        if (!this.currentUser) {
+            alert('Você precisa estar logado para comentar.');
+            return;
+        }
         
         let atas = JSON.parse(localStorage.getItem('porter_atas') || '[]');
         const index = atas.findIndex(a => a.id === ataId);
@@ -2154,7 +2545,8 @@ const app = {
         list.innerHTML = '';
         
         fixas.forEach(a => {
-            const podeExcluir = this.currentUser && (this.currentUser.role === 'ADMIN' || a.user === this.currentUser.user);
+            // 🔧 CORREÇÃO: ADMIN PODE EXCLUIR QUALQUER REGISTRO
+            const podeExcluir = this.currentUser && (this.currentUser.role === 'ADMIN');
             const card = document.createElement('div');
             card.className = 'ata-card fixed fade-in';
             card.innerHTML = `
@@ -2181,7 +2573,7 @@ const app = {
                             `<button class="btn btn-danger" onclick="app.deleteAta(${a.id})">
                                 <i class="fas fa-trash"></i> Excluir
                             </button>` : 
-                            '<span style="font-size: 0.8rem; color: var(--gray);"><i class="fas fa-lock"></i> Apenas autor/Admin</span>'
+                            '<span style="font-size: 0.8rem; color: var(--gray);"><i class="fas fa-lock"></i> Apenas Admin</span>'
                         }
                     </div>
                 </div>
@@ -2459,6 +2851,7 @@ E-mail automático - Não responda
         this.renderOSList(filtradas, `Filtradas por gravidade: ${gravidade}`);
     },
     
+    // 🔧 FUNÇÃO ATUALIZADA: OPERADORES PODEM VER DETALHES COMPLETOS DAS OS
     renderOSList(osList, titulo = '') {
         const list = document.getElementById('os-lista');
         if (!list) return;
@@ -2477,7 +2870,8 @@ E-mail automático - Não responda
         list.innerHTML = '';
         
         osList.forEach(os => {
-            const podeExcluir = this.currentUser && (this.currentUser.role === 'ADMIN' || os.user === this.currentUser.user);
+            // 🔧 CORREÇÃO: ADMIN PODE EXCLUIR QUALQUER OS
+            const podeExcluir = this.currentUser && (this.currentUser.role === 'ADMIN');
             const card = document.createElement('div');
             card.className = 'ata-card os fade-in';
             card.innerHTML = `
@@ -2525,7 +2919,7 @@ E-mail automático - Não responda
                         `<button class="btn btn-danger" onclick="app.deleteOS(${os.id})">
                             <i class="fas fa-trash"></i> Excluir
                         </button>` : 
-                        ''
+                        '<span style="font-size: 0.8rem; color: var(--gray);"><i class="fas fa-lock"></i> Apenas Admin</span>'
                     }
                 </div>
             `;
@@ -2595,6 +2989,7 @@ E-mail automático - Não responda
         this.criarModal(`E-mail da OS - ${os.condo}`, modalContent);
     },
     
+    // 🔧 FUNÇÃO ATUALIZADA: ADMIN PODE EXCLUIR QUALQUER OS
     deleteOS(id) {
         let osList = JSON.parse(localStorage.getItem('porter_os') || '[]');
         const os = osList.find(o => o.id === id);
@@ -2604,11 +2999,10 @@ E-mail automático - Não responda
             return;
         }
         
-        const ehAutor = os.user === this.currentUser.user;
         const ehAdmin = this.currentUser.role === 'ADMIN';
         
-        if (!ehAdmin && !ehAutor) {
-            alert('Apenas o autor ou administradores podem excluir esta Ordem de Serviço.');
+        if (!ehAdmin) {
+            alert('Apenas administradores podem excluir Ordem de Serviço.');
             return;
         }
         
@@ -2620,6 +3014,7 @@ E-mail automático - Não responda
         }
     },
     
+    // 🔧 FUNÇÃO ATUALIZADA: ADMIN PODE EXCLUIR QUALQUER ATA
     deleteAta(id) {
         let atas = JSON.parse(localStorage.getItem('porter_atas') || '[]');
         const ata = atas.find(a => a.id === id);
@@ -2629,11 +3024,10 @@ E-mail automático - Não responda
             return;
         }
         
-        const ehAutor = ata.user === this.currentUser.user;
         const ehAdmin = this.currentUser.role === 'ADMIN';
         
-        if (!ehAdmin && !ehAutor) {
-            alert('Apenas o autor ou administradores podem excluir este registro.');
+        if (!ehAdmin) {
+            alert('Apenas administradores podem excluir registros.');
             return;
         }
         
@@ -2908,7 +3302,8 @@ E-mail automático - Não responda
             container.innerHTML = '';
             
             atasFiltradas.forEach(ata => {
-                const podeExcluir = this.currentUser && (this.currentUser.role === 'ADMIN' || ata.user === this.currentUser.user);
+                // 🔧 CORREÇÃO: ADMIN PODE EXCLUIR QUALQUER REGISTRO
+                const podeExcluir = this.currentUser && (this.currentUser.role === 'ADMIN');
                 const card = document.createElement('div');
                 card.className = 'ata-card fade-in';
                 
@@ -2948,10 +3343,10 @@ E-mail automático - Não responda
                                 <i class="fas fa-comments"></i> Comentários (${ataSegura.comentarios.length})
                             </button>
                             ${podeExcluir ? 
-                                `<button class="btn btn-danger" onclick="app.deleteAta(${ataSegura.id})" title="Apenas autor ou admin pode excluir">
+                                `<button class="btn btn-danger" onclick="app.deleteAta(${ataSegura.id})" title="Apenas admin pode excluir">
                                     <i class="fas fa-trash"></i> Excluir
                                 </button>` : 
-                                ''
+                                '<span style="font-size: 0.8rem; color: var(--gray);"><i class="fas fa-lock"></i> Apenas Admin</span>'
                             }
                         </div>
                     </div>
@@ -2988,15 +3383,18 @@ E-mail automático - Não responda
         }
     },
     
+    // 🆕 FUNÇÃO ATUALIZADA: TODOS VEEM HISTÓRICO DE ACESSO DE TODOS
     renderPresenca() {
         const list = document.getElementById('presenca-lista');
         if (!list) return;
         
+        // 🆕 BUSCAR TODOS OS LOGINS E LOGOFFS (DE TODOS OS USUÁRIOS)
         let presencas = JSON.parse(localStorage.getItem('porter_presencas') || '[]');
         let logoffs = JSON.parse(localStorage.getItem('porter_logoffs') || '[]');
         
         let historico = [];
         
+        // Adicionar todos os logins
         presencas.forEach(p => {
             historico.push({
                 ...p,
@@ -3005,6 +3403,7 @@ E-mail automático - Não responda
             });
         });
         
+        // Adicionar todos os logoffs
         logoffs.forEach(l => {
             historico.push({
                 ...l,
@@ -3013,8 +3412,10 @@ E-mail automático - Não responda
             });
         });
         
+        // Ordenar por timestamp (mais recente primeiro)
         historico.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
         
+        // Aplicar filtros
         if (this.filtrosPresenca.operador) {
             historico = historico.filter(p => p.nome === this.filtrosPresenca.operador);
         }
@@ -3031,6 +3432,7 @@ E-mail automático - Não responda
             historico = historico.filter(p => p.turno === this.filtrosPresenca.turno);
         }
         
+        // Limitar a 50 registros para performance
         historico = historico.slice(0, 50);
         
         if (historico.length === 0) {
@@ -3056,8 +3458,17 @@ E-mail automático - Não responda
         `).join('');
     },
     
-    // 🔧 FUNÇÃO SENDCHATMESSAGE CORRIGIDA
+    // 🔧 FUNÇÃO SENDCHATMESSAGE ATUALIZADA PARA CHAT PRIVADO
     sendChatMessage() {
+        if (this.chatPrivado.ativo) {
+            this.enviarMensagemPrivada();
+        } else {
+            this.enviarMensagemGeral();
+        }
+    },
+    
+    // 🔧 FUNÇÃO PARA ENVIAR MENSAGEM GERAL
+    enviarMensagemGeral() {
         const input = document.getElementById('chat-input');
         const message = input?.value.trim();
         
@@ -3143,16 +3554,18 @@ E-mail automático - Não responda
         });
     },
     
-    // 🔧 FUNÇÃO LOADCHAT CORRIGIDA - AGORA COM SCROLL FUNCIONAL
+    // 🔧 FUNÇÃO LOADCHAT CORRIGIDA COM SCROLL FUNCIONAL
     loadChat() {
+        if (this.chatPrivado.ativo) {
+            this.carregarChatPrivado();
+            return;
+        }
+        
         const container = document.getElementById('chat-messages');
         if (!container) {
             console.log("❌ Container de chat não encontrado");
             return;
         }
-        
-        // 🆕 SALVAR A POSIÇÃO ATUAL DO SCROLL ANTES DE ATUALIZAR
-        const shouldScrollToBottom = this.shouldScrollToBottom(container);
         
         const chat = JSON.parse(localStorage.getItem('porter_chat') || '[]');
         
@@ -3192,9 +3605,15 @@ E-mail automático - Não responda
             return;
         }
         
+        // Ordenar por timestamp (mais antigas primeiro para scroll)
         const chatOrdenado = [...chatCorrigido].sort((a, b) => 
             new Date(a.timestamp) - new Date(b.timestamp)
         );
+        
+        // Salvar altura atual do scroll antes de atualizar
+        const scrollAntes = container.scrollTop;
+        const alturaAntes = container.scrollHeight;
+        const noFinal = container.scrollHeight - container.scrollTop - container.clientHeight < 10;
         
         container.innerHTML = '';
         
@@ -3226,15 +3645,20 @@ E-mail automático - Não responda
             container.appendChild(messageDiv);
         });
         
-        this.mostrarVistoPor(container);
-        
-        // 🆕 RESTAURAR A POSIÇÃO DO SCROLL
-        if (shouldScrollToBottom) {
-            // Se estava no fundo, manter no fundo
+        // 🔧 CORREÇÃO DO SCROLL: Manter posição ou ir para o final
+        if (noFinal) {
+            // Se estava no final, manter no final
             container.scrollTop = container.scrollHeight;
+        } else {
+            // Tentar manter a posição relativa
+            const novaAltura = container.scrollHeight;
+            const diferenca = novaAltura - alturaAntes;
+            if (diferenca > 0 && scrollAntes > 0) {
+                container.scrollTop = scrollAntes + diferenca;
+            }
         }
-        // Se não estava no fundo, manter a posição atual (não forçar scroll)
         
+        this.mostrarVistoPor(container);
         this.registrarVisualizacaoChat();
         this.atualizarBadgeChat();
         
@@ -3242,20 +3666,6 @@ E-mail automático - Não responda
         if (this.firebaseEnabled) {
             this.sincronizarChatDoFirebase();
         }
-    },
-    
-    // 🆕 FUNÇÃO AUXILIAR PARA DETERMINAR SE DEVE SCROLLAR PARA O FUNDO
-    shouldScrollToBottom(container) {
-        if (!container) return true;
-        
-        // Se o container está vazio ou tem poucas mensagens, scroll para baixo
-        if (container.children.length === 0) {
-            return true;
-        }
-        
-        // Verificar se o usuário está perto do fundo (dentro de 100px)
-        const scrollBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
-        return scrollBottom <= 100;
     },
     
     // 🔧 SINCRONIZAR CHAT DO FIREBASE (CORRIGIDO)
@@ -3422,24 +3832,24 @@ E-mail automático - Não responda
         const modalContent = document.getElementById('admin-modal-content');
         if (!modalContent) return;
         
-        const sessions = JSON.parse(localStorage.getItem('porter_last_session') ? 
-            [JSON.parse(localStorage.getItem('porter_last_session'))] : []);
-        const operadoresLogados = DATA.funcionarios.filter(f => 
-            sessions.some(s => s.user === f.user && 
-                (new Date() - new Date(s.lastActivity)) < 300000));
+        // 🆕 BUSCAR TODAS AS SESSÕES ATIVAS
+        let todasSessoes = JSON.parse(localStorage.getItem('porter_todas_sessoes') || '[]');
+        const sessaoAtivaLimite = new Date(new Date().getTime() - 10 * 60000).toISOString();
+        const operadoresLogados = todasSessoes.filter(s => s.lastActivity >= sessaoAtivaLimite);
         
         // Carregar histórico de e-mails
         const emailsHistory = JSON.parse(localStorage.getItem('porter_emails_history') || '[]');
         
         modalContent.innerHTML = `
-            <h4><i class="fas fa-users"></i> Operadores Logados</h4>
+            <h4><i class="fas fa-users"></i> Operadores Logados (Todos)</h4>
             <div style="margin: 1rem 0; max-height: 200px; overflow-y: auto;">
                 ${operadoresLogados.length > 0 ? 
                     operadoresLogados.map(op => `
                         <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee;">
                             <div>
                                 <strong>${op.nome}</strong>
-                                <div style="font-size: 0.8rem; color: #666;">${op.role}</div>
+                                <div style="font-size: 0.8rem; color: #666;">${op.role} | ${op.turno}</div>
+                                <div style="font-size: 0.7rem; color: #888;">Última atividade: ${this.formatarTempoAtivo(new Date(op.lastActivity))}</div>
                             </div>
                             <button class="btn btn-danger btn-sm" onclick="app.forceLogoff('${op.user}')">
                                 <i class="fas fa-sign-out-alt"></i> Deslogar
@@ -3539,7 +3949,15 @@ E-mail automático - Não responda
                 localStorage.setItem('porter_logoffs', JSON.stringify(logoffs));
             }
             
-            localStorage.removeItem('porter_last_session');
+            // Remover da lista de sessões ativas
+            try {
+                let todasSessoes = JSON.parse(localStorage.getItem('porter_todas_sessoes') || '[]');
+                todasSessoes = todasSessoes.filter(s => s.user !== user);
+                localStorage.setItem('porter_todas_sessoes', JSON.stringify(todasSessoes));
+            } catch (e) {
+                console.log('Erro ao remover sessão:', e);
+            }
+            
             this.showMessage('Usuário deslogado com sucesso!', 'success');
             this.openAdminPanel();
         }
@@ -3557,6 +3975,8 @@ E-mail automático - Não responda
             remocoes: JSON.parse(localStorage.getItem('porter_remocoes') || '[]'),
             os_emails: JSON.parse(localStorage.getItem('porter_os_emails') || '[]'),
             emails_history: JSON.parse(localStorage.getItem('porter_emails_history') || '[]'),
+            todas_sessoes: JSON.parse(localStorage.getItem('porter_todas_sessoes') || '[]'),
+            chat_privado: this.chatPrivado.mensagens,
             exportDate: new Date().toISOString(),
             exportBy: this.currentUser.nome,
             firebaseEnabled: this.firebaseEnabled
