@@ -6,147 +6,36 @@
     <title>Ata Operacional Porter - 2026</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
-    <!-- Adicionando CSS para loading/spinners -->
-    <style>
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-        }
-        
-        .spinner {
-            width: 50px;
-            height: 50px;
-            border: 5px solid #f3f3f3;
-            border-top: 5px solid #3498db;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        /* Melhorias de acessibilidade */
-        button:focus, input:focus, select:focus, textarea:focus {
-            outline: 2px solid #3498db;
-            outline-offset: 2px;
-        }
-        
-        /* Modal de confirmação para logout */
-        .confirmation-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 10000;
-        }
-        
-        .confirmation-content {
-            background: white;
-            padding: 2rem;
-            border-radius: 10px;
-            max-width: 400px;
-            width: 90%;
-            text-align: center;
-        }
-        
-        /* Indicador de campos obrigatórios */
-        .required-field::after {
-            content: " *";
-            color: #e74c3c;
-        }
-        
-        /* Botão de backup */
-        .backup-btn {
-            background: linear-gradient(45deg, #9b59b6, #8e44ad) !important;
-            color: white !important;
-        }
-    </style>
 </head>
 <body>
-
-<!-- Overlay de loading -->
-<div class="loading-overlay" id="loading-overlay">
-    <div class="spinner"></div>
-    <div style="color: white; margin-top: 1rem;">Processando...</div>
-</div>
-
-<!-- Modal de confirmação para logout -->
-<div class="confirmation-modal" id="logout-confirmation">
-    <div class="confirmation-content">
-        <h3><i class="fas fa-sign-out-alt"></i> Confirmar Saída</h3>
-        <p>Tem certeza que deseja sair do sistema?</p>
-        <div style="display: flex; gap: 10px; margin-top: 1.5rem; justify-content: center;">
-            <button class="btn btn-primary" onclick="app.confirmLogout(true)">
-                <i class="fas fa-check"></i> Sim, Sair
-            </button>
-            <button class="btn btn-clear" onclick="app.confirmLogout(false)">
-                <i class="fas fa-times"></i> Cancelar
-            </button>
-        </div>
-    </div>
-</div>
 
 <!-- TELA DE LOGIN -->
 <section id="login-screen">
     <div class="login-container">
         <div class="login-logo">
-            <div class="login-logo-img" role="img" aria-label="Logo Porter"></div>
+            <!-- LOGO DA PORTER ADICIONADO AQUI -->
+            <div class="login-logo-img"></div>
             <h1>Ata Operacional Porter</h1>
             <p>Sistema de Registro de Ocorrências - 2026</p>
         </div>
-        
-        <!-- Formulário de login com validação -->
-        <form id="login-form" onsubmit="return app.validateLogin()">
-            <div class="form-group input-icon">
-                <i class="fas fa-user"></i>
-                <input type="text" id="login-user" placeholder="nome.sobrenome" autocomplete="off" 
-                       required pattern="[a-zA-Z]+\.[a-zA-Z]+" 
-                       title="Formato: nome.sobrenome"
-                       aria-label="Nome de usuário no formato nome.sobrenome">
-                <div class="input-error" id="login-user-error" style="display: none; color: #e74c3c; font-size: 0.8rem; margin-top: 5px;">
-                    <i class="fas fa-exclamation-circle"></i> Formato inválido. Use: nome.sobrenome
-                </div>
-            </div>
-            <div class="form-group input-icon">
-                <i class="fas fa-lock"></i>
-                <input type="password" id="login-pass" placeholder="********" autocomplete="off" 
-                       required minlength="6"
-                       aria-label="Senha de acesso">
-                <div class="input-error" id="login-pass-error" style="display: none; color: #e74c3c; font-size: 0.8rem; margin-top: 5px;">
-                    <i class="fas fa-exclamation-circle"></i> Senha deve ter pelo menos 6 caracteres
-                </div>
-            </div>
-            <div class="form-group input-icon">
-                <i class="fas fa-clock"></i>
-                <select id="login-turno" required aria-label="Turno de trabalho">
-                    <option value="">Selecione o turno...</option>
-                    <option value="Diurno">Diurno</option>
-                    <option value="Noturno">Noturno</option>
-                </select>
-                <div class="input-error" id="login-turno-error" style="display: none; color: #e74c3c; font-size: 0.8rem; margin-top: 5px;">
-                    <i class="fas fa-exclamation-circle"></i> Selecione um turno
-                </div>
-            </div>
-            <button type="submit" class="btn btn-primary">
-                <i class="fas fa-sign-in-alt"></i> ACESSAR SISTEMA
-            </button>
-        </form>
-        
+        <div class="form-group input-icon">
+            <i class="fas fa-user"></i>
+            <input type="text" id="login-user" placeholder="nome.sobrenome" autocomplete="off">
+        </div>
+        <div class="form-group input-icon">
+            <i class="fas fa-lock"></i>
+            <input type="password" id="login-pass" placeholder="********" autocomplete="off">
+        </div>
+        <div class="form-group input-icon">
+            <i class="fas fa-clock"></i>
+            <select id="login-turno">
+                <option value="Diurno">Diurno</option>
+                <option value="Noturno">Noturno</option>
+            </select>
+        </div>
+        <button class="btn btn-primary" onclick="app.login()">
+            <i class="fas fa-sign-in-alt"></i> ACESSAR SISTEMA
+        </button>
         <div style="margin-top: 1.5rem; text-align: center; font-size: 0.8rem; color: var(--gray);">
             <i class="fas fa-info-circle"></i> Use suas credenciais fornecidas pela Porter
         </div>
@@ -154,34 +43,28 @@
 </section>
 
 <!-- SIDEBAR COM LISTA DE CONDOMÍNIOS -->
-<div id="sidebar" role="navigation" aria-label="Lista de condomínios">
+<div id="sidebar">
     <div class="sidebar-header">
         <h3><i class="fas fa-building"></i> CONDOMÍNIOS</h3>
-        <button class="sidebar-toggle" onclick="app.toggleSidebar()" aria-label="Fechar menu lateral">
+        <button class="sidebar-toggle" onclick="app.toggleSidebar()">
             <i class="fas fa-times"></i>
         </button>
     </div>
     <div class="condo-list" id="condo-list">
         <!-- Lista de condomínios será gerada dinamicamente -->
     </div>
-    
-    <!-- Botão de backup/exportação (visível apenas para admin) -->
-    <div id="sidebar-backup" style="display: none; padding: 1rem; border-top: 1px solid #eee;">
-        <button class="btn btn-sm backup-btn" onclick="app.openBackupModal()" style="width: 100%;">
-            <i class="fas fa-database"></i> Backup de Dados
-        </button>
-    </div>
 </div>
 
 <!-- CONTEÚDO PRINCIPAL -->
 <div id="main-content" class="hidden">
-    <header role="banner">
+    <header>
         <div class="header-left">
-            <button class="mobile-toggle" onclick="app.toggleSidebar()" aria-label="Abrir menu lateral">
+            <button class="mobile-toggle" onclick="app.toggleSidebar()">
                 <i class="fas fa-bars"></i>
             </button>
             <div class="header-logo">
-                <div class="logo-porter" role="img" aria-label="Logo Porter"></div>
+                <!-- LOGO DA PORTER NO HEADER -->
+                <div class="logo-porter"></div>
                 <div class="header-logo-text">
                     <strong>ATA OPERACIONAL PORTER</strong>
                     <div>Sistema de Registro de Ocorrências - 2026</div>
@@ -196,8 +79,7 @@
         
         <div style="display: flex; align-items: center; gap: 15px;">
             <!-- OPERADORES ONLINE -->
-            <div id="online-users" class="online-users-dropdown" role="button" tabindex="0" 
-                 onclick="app.toggleOnlineUsers()" onkeypress="if(event.key === 'Enter') app.toggleOnlineUsers()">
+            <div id="online-users" class="online-users-dropdown">
                 <i class="fas fa-users" style="color: white;"></i>
                 <span style="font-size: 0.9rem;">
                     <span id="online-count">0</span> online
@@ -207,8 +89,7 @@
             </div>
             
             <!-- Notificações -->
-            <div class="notification-bell" onclick="app.toggleNotifications()" role="button" tabindex="0" 
-                 onkeypress="if(event.key === 'Enter') app.toggleNotifications()">
+            <div class="notification-bell" onclick="app.toggleNotifications()">
                 <i class="fas fa-bell"></i>
                 <span class="notification-badge" id="notification-count" style="display: none;">0</span>
                 <div class="notifications-panel" id="notifications-panel">
@@ -230,13 +111,6 @@
                 <i class="fas fa-file-pdf"></i> Relatório
             </button>
             
-            <!-- Botão Backup/Exportação -->
-            <div id="backup-controls" style="display: none;">
-                <button class="btn backup-btn" onclick="app.openBackupModal()">
-                    <i class="fas fa-database"></i> Backup
-                </button>
-            </div>
-            
             <!-- Botão Admin (apenas para admin) -->
             <div id="admin-controls" class="admin-controls" style="display: none;">
                 <button class="btn btn-warning" onclick="app.openAdminPanel()">
@@ -245,36 +119,31 @@
             </div>
             
             <!-- Botão Sair -->
-            <button class="btn btn-accent" onclick="app.showLogoutConfirmation()">
+            <button class="btn btn-accent" onclick="app.logout()">
                 <i class="fas fa-sign-out-alt"></i> Sair
             </button>
         </div>
     </header>
 
-    <div class="tabs" role="tablist">
-        <button class="tab-btn active" onclick="app.switchTab('tab-ata', this)" 
-                role="tab" aria-selected="true" id="tab-ata-btn">
+    <div class="tabs">
+        <button class="tab-btn active" onclick="app.switchTab('tab-ata', this)">
             <i class="fas fa-file-alt"></i> ATA DE OCORRÊNCIAS
             <span class="tab-badge" id="tab-count-ata">0</span>
         </button>
-        <button class="tab-btn" onclick="app.switchTab('tab-fixas', this)" 
-                role="tab" aria-selected="false" id="tab-fixas-btn">
+        <button class="tab-btn" onclick="app.switchTab('tab-fixas', this)">
             <i class="fas fa-thumbtack"></i> INFORMAÇÕES FIXAS
             <span class="tab-badge" id="tab-count-fixas">0</span>
         </button>
-        <button class="tab-btn" onclick="app.switchTab('tab-os', this)" 
-                role="tab" aria-selected="false" id="tab-os-btn">
+        <button class="tab-btn" onclick="app.switchTab('tab-os', this)">
             <i class="fas fa-tools"></i> ORDEM DE SERVIÇO
             <span class="tab-badge" id="tab-count-os">0</span>
         </button>
         <!-- NOVA ABA: CHAT GERAL -->
-        <button class="tab-btn chat-tab" onclick="app.switchTab('tab-chat', this)" 
-                role="tab" aria-selected="false" id="tab-chat-btn">
+        <button class="tab-btn chat-tab" onclick="app.switchTab('tab-chat', this)">
             <i class="fas fa-comments"></i> CHAT GERAL
             <span class="chat-badge" id="chat-badge">0</span>
         </button>
-        <button class="tab-btn" onclick="app.switchTab('tab-presenca', this)" 
-                role="tab" aria-selected="false" id="tab-presenca-btn">
+        <button class="tab-btn" onclick="app.switchTab('tab-presenca', this)">
             <i class="fas fa-users"></i> HISTÓRICO
         </button>
     </div>
@@ -307,7 +176,7 @@
         </div>
 
         <!-- ABA: ATA DE OCORRÊNCIAS -->
-        <div id="tab-ata" class="tab-content" role="tabpanel" aria-labelledby="tab-ata-btn">
+        <div id="tab-ata" class="tab-content">
             <!-- Filtros -->
             <div class="filters-container">
                 <div class="filters-title">
@@ -352,15 +221,9 @@
                         <button class="btn btn-clear" onclick="app.limparFiltrosAtas()">
                             <i class="fas fa-times"></i> Limpar
                         </button>
-                        <!-- Botão para salvar filtro -->
-                        <button class="btn btn-success btn-sm" onclick="app.salvarFiltro('ata')" id="save-filter-btn">
-                            <i class="fas fa-save"></i> Salvar Filtro
-                        </button>
                     </div>
                 </div>
                 <div id="filtros-ativos-ata" class="filter-info"></div>
-                <!-- Filtros salvos -->
-                <div id="saved-filters-ata" class="saved-filters" style="margin-top: 10px;"></div>
             </div>
 
             <div id="resultados-info-ata" style="margin-bottom: 1rem;"></div>
@@ -368,47 +231,43 @@
             <!-- Formulário Nova Ata -->
             <div class="form-card fade-in">
                 <h2><i class="fas fa-plus-circle"></i> Novo Registro de Ocorrência</h2>
-                <form id="form-ata" onsubmit="return app.validateAtaForm()">
-                    <div class="grid-2">
-                        <div class="form-group">
-                            <label class="required-field"><i class="fas fa-building"></i> Condomínio</label>
-                            <select id="ata-condo" onchange="app.updateCity()" required>
-                                <option value="">Selecione um condomínio...</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label><i class="fas fa-city"></i> Cidade</label>
-                            <input type="text" id="ata-cidade" readonly style="background: #f8f9fa;">
-                        </div>
-                    </div>
-                    <div class="grid-2">
-                        <div class="form-group">
-                            <label class="required-field"><i class="fas fa-tag"></i> Tipo de Registro</label>
-                            <select id="ata-tipo" required>
-                                <option value="">Selecione um tipo...</option>
-                                <option value="Informação">📝 Informação</option>
-                                <option value="Ocorrência">⚠️ Ocorrência</option>
-                                <option value="Incidente">🚨 Incidente</option>
-                                <option value="Informações Fixas">📌 Informações Fixas</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="required-field"><i class="fas fa-tasks"></i> Status</label>
-                            <select id="ata-status" required>
-                                <option value="">Selecione um status...</option>
-                                <option value="Em andamento">🔄 Em andamento</option>
-                                <option value="Finalizado">✅ Finalizado</option>
-                            </select>
-                        </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label><i class="fas fa-building"></i> Condomínio</label>
+                        <select id="ata-condo" onchange="app.updateCity()">
+                            <option value="">Selecione um condomínio...</option>
+                        </select>
                     </div>
                     <div class="form-group">
-                        <label class="required-field"><i class="fas fa-align-left"></i> Descrição dos Fatos</label>
-                        <textarea id="ata-desc" rows="5" placeholder="Descreva detalhadamente os fatos ocorridos..." required></textarea>
+                        <label><i class="fas fa-city"></i> Cidade</label>
+                        <input type="text" id="ata-cidade" readonly style="background: #f8f9fa;">
                     </div>
-                    <button type="submit" class="btn btn-primary" id="save-ata-btn">
-                        <i class="fas fa-save"></i> SALVAR REGISTRO
-                    </button>
-                </form>
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label><i class="fas fa-tag"></i> Tipo de Registro</label>
+                        <select id="ata-tipo">
+                            <option value="Informação">📝 Informação</option>
+                            <option value="Ocorrência">⚠️ Ocorrência</option>
+                            <option value="Incidente">🚨 Incidente</option>
+                            <option value="Informações Fixas">📌 Informações Fixas</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-tasks"></i> Status</label>
+                        <select id="ata-status">
+                            <option value="Em andamento">🔄 Em andamento</option>
+                            <option value="Finalizado">✅ Finalizado</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-align-left"></i> Descrição dos Fatos</label>
+                    <textarea id="ata-desc" rows="5" placeholder="Descreva detalhadamente os fatos ocorridos..."></textarea>
+                </div>
+                <button class="btn btn-primary" onclick="app.saveAta()">
+                    <i class="fas fa-save"></i> SALVAR REGISTRO
+                </button>
             </div>
 
             <!-- Lista de Atas -->
@@ -416,7 +275,7 @@
         </div>
 
         <!-- ABA: INFORMAÇÕES FIXAS -->
-        <div id="tab-fixas" class="tab-content hidden" role="tabpanel" aria-labelledby="tab-fixas-btn">
+        <div id="tab-fixas" class="tab-content hidden">
             <div class="fixed-info-container">
                 <div class="fixed-info-header">
                     <i class="fas fa-thumbtack"></i>
@@ -431,70 +290,67 @@
         </div>
 
         <!-- ABA: ORDEM DE SERVIÇO -->
-        <div id="tab-os" class="tab-content hidden" role="tabpanel" aria-labelledby="tab-os-btn">
+        <div id="tab-os" class="tab-content hidden">
             <!-- Formulário OS -->
             <div class="form-card os-form fade-in">
                 <h2><i class="fas fa-tools"></i> Nova Ordem de Serviço</h2>
-                <form id="form-os" onsubmit="return app.validateOSForm()">
-                    <div class="grid-2">
-                        <div class="form-group">
-                            <label class="required-field"><i class="fas fa-building"></i> Condomínio</label>
-                            <select id="os-condo" onchange="app.updateCityOS()" required>
-                                <option value="">Selecione um condomínio...</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label><i class="fas fa-city"></i> Cidade</label>
-                            <input type="text" id="os-cidade" readonly style="background: #f8f9fa;">
-                        </div>
-                    </div>
-                    <div class="grid-2">
-                        <!-- NOVO CAMPO: GRAVIDADE -->
-                        <div class="form-group">
-                            <label class="required-field"><i class="fas fa-exclamation-triangle"></i> Gravidade da Ocorrência</label>
-                            <select id="os-gravidade" required>
-                                <option value="">Selecione a gravidade...</option>
-                                <option value="Baixa">🟢 Baixa - Manutenção Preventiva/Rotina</option>
-                                <option value="Média">🟡 Média - Reparo Necessário</option>
-                                <option value="Alta">🔴 Alta - Urgente/Problema Crítico</option>
-                                <option value="Emergência">🚨 Emergência - Risco Imediato</option>
-                            </select>
-                            <small style="font-size: 0.8rem; color: #666;">Define prioridade e tempo de resposta</small>
-                        </div>
-                        <div class="form-group">
-                            <label><i class="fas fa-calendar"></i> Data Preferencial</label>
-                            <input type="date" id="os-data">
-                        </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label><i class="fas fa-building"></i> Condomínio</label>
+                        <select id="os-condo" onchange="app.updateCityOS()">
+                            <option value="">Selecione um condomínio...</option>
+                        </select>
                     </div>
                     <div class="form-group">
-                        <label class="required-field"><i class="fas fa-align-left"></i> Descrição do Serviço</label>
-                        <textarea id="os-desc" rows="5" placeholder="Descreva detalhadamente o serviço necessário..." required></textarea>
+                        <label><i class="fas fa-city"></i> Cidade</label>
+                        <input type="text" id="os-cidade" readonly style="background: #f8f9fa;">
                     </div>
-                    <!-- ATUALIZADO: E-MAILS MÚLTIPLOS -->
+                </div>
+                <div class="grid-2">
+                    <!-- NOVO CAMPO: GRAVIDADE -->
                     <div class="form-group">
-                        <label><i class="fas fa-envelope"></i> E-mails para Notificação (separados por vírgula)</label>
-                        <input type="text" id="os-emails" placeholder="tecnica@porter.com, sindico@condominio.com, adm@empresa.com">
-                        <small style="font-size: 0.8rem; color: #666;">Separe múltiplos e-mails por vírgula</small>
+                        <label><i class="fas fa-exclamation-triangle"></i> Gravidade da Ocorrência</label>
+                        <select id="os-gravidade">
+                            <option value="Baixa">🟢 Baixa - Manutenção Preventiva/Rotina</option>
+                            <option value="Média" selected>🟡 Média - Reparo Necessário</option>
+                            <option value="Alta">🔴 Alta - Urgente/Problema Crítico</option>
+                            <option value="Emergência">🚨 Emergência - Risco Imediato</option>
+                        </select>
+                        <small style="font-size: 0.8rem; color: #666;">Define prioridade e tempo de resposta</small>
                     </div>
-                    
-                    <!-- VISUALIZAÇÃO DA PRIORIDADE -->
-                    <div id="os-preview-prioridade" style="margin: 1rem 0; padding: 1rem; background: #f8f9fa; border-radius: 8px; display: none;">
-                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
-                            <div id="os-preview-icone" style="font-size: 1.2rem;"></div>
-                            <div>
-                                <strong id="os-preview-gravidade"></strong>
-                                <div style="font-size: 0.85rem; color: #666;" id="os-preview-prazo"></div>
-                            </div>
-                        </div>
-                        <div style="font-size: 0.85rem; color: #666;">
-                            <i class="fas fa-info-circle"></i> Esta OS será tratada com prioridade correspondente
+                    <div class="form-group">
+                        <label><i class="fas fa-calendar"></i> Data Preferencial</label>
+                        <input type="date" id="os-data">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-align-left"></i> Descrição do Serviço</label>
+                    <textarea id="os-desc" rows="5" placeholder="Descreva detalhadamente o serviço necessário..."></textarea>
+                </div>
+                <!-- ATUALIZADO: E-MAILS MÚLTIPLOS -->
+                <div class="form-group">
+                    <label><i class="fas fa-envelope"></i> E-mails para Notificação (separados por vírgula)</label>
+                    <input type="text" id="os-emails" placeholder="tecnica@porter.com, sindico@condominio.com, adm@empresa.com">
+                    <small style="font-size: 0.8rem; color: #666;">Separe múltiplos e-mails por vírgula</small>
+                </div>
+                
+                <!-- VISUALIZAÇÃO DA PRIORIDADE -->
+                <div id="os-preview-prioridade" style="margin: 1rem 0; padding: 1rem; background: #f8f9fa; border-radius: 8px; display: none;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                        <div id="os-preview-icone" style="font-size: 1.2rem;"></div>
+                        <div>
+                            <strong id="os-preview-gravidade"></strong>
+                            <div style="font-size: 0.85rem; color: #666;" id="os-preview-prazo"></div>
                         </div>
                     </div>
-                    
-                    <button type="submit" class="btn btn-info" id="save-os-btn">
-                        <i class="fas fa-paper-plane"></i> ENVIAR ORDEM DE SERVIÇO
-                    </button>
-                </form>
+                    <div style="font-size: 0.85rem; color: #666;">
+                        <i class="fas fa-info-circle"></i> Esta OS será tratada com prioridade correspondente
+                    </div>
+                </div>
+                
+                <button class="btn btn-info" onclick="app.saveOS()">
+                    <i class="fas fa-paper-plane"></i> ENVIAR ORDEM DE SERVIÇO
+                </button>
             </div>
 
             <!-- NOVO: FILTRO POR GRAVIDADE NA LISTA -->
@@ -526,7 +382,7 @@
         </div>
 
         <!-- NOVA ABA: CHAT GERAL -->
-        <div id="tab-chat" class="tab-content hidden" role="tabpanel" aria-labelledby="tab-chat-btn">
+        <div id="tab-chat" class="tab-content hidden">
             <div class="chat-container">
                 <div class="chat-header">
                     <div>
@@ -537,13 +393,10 @@
                         <button class="chat-clear-btn" onclick="app.clearChat()">
                             <i class="fas fa-trash"></i> Limpar Chat
                         </button>
-                        <button class="chat-clear-btn" onclick="app.openChatModeration()">
-                            <i class="fas fa-user-shield"></i> Moderar
-                        </button>
                     </div>
                 </div>
                 
-                <div class="chat-messages" id="chat-messages" role="log" aria-live="polite">
+                <div class="chat-messages" id="chat-messages">
                     <!-- Mensagens serão carregadas aqui -->
                 </div>
                 
@@ -561,7 +414,7 @@
         </div>
 
         <!-- ABA: HISTÓRICO -->
-        <div id="tab-presenca" class="tab-content hidden" role="tabpanel" aria-labelledby="tab-presenca-btn">
+        <div id="tab-presenca" class="tab-content hidden">
             <div class="filters-container">
                 <div class="filters-title">
                     <i class="fas fa-filter"></i> Filtrar Histórico
@@ -603,7 +456,7 @@
             <!-- Histórico de Acesso -->
             <h3 style="margin: 2rem 0 1rem 0;"><i class="fas fa-history"></i> Histórico de Acesso</h3>
             <div style="overflow-x: auto;">
-                <table role="grid">
+                <table>
                     <thead>
                         <tr>
                             <th><i class="fas fa-user"></i> Operador</th>
@@ -759,81 +612,6 @@
   </div>
 </div>
 
-<!-- MODAL DE BACKUP/EXPORTAÇÃO -->
-<div class="modal" id="backup-modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3><i class="fas fa-database"></i> Backup e Exportação de Dados</h3>
-            <button class="modal-close" onclick="app.closeBackupModal()">&times;</button>
-        </div>
-        <div style="padding: 1rem;">
-            <p>Selecione o formato para exportar os dados do sistema:</p>
-            
-            <div class="grid-2" style="margin: 1.5rem 0;">
-                <button class="btn btn-success" onclick="app.exportData('json')">
-                    <i class="fas fa-file-code"></i> Exportar JSON
-                </button>
-                <button class="btn btn-info" onclick="app.exportData('csv')">
-                    <i class="fas fa-file-csv"></i> Exportar CSV
-                </button>
-                <button class="btn btn-warning" onclick="app.exportData('excel')">
-                    <i class="fas fa-file-excel"></i> Exportar Excel
-                </button>
-                <button class="btn btn-primary" onclick="app.exportData('pdf')">
-                    <i class="fas fa-file-pdf"></i> Exportar PDF
-                </button>
-            </div>
-            
-            <div style="margin-top: 1.5rem; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
-                <h4><i class="fas fa-info-circle"></i> Informações:</h4>
-                <ul style="font-size: 0.9rem;">
-                    <li><strong>JSON:</strong> Formato completo para backup e restauração</li>
-                    <li><strong>CSV:</strong> Para análise em planilhas simples</li>
-                    <li><strong>Excel:</strong> Formato .xlsx com formatação</li>
-                    <li><strong>PDF:</strong> Relatório estruturado para impressão</li>
-                </ul>
-            </div>
-            
-            <div style="margin-top: 1.5rem; font-size: 0.85rem; color: #666;">
-                <i class="fas fa-shield-alt"></i> Os dados exportados contêm apenas informações não sensíveis do sistema.
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- MODAL DE MODERAÇÃO DO CHAT -->
-<div class="modal" id="chat-moderation-modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3><i class="fas fa-user-shield"></i> Moderação do Chat</h3>
-            <button class="modal-close" onclick="app.closeChatModeration()">&times;</button>
-        </div>
-        <div style="padding: 1rem;">
-            <h4>Últimas mensagens:</h4>
-            <div id="chat-moderation-list" style="max-height: 300px; overflow-y: auto; margin: 1rem 0; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
-                <!-- Lista de mensagens para moderação -->
-            </div>
-            
-            <div class="form-group">
-                <label><i class="fas fa-user"></i> Bloquear Usuário (opcional)</label>
-                <input type="text" id="block-user" placeholder="Nome do usuário a bloquear">
-            </div>
-            
-            <div style="display: flex; gap: 10px; margin-top: 1.5rem;">
-                <button class="btn btn-danger" onclick="app.deleteSelectedMessages()">
-                    <i class="fas fa-trash"></i> Apagar Selecionadas
-                </button>
-                <button class="btn btn-warning" onclick="app.blockUser()">
-                    <i class="fas fa-ban"></i> Bloquear Usuário
-                </button>
-                <button class="btn btn-clear" onclick="app.closeChatModeration()">
-                    Fechar
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <!-- ==================== -->
 <!-- SCRIPTS NA ORDEM CORRETA -->
 <!-- ==================== -->
@@ -841,14 +619,11 @@
 <!-- 1. Firebase SDK (PRIMEIRO) -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 
 <!-- 2. Outras bibliotecas -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-<!-- Biblioteca para exportar Excel -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <!-- 3. Sua configuração Firebase (SEGUNDO) -->
 <script src="firebase.js"></script>
