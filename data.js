@@ -1,428 +1,578 @@
-// Dados do sistema Ata Operacional Porter - 2026
-// Arquivo otimizado e corrigido
+/**
+ * Dados do Sistema Ata Operacional Porter - 2026
+ * Versão otimizada e corrigida
+ */
 
-const DATA = {
-    funcionarios: [
-        { nome: "LAÍSSA PEREIRA DOS SANTOS XAVIER", user: "laissa.xavier", pass: "Porter@2026", role: "OPERADOR" },
-        { nome: "VANESSA LOPES SOUZA DE OLIVEIRA", user: "vanessa.oliveira", pass: "Porter@2026", role: "OPERADOR" },
-        { nome: "MARIA LUIZA ALEIXO ANTUNES", user: "maria.antunes", pass: "Porter@2026", role: "OPERADOR" },
-        { nome: "MARISA MENEGHETTI", user: "marisa.meneghetti", pass: "Porter@2026", role: "OPERADOR" },
-        { nome: "LUDMILA R CASSIANO", user: "ludmila.cassiano", pass: "Porter@2026", role: "OPERADOR" },
-        { nome: "MARIA GABRIELA ANTONIO", user: "maria.antonio", pass: "Porter@2026", role: "OPERADOR" },
-        { nome: "DENISE CRISTINA DE SOUSA", user: "denise.sousa", pass: "Porter@2026", role: "OPERADOR" },
-        { nome: "EDSON SILVA MACÊDO", user: "edson.macedo", pass: "Porter@2026", role: "OPERADOR" },
-        { nome: "MARIA CLARA RAMOS", user: "maria.ramos", pass: "Porter@2026", role: "OPERADOR" },
-        { nome: "GABRIELY AMORIM CAMPOS", user: "gabriely.campos", pass: "Porter@2026", role: "OPERADOR" },
-        { nome: "SANDRA REGINA DA FRANÇA SILVA", user: "sandra.silva", pass: "Porter@2026", role: "OPERADOR" },
-        { nome: "THAIS BENA LIMA", user: "thais.lima", pass: "Porter@2026", role: "OPERADOR" },
-        { nome: "ABNER CAVALCANTE", user: "abner.cavalcante", pass: "Porter@2026", role: "OPERADOR" },
-        { nome: "DAIANE LUCY RODRIGUES DE ALMEIDA", user: "daiane.almeida", pass: "Porter@2026", role: "OPERADOR" },
-        { nome: "ALINY MELQUIADES DE SOUZA", user: "aliny.souza", pass: "Porter@2026", role: "OPERADOR" },
-        { nome: "LOUISE COSTA", user: "louise.costa", pass: "Porter@2026", role: "OPERADOR" },
-        { nome: "ROSALIA TAIT KLINKERFUS", user: "rosalia.klinkerfus", pass: "Porter@2026", role: "OPERADOR" },
-        { nome: "MARIO ALEXANDRE CLEMENTIN", user: "mario.clementin", pass: "Porter@2026", role: "OPERADOR" },
-        { nome: "VANIA DO SOCORRO LEOCADIO", user: "vania.leocadio", pass: "Porter@2026", role: "OPERADOR" },
-        { nome: "JACKELINE ARAUJO SAMPAIO DIAS", user: "jackeline.dias", pass: "Porter@2026", role: "OPERADOR" },
-        { nome: "LUCAS VINICIUS DA SILVA", user: "lucas.v.silva", pass: "Porter@2026", role: "OPERADOR" },
-        { nome: "CARLOS HENRIQUE FERREIRA LEITE", user: "carlos.leite", pass: "Porter@2026", role: "OPERADOR" },
-        { nome: "LUIZ FERNANDO S MORYAMA DOS SANTOS", user: "luiz.santos", pass: "Porter@2026", role: "OPERADOR" },
-        { nome: "ERICK DE SOUZA RODRIGUES", user: "erick.rodrigues", pass: "Porter@2026", role: "OPERADOR" },
-        { nome: "MATHEUS ROBERTO BRASIL SILVA", user: "matheus.silva", pass: "Porter@2026", role: "OPERADOR" },
-        { nome: "WELINGTON FELIPE ALVES BARBOSA", user: "wellington.barbosa", pass: "Porter@2026", role: "OPERADOR" },
-        { nome: "KAIC VITOR MARTINS DE BRITO", user: "kaic.brito", pass: "Porter@2026", role: "OPERADOR" },
-        { nome: "DEISY SANTOS CRUZ", user: "deisy.cruz", pass: "Porter@2026", role: "OPERADOR" },
-        { nome: "DANIELE DA SILVA ROCHA", user: "daniele.rocha", pass: "Porter@2026", role: "OPERADOR" },
-        { nome: "ANA BEATRIZ PEREIRA", user: "ana.pereira", pass: "Porter@2026", role: "OPERADOR" },
-        { nome: "LUCAS DANIEL", user: "lucas.daniel", pass: "Porter@2026", role: "OPERADOR" },
-        { nome: "ADMINISTRADOR PORTER", user: "admin.porter", pass: "Admin@2026", role: "ADMIN" }
-    ],
-    condominios: [
-        { n: "ALAMEDA PINHEIROS", c: "Londrina" }, { n: "ALGARVE", c: "Londrina" }, { n: "AMADEUS", c: "Londrina" },
-        { n: "AMARILIS", c: "Londrina" }, { n: "AMERICA", c: "Londrina" }, { n: "ANITA GARIBALDI", c: "Londrina" },
-        { n: "AQUALUNA", c: "Londrina" }, { n: "ARIANE", c: "Londrina" }, { n: "ARQUITETO JULIO RIBEIRO", c: "Londrina" },
-        { n: "ATHENAS", c: "Londrina" }, { n: "BARAO CATUAI", c: "Londrina" }, { n: "BASE - PORTER LONDRINA", c: "Londrina" },
-        { n: "BELLEVILLE", c: "Londrina" }, { n: "BENTO MUNHOZ DA ROCHA NETTO II", c: "Maringá" },
-        { n: "BIARRITZ", c: "Londrina" }, { n: "BOSQUE", c: "Londrina" }, { n: "CAMPOS ELISEOS", c: "Londrina" },
-        { n: "CASABLANCA", c: "Londrina" }, { n: "CASA CONDOMINIO (Londrina)", c: "Londrina" },
-        { n: "CASA CONDOMÍNIO (Maringá)", c: "Maringá" }, { n: "CASARIO DO PORTO", c: "Londrina" },
-        { n: "CENTRO EMPRESARIAL NEWTON CAMARA", c: "Londrina" }, { n: "CIDADE DOS PASSAROS", c: "Arapongas" },
-        { n: "CITZEN PARK", c: "Maringá" }, { n: "COMERCIAL CAMBARA", c: "Londrina" }, { n: "DOLCE VIE", c: "Londrina" },
-        { n: "EBANO", c: "Londrina" }, { n: "ENSEADAS", c: "Londrina" }, { n: "EUROCENTER", c: "Londrina" },
-        { n: "FERNANDA", c: "Londrina" }, { n: "FLOR DA MATA", c: "Londrina" }, { n: "FLOR DE LOTUS", c: "Londrina" },
-        { n: "FLORENZA", c: "Londrina" }, { n: "GOLDEN GATE", c: "Londrina" }, { n: "GOLDENVILLE", c: "Londrina" },
-        { n: "GRAO PARA", c: "Londrina" }, { n: "GREENFIELDS", c: "Londrina" }, { n: "HEIMTAL PARK", c: "Londrina" },
-        { n: "HYDE PARK", c: "Londrina" }, { n: "INDREL INDUSTRIA DE REFRIGERACAO LONDRINENSE LTDA", c: "Londrina" },
-        { n: "INEDITO", c: "Londrina" }, { n: "JOAO DINARDI", c: "Londrina" }, { n: "LAKE VAN GOGH", c: "Londrina" },
-        { n: "LA SENA", c: "Cambé" }, { n: "LE REVE", c: "Londrina" }, { n: "MAR DEL PLATA", c: "Londrina" },
-        { n: "MAXIMUS RESIDENCE", c: "Londrina" }, { n: "MGL - MECANICA EIRELI", c: "Cambé" },
-        { n: "MONT BLANC", c: "Londrina" }, { n: "MORADA IMPERIAL", c: "Londrina" }, { n: "MUNDO NOVO", c: "Londrina" },
-        { n: "NEW PLAZA RESIDENCE", c: "Maringá" }, { n: "NICOLA PAGAN", c: "Londrina" },
-        { n: "ORTIZ (Cambé)", c: "Cambé" }, { n: "PALAIS LAC DOR", c: "Londrina" }, { n: "PARQUE IMPERIAL", c: "Londrina" },
-        { n: "PEROLA NEGRA", c: "Londrina" }, { n: "PETIT VILLE", c: "Londrina" }, { n: "POLARIS", c: "Londrina" },
-        { n: "PORTLAND RESIDENCE", c: "Londrina" }, { n: "PRIME HOUSE", c: "Londrina" }, { n: "PRIVILEGE JAMAICA", c: "Londrina" },
-        { n: "QUINTA DA BOA VISTA III A", c: "Londrina" }, { n: "QUINTA DA BOA VISTA VI", c: "Londrina" },
-        { n: "RIO TEJO", c: "Maringá" }, { n: "RIO TEVERE", c: "Maringá" }, { n: "SANTOS", c: "Londrina" },
-        { n: "SAO GABRIEL", c: "Maringá" }, { n: "SERRA VERDE", c: "Londrina" }, { n: "SIRMIONE", c: "Maringá" },
-        { n: "SOLAR MONTREAUX", c: "Londrina" }, { n: "SPAZIO LAS PALMAS", c: "Londrina" },
-        { n: "SPEZIA", c: "Londrina" }, { n: "STRAUSS BOULEVARD", c: "Londrina" }, { n: "TAPUIAS JARDIM", c: "Londrina" },
-        { n: "TERRALIS JARDIN RESIDENCE", c: "Londrina" }, { n: "TERRASSE JARDIN", c: "Londrina" },
-        { n: "TORRES BRASIL", c: "Londrina" }, { n: "UNIVERSITOP", c: "Londrina" },
-        { n: "VENICE DOWNTOWN", c: "Londrina" }, { n: "VILLA BELLA (Cambé)", c: "Cambé" },
-        { n: "VILLA DAS TORRES", c: "Cambé" }, { n: "VILLAGE LA CORUNA", c: "Londrina" },
-        { n: "VILLAGGIO DO ENGENHO", c: "Cambé" }, { n: "VILLA ROMANA", c: "Londrina" },
-        { n: "VISCONDE DE BARBACENA", c: "Londrina" }, { n: "VITTACE BOULEVARD", c: "Londrina" },
-        { n: "VIVALDI BOULEVARD", c: "Londrina" }, { n: "VIVENDA DOS PESCADORES", c: "Maringá" }
-    ]
+// Configuração básica do sistema
+const SYSTEM_CONFIG = {
+    nome: "Ata Operacional Porter",
+    versao: "2.0.0",
+    ano: "2026",
+    empresa: "Porter",
+    sessaoTimeout: 3600000, // 1 hora em milisegundos
+    maxTentativasLogin: 3
 };
 
-// Funções utilitárias para manipulação de dados
-const DataUtils = {
+// Dados dos funcionários
+const FUNCIONARIOS = [
+    { id: 1, nome: "LAÍSSA PEREIRA DOS SANTOS XAVIER", usuario: "laissa.xavier", senha: "Porter@2026", cargo: "OPERADOR", ativo: true },
+    { id: 2, nome: "VANESSA LOPES SOUZA DE OLIVEIRA", usuario: "vanessa.oliveira", senha: "Porter@2026", cargo: "OPERADOR", ativo: true },
+    { id: 3, nome: "MARIA LUIZA ALEIXO ANTUNES", usuario: "maria.antunes", senha: "Porter@2026", cargo: "OPERADOR", ativo: true },
+    { id: 4, nome: "MARISA MENEGHETTI", usuario: "marisa.meneghetti", senha: "Porter@2026", cargo: "OPERADOR", ativo: true },
+    { id: 5, nome: "LUDMILA R CASSIANO", usuario: "ludmila.cassiano", senha: "Porter@2026", cargo: "OPERADOR", ativo: true },
+    { id: 6, nome: "MARIA GABRIELA ANTONIO", usuario: "maria.antonio", senha: "Porter@2026", cargo: "OPERADOR", ativo: true },
+    { id: 7, nome: "DENISE CRISTINA DE SOUSA", usuario: "denise.sousa", senha: "Porter@2026", cargo: "OPERADOR", ativo: true },
+    { id: 8, nome: "EDSON SILVA MACÊDO", usuario: "edson.macedo", senha: "Porter@2026", cargo: "OPERADOR", ativo: true },
+    { id: 9, nome: "MARIA CLARA RAMOS", usuario: "maria.ramos", senha: "Porter@2026", cargo: "OPERADOR", ativo: true },
+    { id: 10, nome: "GABRIELY AMORIM CAMPOS", usuario: "gabriely.campos", senha: "Porter@2026", cargo: "OPERADOR", ativo: true },
+    { id: 11, nome: "SANDRA REGINA DA FRANÇA SILVA", usuario: "sandra.silva", senha: "Porter@2026", cargo: "OPERADOR", ativo: true },
+    { id: 12, nome: "THAIS BENA LIMA", usuario: "thais.lima", senha: "Porter@2026", cargo: "OPERADOR", ativo: true },
+    { id: 13, nome: "ABNER CAVALCANTE", usuario: "abner.cavalcante", senha: "Porter@2026", cargo: "OPERADOR", ativo: true },
+    { id: 14, nome: "DAIANE LUCY RODRIGUES DE ALMEIDA", usuario: "daiane.almeida", senha: "Porter@2026", cargo: "OPERADOR", ativo: true },
+    { id: 15, nome: "ALINY MELQUIADES DE SOUZA", usuario: "aliny.souza", senha: "Porter@2026", cargo: "OPERADOR", ativo: true },
+    { id: 16, nome: "LOUISE COSTA", usuario: "louise.costa", senha: "Porter@2026", cargo: "OPERADOR", ativo: true },
+    { id: 17, nome: "ROSALIA TAIT KLINKERFUS", usuario: "rosalia.klinkerfus", senha: "Porter@2026", cargo: "OPERADOR", ativo: true },
+    { id: 18, nome: "MARIO ALEXANDRE CLEMENTIN", usuario: "mario.clementin", senha: "Porter@2026", cargo: "OPERADOR", ativo: true },
+    { id: 19, nome: "VANIA DO SOCORRO LEOCADIO", usuario: "vania.leocadio", senha: "Porter@2026", cargo: "OPERADOR", ativo: true },
+    { id: 20, nome: "JACKELINE ARAUJO SAMPAIO DIAS", usuario: "jackeline.dias", senha: "Porter@2026", cargo: "OPERADOR", ativo: true },
+    { id: 21, nome: "LUCAS VINICIUS DA SILVA", usuario: "lucas.v.silva", senha: "Porter@2026", cargo: "OPERADOR", ativo: true },
+    { id: 22, nome: "CARLOS HENRIQUE FERREIRA LEITE", usuario: "carlos.leite", senha: "Porter@2026", cargo: "OPERADOR", ativo: true },
+    { id: 23, nome: "LUIZ FERNANDO S MORYAMA DOS SANTOS", usuario: "luiz.santos", senha: "Porter@2026", cargo: "OPERADOR", ativo: true },
+    { id: 24, nome: "ERICK DE SOUZA RODRIGUES", usuario: "erick.rodrigues", senha: "Porter@2026", cargo: "OPERADOR", ativo: true },
+    { id: 25, nome: "MATHEUS ROBERTO BRASIL SILVA", usuario: "matheus.silva", senha: "Porter@2026", cargo: "OPERADOR", ativo: true },
+    { id: 26, nome: "WELINGTON FELIPE ALVES BARBOSA", usuario: "wellington.barbosa", senha: "Porter@2026", cargo: "OPERADOR", ativo: true },
+    { id: 27, nome: "KAIC VITOR MARTINS DE BRITO", usuario: "kaic.brito", senha: "Porter@2026", cargo: "OPERADOR", ativo: true },
+    { id: 28, nome: "DEISY SANTOS CRUZ", usuario: "deisy.cruz", senha: "Porter@2026", cargo: "OPERADOR", ativo: true },
+    { id: 29, nome: "DANIELE DA SILVA ROCHA", usuario: "daniele.rocha", senha: "Porter@2026", cargo: "OPERADOR", ativo: true },
+    { id: 30, nome: "ANA BEATRIZ PEREIRA", usuario: "ana.pereira", senha: "Porter@2026", cargo: "OPERADOR", ativo: true },
+    { id: 31, nome: "LUCAS DANIEL", usuario: "lucas.daniel", senha: "Porter@2026", cargo: "OPERADOR", ativo: true },
+    { id: 32, nome: "ADMINISTRADOR PORTER", usuario: "admin.porter", senha: "Admin@2026", cargo: "ADMIN", ativo: true }
+];
+
+// Dados dos condomínios
+const CONDOMINIOS = [
+    { id: 1, nome: "ALAMEDA PINHEIROS", cidade: "Londrina" },
+    { id: 2, nome: "ALGARVE", cidade: "Londrina" },
+    { id: 3, nome: "AMADEUS", cidade: "Londrina" },
+    { id: 4, nome: "AMARILIS", cidade: "Londrina" },
+    { id: 5, nome: "AMERICA", cidade: "Londrina" },
+    { id: 6, nome: "ANITA GARIBALDI", cidade: "Londrina" },
+    { id: 7, nome: "AQUALUNA", cidade: "Londrina" },
+    { id: 8, nome: "ARIANE", cidade: "Londrina" },
+    { id: 9, nome: "ARQUITETO JULIO RIBEIRO", cidade: "Londrina" },
+    { id: 10, nome: "ATHENAS", cidade: "Londrina" },
+    { id: 11, nome: "BARAO CATUAI", cidade: "Londrina" },
+    { id: 12, nome: "BASE - PORTER LONDRINA", cidade: "Londrina" },
+    { id: 13, nome: "BELLEVILLE", cidade: "Londrina" },
+    { id: 14, nome: "BENTO MUNHOZ DA ROCHA NETTO II", cidade: "Maringá" },
+    { id: 15, nome: "BIARRITZ", cidade: "Londrina" },
+    { id: 16, nome: "BOSQUE", cidade: "Londrina" },
+    { id: 17, nome: "CAMPOS ELISEOS", cidade: "Londrina" },
+    { id: 18, nome: "CASABLANCA", cidade: "Londrina" },
+    { id: 19, nome: "CASA CONDOMINIO (Londrina)", cidade: "Londrina" },
+    { id: 20, nome: "CASA CONDOMÍNIO (Maringá)", cidade: "Maringá" },
+    { id: 21, nome: "CASARIO DO PORTO", cidade: "Londrina" },
+    { id: 22, nome: "CENTRO EMPRESARIAL NEWTON CAMARA", cidade: "Londrina" },
+    { id: 23, nome: "CIDADE DOS PASSAROS", cidade: "Arapongas" },
+    { id: 24, nome: "CITZEN PARK", cidade: "Maringá" },
+    { id: 25, nome: "COMERCIAL CAMBARA", cidade: "Londrina" },
+    { id: 26, nome: "DOLCE VIE", cidade: "Londrina" },
+    { id: 27, nome: "EBANO", cidade: "Londrina" },
+    { id: 28, nome: "ENSEADAS", cidade: "Londrina" },
+    { id: 29, nome: "EUROCENTER", cidade: "Londrina" },
+    { id: 30, nome: "FERNANDA", cidade: "Londrina" },
+    { id: 31, nome: "FLOR DA MATA", cidade: "Londrina" },
+    { id: 32, nome: "FLOR DE LOTUS", cidade: "Londrina" },
+    { id: 33, nome: "FLORENZA", cidade: "Londrina" },
+    { id: 34, nome: "GOLDEN GATE", cidade: "Londrina" },
+    { id: 35, nome: "GOLDENVILLE", cidade: "Londrina" },
+    { id: 36, nome: "GRAO PARA", cidade: "Londrina" },
+    { id: 37, nome: "GREENFIELDS", cidade: "Londrina" },
+    { id: 38, nome: "HEIMTAL PARK", cidade: "Londrina" },
+    { id: 39, nome: "HYDE PARK", cidade: "Londrina" },
+    { id: 40, nome: "INDREL INDUSTRIA DE REFRIGERACAO LONDRINENSE LTDA", cidade: "Londrina" },
+    { id: 41, nome: "INEDITO", cidade: "Londrina" },
+    { id: 42, nome: "JOAO DINARDI", cidade: "Londrina" },
+    { id: 43, nome: "LAKE VAN GOGH", cidade: "Londrina" },
+    { id: 44, nome: "LA SENA", cidade: "Cambé" },
+    { id: 45, nome: "LE REVE", cidade: "Londrina" },
+    { id: 46, nome: "MAR DEL PLATA", cidade: "Londrina" },
+    { id: 47, nome: "MAXIMUS RESIDENCE", cidade: "Londrina" },
+    { id: 48, nome: "MGL - MECANICA EIRELI", cidade: "Cambé" },
+    { id: 49, nome: "MONT BLANC", cidade: "Londrina" },
+    { id: 50, nome: "MORADA IMPERIAL", cidade: "Londrina" },
+    { id: 51, nome: "MUNDO NOVO", cidade: "Londrina" },
+    { id: 52, nome: "NEW PLAZA RESIDENCE", cidade: "Maringá" },
+    { id: 53, nome: "NICOLA PAGAN", cidade: "Londrina" },
+    { id: 54, nome: "ORTIZ (Cambé)", cidade: "Cambé" },
+    { id: 55, nome: "PALAIS LAC DOR", cidade: "Londrina" },
+    { id: 56, nome: "PARQUE IMPERIAL", cidade: "Londrina" },
+    { id: 57, nome: "PEROLA NEGRA", cidade: "Londrina" },
+    { id: 58, nome: "PETIT VILLE", cidade: "Londrina" },
+    { id: 59, nome: "POLARIS", cidade: "Londrina" },
+    { id: 60, nome: "PORTLAND RESIDENCE", cidade: "Londrina" },
+    { id: 61, nome: "PRIME HOUSE", cidade: "Londrina" },
+    { id: 62, nome: "PRIVILEGE JAMAICA", cidade: "Londrina" },
+    { id: 63, nome: "QUINTA DA BOA VISTA III A", cidade: "Londrina" },
+    { id: 64, nome: "QUINTA DA BOA VISTA VI", cidade: "Londrina" },
+    { id: 65, nome: "RIO TEJO", cidade: "Maringá" },
+    { id: 66, nome: "RIO TEVERE", cidade: "Maringá" },
+    { id: 67, nome: "SANTOS", cidade: "Londrina" },
+    { id: 68, nome: "SAO GABRIEL", cidade: "Maringá" },
+    { id: 69, nome: "SERRA VERDE", cidade: "Londrina" },
+    { id: 70, nome: "SIRMIONE", cidade: "Maringá" },
+    { id: 71, nome: "SOLAR MONTREAUX", cidade: "Londrina" },
+    { id: 72, nome: "SPAZIO LAS PALMAS", cidade: "Londrina" },
+    { id: 73, nome: "SPEZIA", cidade: "Londrina" },
+    { id: 74, nome: "STRAUSS BOULEVARD", cidade: "Londrina" },
+    { id: 75, nome: "TAPUIAS JARDIM", cidade: "Londrina" },
+    { id: 76, nome: "TERRALIS JARDIN RESIDENCE", cidade: "Londrina" },
+    { id: 77, nome: "TERRASSE JARDIN", cidade: "Londrina" },
+    { id: 78, nome: "TORRES BRASIL", cidade: "Londrina" },
+    { id: 79, nome: "UNIVERSITOP", cidade: "Londrina" },
+    { id: 80, nome: "VENICE DOWNTOWN", cidade: "Londrina" },
+    { id: 81, nome: "VILLA BELLA (Cambé)", cidade: "Cambé" },
+    { id: 82, nome: "VILLA DAS TORRES", cidade: "Cambé" },
+    { id: 83, nome: "VILLAGE LA CORUNA", cidade: "Londrina" },
+    { id: 84, nome: "VILLAGGIO DO ENGENHO", cidade: "Cambé" },
+    { id: 85, nome: "VILLA ROMANA", cidade: "Londrina" },
+    { id: 86, nome: "VISCONDE DE BARBACENA", cidade: "Londrina" },
+    { id: 87, nome: "VITTACE BOULEVARD", cidade: "Londrina" },
+    { id: 88, nome: "VIVALDI BOULEVARD", cidade: "Londrina" },
+    { id: 89, nome: "VIVENDA DOS PESCADORES", cidade: "Maringá" }
+];
+
+// Tipos de registros para ATA
+const TIPOS_REGISTRO = [
+    { valor: "Informação", texto: "📝 Informação", cor: "#3498db", icone: "fa-info-circle" },
+    { valor: "Ocorrência", texto: "⚠️ Ocorrência", cor: "#f39c12", icone: "fa-exclamation-triangle" },
+    { valor: "Incidente", texto: "🚨 Incidente", cor: "#e74c3c", icone: "fa-bell" },
+    { valor: "Informações Fixas", texto: "📌 Informações Fixas", cor: "#9b59b6", icone: "fa-thumbtack" }
+];
+
+// Status de registros
+const STATUS_REGISTRO = [
+    { valor: "Em andamento", texto: "🔄 Em andamento", cor: "#f39c12", icone: "fa-sync-alt" },
+    { valor: "Finalizado", texto: "✅ Finalizado", cor: "#27ae60", icone: "fa-check-circle" },
+    { valor: "Cancelado", texto: "❌ Cancelado", cor: "#95a5a6", icone: "fa-times-circle" }
+];
+
+// Gravidade para Ordens de Serviço
+const GRAVIDADE_OS = [
+    { 
+        valor: "Baixa", 
+        texto: "🟢 Baixa - Manutenção Preventiva/Rotina", 
+        cor: "#27ae60",
+        prazo: "7 dias úteis",
+        icone: "fa-thermometer-empty"
+    },
+    { 
+        valor: "Média", 
+        texto: "🟡 Média - Reparo Necessário", 
+        cor: "#f39c12",
+        prazo: "3 dias úteis",
+        icone: "fa-thermometer-quarter"
+    },
+    { 
+        valor: "Alta", 
+        texto: "🔴 Alta - Urgente/Problema Crítico", 
+        cor: "#e74c3c",
+        prazo: "24 horas",
+        icone: "fa-thermometer-half"
+    },
+    { 
+        valor: "Emergência", 
+        texto: "🚨 Emergência - Risco Imediato", 
+        cor: "#8b0000",
+        prazo: "Imediato",
+        icone: "fa-thermometer-full"
+    }
+];
+
+// Opções de humor
+const OPCOES_HUMOR = [
+    { valor: "excelente", emoji: "😊", texto: "Excelente", cor: "#27ae60", icone: "fa-grin-beam" },
+    { valor: "bom", emoji: "🙂", texto: "Bom", cor: "#2ecc71", icone: "fa-smile" },
+    { valor: "normal", emoji: "😐", texto: "Normal", cor: "#f39c12", icone: "fa-meh" },
+    { valor: "ruim", emoji: "😕", texto: "Ruim", cor: "#e74c3c", icone: "fa-frown" },
+    { valor: "pessimo", emoji: "😞", texto: "Péssimo", cor: "#c0392b", icone: "fa-sad-tear" }
+];
+
+// Turnos de trabalho
+const TURNOS = [
+    { valor: "Diurno", texto: "Diurno", icone: "fa-sun", cor: "#f39c12" },
+    { valor: "Noturno", texto: "Noturno", icone: "fa-moon", cor: "#34495e" }
+];
+
+// E-mails para contato
+const EMAILS_TECNICA = [
+    "londrina.tecnica1@porter.com.br",
+    "londrina.tecnicaplantao@porter.com.br",
+    "londrina.tecnicaplantao1@porter.com.br"
+];
+
+// Classe de utilitários para manipulação de dados
+class DataUtils {
     
-    // Validação de login
-    validarLogin: function(usuario, senha, turno) {
-        // Validações básicas
-        if (!usuario || !senha || !turno) {
-            return { sucesso: false, mensagem: "Preencha todos os campos" };
+    // Login
+    static login(usuario, senha) {
+        if (!usuario || !senha) {
+            return { sucesso: false, mensagem: "Preencha usuário e senha" };
         }
         
-        // Validar formato do usuário (nome.sobrenome)
-        const usuarioRegex = /^[a-z]+\.[a-z]+$/;
-        if (!usuarioRegex.test(usuario)) {
-            return { sucesso: false, mensagem: "Usuário deve estar no formato: nome.sobrenome" };
-        }
-        
-        // Validar senha
-        if (senha.length < 6) {
-            return { sucesso: false, mensagem: "Senha deve ter pelo menos 6 caracteres" };
-        }
-        
-        // Buscar funcionário
-        const funcionario = DATA.funcionarios.find(f => f.user === usuario);
+        const funcionario = FUNCIONARIOS.find(f => 
+            f.usuario === usuario && 
+            f.ativo === true
+        );
         
         if (!funcionario) {
-            return { sucesso: false, mensagem: "Usuário não encontrado" };
+            return { sucesso: false, mensagem: "Usuário não encontrado ou inativo" };
         }
         
-        if (funcionario.pass !== senha) {
+        if (funcionario.senha !== senha) {
             return { sucesso: false, mensagem: "Senha incorreta" };
         }
         
-        // Validar turno
-        const turnosValidos = ["Diurno", "Noturno"];
-        if (!turnosValidos.includes(turno)) {
-            return { sucesso: false, mensagem: "Turno inválido" };
-        }
-        
-        return { 
-            sucesso: true, 
-            funcionario: {
-                nome: funcionario.nome,
-                usuario: funcionario.user,
-                role: funcionario.role,
-                turno: turno
-            }
-        };
-    },
-    
-    // Obter condomínios por cidade
-    getCondominiosPorCidade: function(cidade) {
-        if (!cidade) return DATA.condominios;
-        return DATA.condominios.filter(cond => cond.c === cidade);
-    },
-    
-    // Obter todas as cidades únicas
-    getCidades: function() {
-        const cidades = new Set();
-        DATA.condominios.forEach(cond => cidades.add(cond.c));
-        return Array.from(cidades);
-    },
-    
-    // Obter funcionário por usuário
-    getFuncionarioPorUsuario: function(usuario) {
-        return DATA.funcionarios.find(f => f.user === usuario);
-    },
-    
-    // Obter funcionários por role
-    getFuncionariosPorRole: function(role) {
-        return DATA.funcionarios.filter(f => f.role === role);
-    },
-    
-    // Validar condomínio
-    validarCondominio: function(nomeCondominio) {
-        return DATA.condominios.some(cond => cond.n === nomeCondominio);
-    },
-    
-    // Obter informações do condomínio
-    getInfoCondominio: function(nomeCondominio) {
-        const condominio = DATA.condominios.find(cond => cond.n === nomeCondominio);
-        if (condominio) {
-            return {
-                nome: condominio.n,
-                cidade: condominio.c,
-                tipo: this.getTipoCondominio(condominio.n)
-            };
-        }
-        return null;
-    },
-    
-    // Determinar tipo de condomínio baseado no nome
-    getTipoCondominio: function(nome) {
-        const nomeLower = nome.toLowerCase();
-        
-        if (nomeLower.includes("comercial") || nomeLower.includes("empresarial") || nomeLower.includes("center")) {
-            return "Comercial";
-        } else if (nomeLower.includes("industria") || nomeLower.includes("ltda") || nomeLower.includes("eireli")) {
-            return "Industrial";
-        } else if (nomeLower.includes("base") || nomeLower.includes("porter")) {
-            return "Sede";
-        } else {
-            return "Residencial";
-        }
-    },
-    
-    // Gerar estatísticas
-    getEstatisticas: function() {
-        return {
-            totalFuncionarios: DATA.funcionarios.length,
-            totalCondominios: DATA.condominios.length,
-            adminCount: DATA.funcionarios.filter(f => f.role === "ADMIN").length,
-            operadorCount: DATA.funcionarios.filter(f => f.role === "OPERADOR").length,
-            condominiosPorCidade: this.getCondominiosPorCidadeCount()
-        };
-    },
-    
-    getCondominiosPorCidadeCount: function() {
-        const counts = {};
-        DATA.condominios.forEach(cond => {
-            counts[cond.c] = (counts[cond.c] || 0) + 1;
-        });
-        return counts;
-    },
-    
-    // Exportar dados em diferentes formatos
-    exportarDados: function(formato = 'json') {
-        const dadosParaExportar = {
-            sistema: "Ata Operacional Porter",
-            versao: "2.0.0",
-            dataExportacao: new Date().toISOString(),
-            funcionarios: DATA.funcionarios,
-            condominios: DATA.condominios
-        };
-        
-        switch(formato.toLowerCase()) {
-            case 'json':
-                return JSON.stringify(dadosParaExportar, null, 2);
-                
-            case 'csv':
-                return this.converterParaCSV(dadosParaExportar);
-                
-            default:
-                return JSON.stringify(dadosParaExportar, null, 2);
-        }
-    },
-    
-    converterParaCSV: function(dados) {
-        let csv = '';
-        
-        // Funcionários
-        csv += "FUNCIONÁRIOS\n";
-        csv += "Nome,Usuário,Cargo\n";
-        dados.funcionarios.forEach(func => {
-            csv += `"${func.nome}","${func.user}","${func.role}"\n`;
-        });
-        
-        csv += "\nCONDOMÍNIOS\n";
-        csv += "Nome,Cidade\n";
-        dados.condominios.forEach(cond => {
-            csv += `"${cond.n}","${cond.c}"\n`;
-        });
-        
-        return csv;
-    },
-    
-    // Backup de dados (localStorage)
-    criarBackup: function() {
-        const backup = {
-            timestamp: new Date().getTime(),
-            data: JSON.stringify(DATA),
-            hash: this.criarHash(JSON.stringify(DATA))
-        };
-        
-        // Salvar no localStorage
-        localStorage.setItem('porter_backup_' + backup.timestamp, JSON.stringify(backup));
-        
-        // Limitar a 5 backups
-        this.limitarBackups(5);
-        
         return {
             sucesso: true,
-            timestamp: backup.timestamp,
-            data: new Date(backup.timestamp).toLocaleString('pt-BR')
-        };
-    },
-    
-    criarHash: function(string) {
-        let hash = 0;
-        for (let i = 0; i < string.length; i++) {
-            const char = string.charCodeAt(i);
-            hash = ((hash << 5) - hash) + char;
-            hash = hash & hash;
-        }
-        return hash.toString(16);
-    },
-    
-    limitarBackups: function(limite) {
-        const backups = [];
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key.startsWith('porter_backup_')) {
-                backups.push({
-                    key: key,
-                    timestamp: parseInt(key.replace('porter_backup_', ''))
-                });
+            funcionario: {
+                id: funcionario.id,
+                nome: funcionario.nome,
+                usuario: funcionario.usuario,
+                cargo: funcionario.cargo
             }
-        }
-        
-        backups.sort((a, b) => a.timestamp - b.timestamp);
-        
-        while (backups.length > limite) {
-            const backupParaRemover = backups.shift();
-            localStorage.removeItem(backupParaRemover.key);
-        }
-    },
-    
-    listarBackups: function() {
-        const backups = [];
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key.startsWith('porter_backup_')) {
-                try {
-                    const backup = JSON.parse(localStorage.getItem(key));
-                    backups.push({
-                        timestamp: backup.timestamp,
-                        data: new Date(backup.timestamp).toLocaleString('pt-BR'),
-                        size: backup.data.length
-                    });
-                } catch (e) {
-                    console.error('Erro ao ler backup:', key, e);
-                }
-            }
-        }
-        
-        backups.sort((a, b) => b.timestamp - a.timestamp);
-        return backups;
-    },
-    
-    restaurarBackup: function(timestamp) {
-        const key = 'porter_backup_' + timestamp;
-        const backup = JSON.parse(localStorage.getItem(key));
-        
-        if (!backup) {
-            return { sucesso: false, mensagem: "Backup não encontrado" };
-        }
-        
-        // Verificar integridade
-        const hashAtual = this.criarHash(backup.data);
-        if (hashAtual !== backup.hash) {
-            return { sucesso: false, mensagem: "Backup corrompido" };
-        }
-        
-        try {
-            const dadosRestaurados = JSON.parse(backup.data);
-            
-            // Atualizar DATA com dados restaurados
-            Object.keys(dadosRestaurados).forEach(key => {
-                if (DATA.hasOwnProperty(key)) {
-                    DATA[key] = dadosRestaurados[key];
-                }
-            });
-            
-            return { 
-                sucesso: true, 
-                mensagem: "Backup restaurado com sucesso",
-                data: new Date(backup.timestamp).toLocaleString('pt-BR')
-            };
-            
-        } catch (e) {
-            return { sucesso: false, mensagem: "Erro ao restaurar backup: " + e.message };
-        }
-    },
-    
-    // Log de atividades
-    logAtividade: function(usuario, acao, detalhes = null) {
-        const log = {
-            timestamp: new Date().getTime(),
-            usuario: usuario,
-            acao: acao,
-            detalhes: detalhes
         };
-        
-        const logs = JSON.parse(localStorage.getItem('porter_logs') || '[]');
-        logs.push(log);
-        
-        // Limitar a 500 logs
-        if (logs.length > 500) {
-            logs.shift();
-        }
-        
-        localStorage.setItem('porter_logs', JSON.stringify(logs));
-        return log;
-    },
+    }
     
-    getLogs: function(limite = 100) {
-        const logs = JSON.parse(localStorage.getItem('porter_logs') || '[]');
-        return logs.slice(-limite).reverse();
-    },
+    // Obter condomínios
+    static getCondominios() {
+        return CONDOMINIOS;
+    }
     
-    // Limpar logs antigos
-    limparLogsAntigos: function(dias = 30) {
-        const logs = JSON.parse(localStorage.getItem('porter_logs') || '[]');
-        const limite = Date.now() - (dias * 24 * 60 * 60 * 1000);
-        
-        const logsAtualizados = logs.filter(log => log.timestamp > limite);
-        localStorage.setItem('porter_logs', JSON.stringify(logsAtualizados));
-        
-        return {
-            removidos: logs.length - logsAtualizados.length,
-            restantes: logsAtualizados.length
-        };
-    },
+    static getCondominioPorNome(nome) {
+        return CONDOMINIOS.find(c => c.nome === nome);
+    }
     
-    // Validação de e-mail para OS
-    validarEmailsOS: function(emails) {
+    static getCondominiosPorCidade(cidade) {
+        if (!cidade) return CONDOMINIOS;
+        return CONDOMINIOS.filter(c => c.cidade === cidade);
+    }
+    
+    // Obter funcionários
+    static getFuncionarios() {
+        return FUNCIONARIOS.filter(f => f.ativo);
+    }
+    
+    static getFuncionarioPorUsuario(usuario) {
+        return FUNCIONARIOS.find(f => f.usuario === usuario && f.ativo);
+    }
+    
+    static getFuncionariosPorCargo(cargo) {
+        return FUNCIONARIOS.filter(f => f.cargo === cargo && f.ativo);
+    }
+    
+    // Obter cidades únicas
+    static getCidades() {
+        const cidades = new Set(CONDOMINIOS.map(c => c.cidade));
+        return Array.from(cidades).sort();
+    }
+    
+    // Validações
+    static validarEmail(email) {
+        const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return regex.test(email);
+    }
+    
+    static validarEmailsLista(emails) {
         if (!emails || emails.trim() === '') {
             return { valido: true, emails: [] };
         }
         
-        const listaEmails = emails.split(',').map(email => email.trim());
-        const emailsValidos = [];
-        const emailsInvalidos = [];
+        const lista = emails.split(',').map(e => e.trim());
+        const validos = [];
+        const invalidos = [];
         
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        
-        listaEmails.forEach(email => {
-            if (emailRegex.test(email)) {
-                emailsValidos.push(email);
+        lista.forEach(email => {
+            if (this.validarEmail(email)) {
+                validos.push(email);
             } else {
-                emailsInvalidos.push(email);
+                invalidos.push(email);
             }
         });
         
         return {
-            valido: emailsInvalidos.length === 0,
-            emails: emailsValidos,
-            invalidos: emailsInvalidos
+            valido: invalidos.length === 0,
+            validos: validos,
+            invalidos: invalidos
         };
-    },
-    
-    // Gerar ID único
-    gerarIdUnico: function() {
-        return Date.now().toString(36) + Math.random().toString(36).substr(2);
     }
+    
+    static validarUsuario(usuario) {
+        const regex = /^[a-z]+\.[a-z]+$/;
+        return regex.test(usuario);
+    }
+    
+    // Geração de IDs
+    static gerarId() {
+        return Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    }
+    
+    static gerarDataAtual() {
+        return new Date().toISOString();
+    }
+    
+    static formatarData(data) {
+        if (!data) return '';
+        const d = new Date(data);
+        return d.toLocaleString('pt-BR');
+    }
+    
+    static formatarDataCurta(data) {
+        if (!data) return '';
+        const d = new Date(data);
+        return d.toLocaleDateString('pt-BR');
+    }
+    
+    // LocalStorage helpers
+    static salvarLocal(chave, dados) {
+        try {
+            localStorage.setItem(chave, JSON.stringify(dados));
+            return true;
+        } catch (e) {
+            console.error('Erro ao salvar no localStorage:', e);
+            return false;
+        }
+    }
+    
+    static carregarLocal(chave) {
+        try {
+            const dados = localStorage.getItem(chave);
+            return dados ? JSON.parse(dados) : null;
+        } catch (e) {
+            console.error('Erro ao carregar do localStorage:', e);
+            return null;
+        }
+    }
+    
+    static removerLocal(chave) {
+        try {
+            localStorage.removeItem(chave);
+            return true;
+        } catch (e) {
+            console.error('Erro ao remover do localStorage:', e);
+            return false;
+        }
+    }
+    
+    // Logs e histórico
+    static logAcao(usuario, acao, detalhes = null) {
+        const log = {
+            id: this.gerarId(),
+            usuario: usuario,
+            acao: acao,
+            detalhes: detalhes,
+            timestamp: this.gerarDataAtual(),
+            dataFormatada: this.formatarData(new Date())
+        };
+        
+        // Salvar no localStorage
+        const logs = this.carregarLocal('porter_logs') || [];
+        logs.push(log);
+        
+        // Manter apenas últimos 500 logs
+        if (logs.length > 500) {
+            logs.splice(0, logs.length - 500);
+        }
+        
+        this.salvarLocal('porter_logs', logs);
+        
+        return log;
+    }
+    
+    static getLogs(limite = 100) {
+        const logs = this.carregarLocal('porter_logs') || [];
+        return logs.slice(-limite).reverse();
+    }
+    
+    // Backup de dados
+    static criarBackup() {
+        const backup = {
+            timestamp: this.gerarDataAtual(),
+            sistema: SYSTEM_CONFIG,
+            funcionarios: FUNCIONARIOS,
+            condominios: CONDOMINIOS
+        };
+        
+        const backupKey = 'backup_' + new Date().getTime();
+        this.salvarLocal(backupKey, backup);
+        
+        // Limitar backups
+        this.limitarBackups(5);
+        
+        return {
+            sucesso: true,
+            chave: backupKey,
+            data: this.formatarData(new Date())
+        };
+    }
+    
+    static limitarBackups(max = 5) {
+        const backups = [];
+        
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key.startsWith('backup_')) {
+                backups.push({
+                    key: key,
+                    timestamp: parseInt(key.replace('backup_', ''))
+                });
+            }
+        }
+        
+        backups.sort((a, b) => b.timestamp - a.timestamp);
+        
+        // Remover backups antigos
+        for (let i = max; i < backups.length; i++) {
+            localStorage.removeItem(backups[i].key);
+        }
+    }
+    
+    static listarBackups() {
+        const backups = [];
+        
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key.startsWith('backup_')) {
+                try {
+                    const backup = this.carregarLocal(key);
+                    backups.push({
+                        chave: key,
+                        data: this.formatarData(new Date(parseInt(key.replace('backup_', '')))),
+                        timestamp: parseInt(key.replace('backup_', ''))
+                    });
+                } catch (e) {
+                    console.error('Erro ao carregar backup:', key, e);
+                }
+            }
+        }
+        
+        return backups.sort((a, b) => b.timestamp - a.timestamp);
+    }
+    
+    // Estatísticas
+    static getEstatisticas() {
+        const funcionariosAtivos = FUNCIONARIOS.filter(f => f.ativo).length;
+        const admins = FUNCIONARIOS.filter(f => f.cargo === 'ADMIN' && f.ativo).length;
+        const operadores = FUNCIONARIOS.filter(f => f.cargo === 'OPERADOR' && f.ativo).length;
+        
+        // Contar condomínios por cidade
+        const condominiosPorCidade = {};
+        CONDOMINIOS.forEach(cond => {
+            condominiosPorCidade[cond.cidade] = (condominiosPorCidade[cond.cidade] || 0) + 1;
+        });
+        
+        return {
+            funcionarios: {
+                total: funcionariosAtivos,
+                admins: admins,
+                operadores: operadores
+            },
+            condominios: {
+                total: CONDOMINIOS.length,
+                porCidade: condominiosPorCidade
+            },
+            sistema: {
+                nome: SYSTEM_CONFIG.nome,
+                versao: SYSTEM_CONFIG.versao
+            }
+        };
+    }
+    
+    // Exportação de dados
+    static exportarDados(formato = 'json') {
+        const dados = {
+            sistema: SYSTEM_CONFIG,
+            exportacao: this.formatarData(new Date()),
+            funcionarios: FUNCIONARIOS,
+            condominios: CONDOMINIOS
+        };
+        
+        switch(formato) {
+            case 'json':
+                return JSON.stringify(dados, null, 2);
+                
+            case 'csv':
+                return this.converterParaCSV(dados);
+                
+            default:
+                return JSON.stringify(dados, null, 2);
+        }
+    }
+    
+    static converterParaCSV(dados) {
+        let csv = '';
+        
+        // Cabeçalho
+        csv += "Sistema;Versão;Data Exportação\n";
+        csv += `${dados.sistema.nome};${dados.sistema.versao};${dados.exportacao}\n\n`;
+        
+        // Funcionários
+        csv += "FUNCIONÁRIOS\n";
+        csv += "ID;Nome;Usuário;Cargo;Ativo\n";
+        dados.funcionarios.forEach(func => {
+            csv += `${func.id};"${func.nome}";${func.usuario};${func.cargo};${func.ativo}\n`;
+        });
+        
+        csv += "\nCONDOMÍNIOS\n";
+        csv += "ID;Nome;Cidade\n";
+        dados.condominios.forEach(cond => {
+            csv += `${cond.id};"${cond.nome}";${cond.cidade}\n`;
+        });
+        
+        return csv;
+    }
+}
+
+// Exportar objetos para uso global (compatibilidade)
+const DATA = {
+    funcionarios: FUNCIONARIOS.map(f => ({
+        nome: f.nome,
+        user: f.usuario,
+        pass: f.senha,
+        role: f.cargo
+    })),
+    condominios: CONDOMINIOS.map(c => ({
+        n: c.nome,
+        c: c.cidade
+    }))
 };
 
-// Exportar para uso global
+// Disponibilizar no escopo global
 if (typeof window !== 'undefined') {
     window.DATA = DATA;
     window.DataUtils = DataUtils;
+    window.SYSTEM_CONFIG = SYSTEM_CONFIG;
+    window.TIPOS_REGISTRO = TIPOS_REGISTRO;
+    window.STATUS_REGISTRO = STATUS_REGISTRO;
+    window.GRAVIDADE_OS = GRAVIDADE_OS;
+    window.OPCOES_HUMOR = OPCOES_HUMOR;
+    window.TURNOS = TURNOS;
+    window.EMAILS_TECNICA = EMAILS_TECNICA;
+}
+
+// Para uso em módulos
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        DATA,
+        DataUtils,
+        SYSTEM_CONFIG,
+        TIPOS_REGISTRO,
+        STATUS_REGISTRO,
+        GRAVIDADE_OS,
+        OPCOES_HUMOR,
+        TURNOS,
+        EMAILS_TECNICA,
+        FUNCIONARIOS,
+        CONDOMINIOS
+    };
 }
