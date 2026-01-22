@@ -12,9 +12,6 @@ const app = {
     firebaseEnabled: false, // 🆕 Controle do Firebase
     filtrosAtas: { condo: '', dataInicio: '', dataFim: '', tipo: '', status: '' },
     filtrosPresenca: { operador: '', dataInicio: '', dataFim: '', turno: '' },
-    // 🔧 ADIÇÃO: Controle de chats privados
-    activePrivateChat: null,
-    privateChats: {},
     
     init() {
         // TESTAR FIREBASE PRIMEIRO
@@ -115,15 +112,6 @@ const app = {
         setTimeout(() => {
             this.corrigirDadosExistentes();
         }, 1500);
-        
-        // 🔧 ADIÇÃO: Inicializar controle de chats privados
-        this.inicializarChatsPrivados();
-    },
-    
-    // 🔧 FUNÇÃO PARA INICIALIZAR CHATS PRIVADOS
-    inicializarChatsPrivados() {
-        console.log("🔧 Inicializando sistema de chats privados...");
-        this.privateChats = JSON.parse(localStorage.getItem('porter_private_chats') || '{}');
     },
     
     // 🔧 FUNÇÃO PARA CORRIGIR DADOS EXISTENTES
@@ -171,11 +159,7 @@ const app = {
                     message: msg.message || "(mensagem vazia)",
                     time: msg.time || new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
                     timestamp: msg.timestamp || new Date().toISOString(),
-                    date: msg.date || new Date().toLocaleDateString('pt-BR'),
-                    // 🔧 ADIÇÃO: Campo para chats privados
-                    privateChat: msg.privateChat || false,
-                    recipientUser: msg.recipientUser || null,
-                    recipientName: msg.recipientName || null
+                    date: msg.date || new Date().toLocaleDateString('pt-BR')
                 };
             });
             
@@ -724,14 +708,6 @@ const app = {
                         ${user.nome.split(' ')[0]}
                         ${user.role === 'ADMIN' ? ' 👑' : ''}
                         ${user.isCurrentUser ? '<span style="color: #3498db; font-size: 0.8rem;"> (Você)</span>' : ''}
-                        <!-- 🔧 ADIÇÃO: Botão para chat privado -->
-                        ${!user.isCurrentUser ? 
-                            `<button class="btn-private-chat" onclick="app.iniciarChatPrivado('${user.user}', '${user.nome}')" 
-                                    style="background: #3498db; color: white; border: none; border-radius: 4px; padding: 2px 8px; font-size: 0.7rem; margin-left: 5px; cursor: pointer;">
-                                <i class="fas fa-comment"></i>
-                            </button>` : 
-                            ''
-                        }
                     </div>
                     <div class="online-user-role">
                         ${user.moodStatus || 'Online'}
@@ -2653,7 +2629,6 @@ E-mail automático - Não responda
             return;
         }
         
-        // 🔧 CORREÇÃO: Permitir que ADMIN exclua qualquer registro
         const ehAutor = ata.user === this.currentUser.user;
         const ehAdmin = this.currentUser.role === 'ADMIN';
         
@@ -3017,87 +2992,9 @@ E-mail automático - Não responda
         const list = document.getElementById('presenca-lista');
         if (!list) return;
         
-        // 🔧 CORREÇÃO: Carregar todos os registros de todos os usuários
         let presencas = JSON.parse(localStorage.getItem('porter_presencas') || '[]');
         let logoffs = JSON.parse(localStorage.getItem('porter_logoffs') || '[]');
         
-        // 🔧 ADIÇÃO: Carregar logs de outros usuários do sistema central
-        if (this.firebaseEnabled) {
-            // Tentar carregar logs do Firebase para histórico completo
-            try {
-                // Carregar histórico mais amplo para visualização universal
-                const todasPresencas = [...presencas];
-                const todosLogoffs = [...logoffs];
-                
-                // Combinar todos os dados
-                let historico = [];
-                
-                todasPresencas.forEach(p => {
-                    historico.push({
-                        ...p,
-                        tipo: 'login',
-                        tipoDisplay: 'Login'
-                    });
-                });
-                
-                todosLogoffs.forEach(l => {
-                    historico.push({
-                        ...l,
-                        tipo: 'logoff',
-                        tipoDisplay: 'Logoff'
-                    });
-                });
-                
-                historico.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-                
-                // Aplicar filtros
-                if (this.filtrosPresenca.operador) {
-                    historico = historico.filter(p => p.nome === this.filtrosPresenca.operador);
-                }
-                
-                if (this.filtrosPresenca.dataInicio) {
-                    historico = historico.filter(p => p.dataISO >= this.filtrosPresenca.dataInicio);
-                }
-                
-                if (this.filtrosPresenca.dataFim) {
-                    historico = historico.filter(p => p.dataISO <= this.filtrosPresenca.dataFim);
-                }
-                
-                if (this.filtrosPresenca.turno) {
-                    historico = historico.filter(p => p.turno === this.filtrosPresenca.turno);
-                }
-                
-                historico = historico.slice(0, 100); // Limitar a 100 registros
-                
-                if (historico.length === 0) {
-                    list.innerHTML = `
-                        <tr>
-                            <td colspan="5" style="text-align: center; padding: 3rem; color: #888;">
-                                <i class="fas fa-history" style="font-size: 2rem; display: block; margin-bottom: 1rem; color: #ddd;"></i>
-                                Nenhum registro de histórico encontrado
-                            </td>
-                        </tr>
-                    `;
-                    return;
-                }
-                
-                list.innerHTML = historico.map(p => `
-                    <tr>
-                        <td><i class="fas fa-user-circle"></i> ${p.nome || ''}</td>
-                        <td><span style="padding: 4px 10px; background: ${p.turno === 'Diurno' ? '#fff3cd' : '#e8f4fc'}; border-radius: 4px;">${p.turno || ''}</span></td>
-                        <td>${p.data || ''}</td>
-                        <td>${p.tipo === 'login' ? `<i class="fas fa-sign-in-alt" style="color: #27ae60;"></i> ${p.hora || ''}` : ''}</td>
-                        <td>${p.tipo === 'logoff' ? `<i class="fas fa-sign-out-alt" style="color: #e74c3c;"></i> ${p.hora || ''}` : ''}</td>
-                    </tr>
-                `).join('');
-                
-                return;
-            } catch (e) {
-                console.log("Erro ao carregar histórico completo:", e);
-            }
-        }
-        
-        // Fallback para histórico local
         let historico = [];
         
         presencas.forEach(p => {
@@ -3159,7 +3056,7 @@ E-mail automático - Não responda
         `).join('');
     },
     
-    // 🔧 FUNÇÃO SENDCHATMESSAGE CORRIGIDA COM SUPORTE A CHATS PRIVADOS
+    // 🔧 FUNÇÃO SENDCHATMESSAGE CORRIGIDA
     sendChatMessage() {
         const input = document.getElementById('chat-input');
         const message = input?.value.trim();
@@ -3177,11 +3074,6 @@ E-mail automático - Não responda
             sendBtn.disabled = true;
         }
         
-        // 🔧 ADIÇÃO: Verificar se é um chat privado
-        const isPrivateChat = this.activePrivateChat !== null;
-        const recipientUser = isPrivateChat ? this.activePrivateChat.user : null;
-        const recipientName = isPrivateChat ? this.activePrivateChat.nome : null;
-        
         const chatMessage = {
             id: Date.now(),
             sender: this.currentUser.nome,
@@ -3191,17 +3083,13 @@ E-mail automático - Não responda
             message: message,
             time: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
             timestamp: new Date().toISOString(),
-            date: new Date().toLocaleDateString('pt-BR'),
-            // 🔧 ADIÇÃO: Campos para chats privados
-            privateChat: isPrivateChat,
-            recipientUser: recipientUser,
-            recipientName: recipientName
+            date: new Date().toLocaleDateString('pt-BR')
         };
         
         // ✅ SEMPRE salvar no localStorage primeiro
         let chat = JSON.parse(localStorage.getItem('porter_chat') || '[]');
         chat.unshift(chatMessage);
-        if (chat.length > 200) chat = chat.slice(0, 200); // Aumentado para 200 mensagens
+        if (chat.length > 100) chat = chat.slice(0, 100);
         localStorage.setItem('porter_chat', JSON.stringify(chat));
         
         // ✅ TENTAR salvar no Firebase também
@@ -3213,11 +3101,6 @@ E-mail automático - Não responda
                 .catch(error => {
                     console.log("⚠️ Mensagem salva apenas localmente:", error);
                 });
-        }
-        
-        // 🔧 ADIÇÃO: Atualizar conversa privada se aplicável
-        if (isPrivateChat && recipientUser) {
-            this.atualizarConversaPrivada(recipientUser, chatMessage);
         }
         
         this.criarNotificacaoChatComAcao(chatMessage);
@@ -3232,31 +3115,6 @@ E-mail automático - Não responda
         
         this.loadChat();
         this.updateTabCounts();
-    },
-    
-    // 🔧 ADIÇÃO: ATUALIZAR CONVERSA PRIVADA
-    atualizarConversaPrivada(recipientUser, chatMessage) {
-        const chatKey = this.getPrivateChatKey(this.currentUser.user, recipientUser);
-        
-        if (!this.privateChats[chatKey]) {
-            this.privateChats[chatKey] = {
-                users: [this.currentUser.user, recipientUser],
-                names: [this.currentUser.nome, this.activePrivateChat?.nome || 'Usuário'],
-                lastMessage: chatMessage.timestamp,
-                unread: 0
-            };
-        } else {
-            this.privateChats[chatKey].lastMessage = chatMessage.timestamp;
-        }
-        
-        // Salvar no localStorage
-        localStorage.setItem('porter_private_chats', JSON.stringify(this.privateChats));
-    },
-    
-    // 🔧 ADIÇÃO: OBTER CHAVE ÚNICA PARA CHAT PRIVADO
-    getPrivateChatKey(user1, user2) {
-        const users = [user1, user2].sort();
-        return `private_${users[0]}_${users[1]}`;
     },
     
     // 🔧 SINCRONIZAR CHAT COM FIREBASE (CORRIGIDO)
@@ -3285,7 +3143,7 @@ E-mail automático - Não responda
         });
     },
     
-    // 🔧 FUNÇÃO LOADCHAT CORRIGIDA COM SUPORTE A CHATS PRIVADOS E SCROLL
+    // 🔧 FUNÇÃO LOADCHAT CORRIGIDA
     loadChat() {
         const container = document.getElementById('chat-messages');
         if (!container) {
@@ -3307,10 +3165,7 @@ E-mail automático - Não responda
                 message: msg.message || "(mensagem vazia)",
                 time: msg.time || new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
                 timestamp: msg.timestamp || new Date().toISOString(),
-                date: msg.date || new Date().toLocaleDateString('pt-BR'),
-                privateChat: msg.privateChat || false,
-                recipientUser: msg.recipientUser || null,
-                recipientName: msg.recipientName || null
+                date: msg.date || new Date().toLocaleDateString('pt-BR')
             };
         });
         
@@ -3322,30 +3177,11 @@ E-mail automático - Não responda
             if (adminControls) adminControls.style.display = 'flex';
         }
         
-        // 🔧 ADIÇÃO: Filtrar mensagens se for chat privado
-        let mensagensParaExibir = [...chatCorrigido];
-        
-        if (this.activePrivateChat) {
-            const recipientUser = this.activePrivateChat.user;
-            mensagensParaExibir = chatCorrigido.filter(msg => {
-                // Mostrar mensagens onde o usuário atual é remetente OU destinatário
-                return msg.privateChat && 
-                      ((msg.senderUser === this.currentUser.user && msg.recipientUser === recipientUser) ||
-                       (msg.senderUser === recipientUser && msg.recipientUser === this.currentUser.user));
-            });
-        } else {
-            // Chat geral: mostrar apenas mensagens não privadas
-            mensagensParaExibir = chatCorrigido.filter(msg => !msg.privateChat);
-        }
-        
-        if (mensagensParaExibir.length === 0) {
+        if (chatCorrigido.length === 0) {
             container.innerHTML = `
                 <div style="text-align: center; padding: 2rem; color: var(--gray);">
                     <i class="fas fa-comment-slash" style="font-size: 2rem; margin-bottom: 1rem;"></i>
-                    <p>${this.activePrivateChat ? 
-                        `Nenhuma mensagem privada com ${this.activePrivateChat.nome}. Inicie a conversa!` : 
-                        'Nenhuma mensagem ainda. Seja o primeiro a enviar uma mensagem!'}
-                    </p>
+                    <p>Nenhuma mensagem ainda. Seja o primeiro a enviar uma mensagem!</p>
                 </div>
             `;
             
@@ -3353,13 +3189,9 @@ E-mail automático - Não responda
             return;
         }
         
-        const chatOrdenado = [...mensagensParaExibir].sort((a, b) => 
+        const chatOrdenado = [...chatCorrigido].sort((a, b) => 
             new Date(a.timestamp) - new Date(b.timestamp)
         );
-        
-        // 🔧 CORREÇÃO: Salvar a posição atual do scroll antes de atualizar
-        const scrollPosition = container.scrollTop;
-        const wasAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 50;
         
         container.innerHTML = '';
         
@@ -3369,18 +3201,11 @@ E-mail automático - Não responda
             messageDiv.className = `chat-message ${isSent ? 'sent' : 'received'}`;
             messageDiv.dataset.id = msg.id;
             
-            // 🔧 ADIÇÃO: Indicador de chat privado
-            const privateIndicator = msg.privateChat ? 
-                `<span style="font-size: 0.7rem; color: #666; margin-left: 5px;">
-                    <i class="fas fa-lock"></i> Privado
-                </span>` : '';
-            
             messageDiv.innerHTML = `
                 <div class="chat-message-header">
                     <span class="chat-message-sender">
                         <span style="font-size: 1.1rem; margin-right: 5px;">${msg.senderMood || '😐'}</span>
                         ${msg.sender} ${msg.senderRole === 'ADMIN' ? ' 👑' : ''}
-                        ${privateIndicator}
                     </span>
                     <span class="chat-message-time">${msg.date} ${msg.time}</span>
                 </div>
@@ -3399,14 +3224,7 @@ E-mail automático - Não responda
         });
         
         this.mostrarVistoPor(container);
-        
-        // 🔧 CORREÇÃO: Restaurar posição do scroll
-        if (wasAtBottom) {
-            container.scrollTop = container.scrollHeight;
-        } else {
-            container.scrollTop = scrollPosition;
-        }
-        
+        container.scrollTop = container.scrollHeight;
         this.registrarVisualizacaoChat();
         this.atualizarBadgeChat();
         
@@ -3423,7 +3241,7 @@ E-mail automático - Não responda
         try {
             db.collection("chat_messages")
                 .orderBy("firebaseTimestamp", "desc")
-                .limit(100)
+                .limit(50)
                 .get()
                 .then(snapshot => {
                     if (snapshot.empty) {
@@ -3451,19 +3269,16 @@ E-mail automático - Não responda
                                 message: data.message,
                                 time: data.time,
                                 date: data.date,
-                                timestamp: data.timestamp || data.firebaseTimestamp?.toDate?.()?.toISOString() || new Date().toISOString(),
-                                privateChat: data.privateChat || false,
-                                recipientUser: data.recipientUser || null,
-                                recipientName: data.recipientName || null
+                                timestamp: data.timestamp || data.firebaseTimestamp?.toDate?.()?.toISOString() || new Date().toISOString()
                             });
                             atualizou = true;
                         }
                     });
                     
                     if (atualizou) {
-                        // Manter limite de 200 mensagens
-                        if (chatLocal.length > 200) {
-                            chatLocal = chatLocal.slice(0, 200);
+                        // Manter limite de 100 mensagens
+                        if (chatLocal.length > 100) {
+                            chatLocal = chatLocal.slice(0, 100);
                         }
                         
                         localStorage.setItem('porter_chat', JSON.stringify(chatLocal));
@@ -3718,7 +3533,6 @@ E-mail automático - Não responda
             remocoes: JSON.parse(localStorage.getItem('porter_remocoes') || '[]'),
             os_emails: JSON.parse(localStorage.getItem('porter_os_emails') || '[]'),
             emails_history: JSON.parse(localStorage.getItem('porter_emails_history') || '[]'),
-            private_chats: JSON.parse(localStorage.getItem('porter_private_chats') || '{}'),
             exportDate: new Date().toISOString(),
             exportBy: this.currentUser.nome,
             firebaseEnabled: this.firebaseEnabled
@@ -3770,60 +3584,6 @@ E-mail automático - Não responda
         setTimeout(() => {
             message.remove();
         }, 3000);
-    },
-    
-    // 🔧 ADIÇÃO: INICIAR CHAT PRIVADO
-    iniciarChatPrivado(user, nome) {
-        if (!this.currentUser) return;
-        
-        if (user === this.currentUser.user) {
-            alert("Você não pode iniciar um chat privado consigo mesmo!");
-            return;
-        }
-        
-        this.activePrivateChat = { user, nome };
-        
-        // Atualizar interface para mostrar que estamos em um chat privado
-        const chatHeader = document.getElementById('chat-header-title');
-        if (chatHeader) {
-            chatHeader.innerHTML = `<i class="fas fa-lock"></i> Chat Privado: ${nome}`;
-        }
-        
-        // Adicionar botão para voltar ao chat geral
-        const chatInputArea = document.getElementById('chat-input-area');
-        if (chatInputArea) {
-            const backButton = document.createElement('button');
-            backButton.innerHTML = '<i class="fas fa-arrow-left"></i> Chat Geral';
-            backButton.className = 'btn btn-warning';
-            backButton.style.marginLeft = '10px';
-            backButton.onclick = () => {
-                this.activePrivateChat = null;
-                if (chatHeader) {
-                    chatHeader.innerHTML = '<i class="fas fa-comments"></i> Chat Geral';
-                }
-                backButton.remove();
-                this.loadChat();
-            };
-            
-            // Remover botão anterior se existir
-            const existingBackButton = chatInputArea.querySelector('.back-to-general');
-            if (existingBackButton) {
-                existingBackButton.remove();
-            }
-            
-            backButton.className += ' back-to-general';
-            chatInputArea.appendChild(backButton);
-        }
-        
-        // Carregar mensagens do chat privado
-        this.loadChat();
-        
-        // Focar no input
-        const chatInput = document.getElementById('chat-input');
-        if (chatInput) {
-            chatInput.placeholder = `Mensagem para ${nome}...`;
-            chatInput.focus();
-        }
     }
 };
 
@@ -3879,10 +3639,7 @@ setTimeout(() => {
             message: msg.message || "(mensagem vazia)",
             time: msg.time || new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
             timestamp: msg.timestamp || new Date().toISOString(),
-            date: msg.date || new Date().toLocaleDateString('pt-BR'),
-            privateChat: msg.privateChat || false,
-            recipientUser: msg.recipientUser || null,
-            recipientName: msg.recipientName || null
+            date: msg.date || new Date().toLocaleDateString('pt-BR')
         }));
         localStorage.setItem('porter_chat', JSON.stringify(chatCorrigido));
     }
@@ -3958,3 +3715,4 @@ setTimeout(() => {
         
     }, 3000);
 })();
+
