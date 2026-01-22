@@ -3143,13 +3143,16 @@ E-mail automático - Não responda
         });
     },
     
-    // 🔧 FUNÇÃO LOADCHAT CORRIGIDA
+    // 🔧 FUNÇÃO LOADCHAT CORRIGIDA - AGORA COM SCROLL FUNCIONAL
     loadChat() {
         const container = document.getElementById('chat-messages');
         if (!container) {
             console.log("❌ Container de chat não encontrado");
             return;
         }
+        
+        // 🆕 SALVAR A POSIÇÃO ATUAL DO SCROLL ANTES DE ATUALIZAR
+        const shouldScrollToBottom = this.shouldScrollToBottom(container);
         
         const chat = JSON.parse(localStorage.getItem('porter_chat') || '[]');
         
@@ -3224,7 +3227,14 @@ E-mail automático - Não responda
         });
         
         this.mostrarVistoPor(container);
-        container.scrollTop = container.scrollHeight;
+        
+        // 🆕 RESTAURAR A POSIÇÃO DO SCROLL
+        if (shouldScrollToBottom) {
+            // Se estava no fundo, manter no fundo
+            container.scrollTop = container.scrollHeight;
+        }
+        // Se não estava no fundo, manter a posição atual (não forçar scroll)
+        
         this.registrarVisualizacaoChat();
         this.atualizarBadgeChat();
         
@@ -3232,6 +3242,20 @@ E-mail automático - Não responda
         if (this.firebaseEnabled) {
             this.sincronizarChatDoFirebase();
         }
+    },
+    
+    // 🆕 FUNÇÃO AUXILIAR PARA DETERMINAR SE DEVE SCROLLAR PARA O FUNDO
+    shouldScrollToBottom(container) {
+        if (!container) return true;
+        
+        // Se o container está vazio ou tem poucas mensagens, scroll para baixo
+        if (container.children.length === 0) {
+            return true;
+        }
+        
+        // Verificar se o usuário está perto do fundo (dentro de 100px)
+        const scrollBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+        return scrollBottom <= 100;
     },
     
     // 🔧 SINCRONIZAR CHAT DO FIREBASE (CORRIGIDO)
@@ -3715,4 +3739,3 @@ setTimeout(() => {
         
     }, 3000);
 })();
-
