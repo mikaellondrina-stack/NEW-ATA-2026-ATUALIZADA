@@ -1,212 +1,339 @@
-// app-email.js - Sistema de Envio de Emails
-// Configuração do EmailJS (substitua com suas credenciais)
-(function() {
-    emailjs.init("SEU_USER_ID_AQUI");
-})();
-
-// Template ID do EmailJS
-const EMAIL_TEMPLATES = {
-    criacao_ata: "template_criacao_ata",
-    atualizacao_ata: "template_atualizacao_ata"
-};
-
-// Configurações de email
-const EMAIL_CONFIG = {
-    service_id: "SEU_SERVICE_ID_AQUI",
-    from_name: "Sistema Porter 2026",
-    from_email: "sistema@porter2026.com",
-    reply_to: "nao-responder@porter2026.com"
-};
-
-// Função para enviar email sobre ATA
-async function enviarEmailAta(ataData, ataId, tipo) {
-    try {
-        // Buscar emails dos participantes
-        const participantesEmails = await obterEmailsParticipantes(ataData.participantes);
+// SISTEMA DE E-MAIL - ADIÇÃO MODULAR
+const emailApp = {
+    // Configuração de e-mails da Porter
+    EMAIL_CONFIG: {
+        // Remetente (sistema Porter)
+        FROM_EMAIL: "londrina.operacional@porter.com.br",
+        FROM_NAME: "Sistema Porter - Operacional",
         
-        if (participantesEmails.length === 0 && !ataData.responsavel) {
-            console.log('Nenhum email para enviar');
-            return;
-        }
+        // Destinatários técnicos (múltiplos)
+        TO_EMAILS: [
+            "londrina.tecnica1@porter.com.br",
+            "londrina.tecnicaplantao@porter.com.br", 
+            "londrina.tecnicaplantao1@porter.com.br"
+        ],
         
-        // Preparar dados do email
-        const templateParams = {
-            to_name: ataData.responsavel,
-            to_email: await obterEmailResponsavel(ataData.responsavel),
-            ata_titulo: ataData.titulo,
-            ata_descricao: ataData.descricao,
-            ata_data: formatarData(ataData.data),
-            ata_condominio: ataData.condominio,
-            ata_status: ataData.status,
-            ata_id: ataId,
-            participantes: ataData.participantes?.join(', ') || 'Não informados',
-            criado_por: ataData.criadoPorNome,
-            data_criacao: new Date().toLocaleDateString('pt-BR'),
-            link_ata: `${window.location.origin}/ata/${ataId}`,
-            tipo_operacao: tipo === 'criacao' ? 'criação' : 'atualização'
-        };
-        
-        // Determinar template
-        const templateId = tipo === 'criacao' ? EMAIL_TEMPLATES.criacao_ata : EMAIL_TEMPLATES.atualizacao_ata;
-        
-        // Enviar email para o responsável
-        if (templateParams.to_email) {
-            await emailjs.send(
-                EMAIL_CONFIG.service_id,
-                templateId,
-                templateParams
-            );
-            console.log(`Email enviado para ${templateParams.to_email}`);
-        }
-        
-        // Enviar email para participantes (cópia)
-        if (participantesEmails.length > 0) {
-            await enviarEmailParticipantes(ataData, ataId, tipo, participantesEmails);
-        }
-        
-    } catch (error) {
-        console.error('Erro ao enviar email:', error);
-        // Não mostrar erro para o usuário para não interromper o fluxo principal
-    }
-}
-
-// Função auxiliar para obter emails dos participantes
-async function obterEmailsParticipantes(participantes) {
-    if (!participantes || participantes.length === 0) {
-        return [];
-    }
+        // Configuração do EmailJS (para envio real)
+        EMAILJS_SERVICE_ID: 'service_porter_operacional',
+        EMAILJS_TEMPLATE_ID: 'template_porter_tecnica',
+        EMAILJS_PUBLIC_KEY: 'c99DBcA6cuFkXU2xZ' // Chave pública exemplo - substitua pela sua
+    },
     
-    try {
-        const emails = [];
+    init() {
+        // Inicializar EmailJS
+        if (typeof emailjs !== 'undefined') {
+            emailjs.init(this.EMAIL_CONFIG.EMAILJS_PUBLIC_KEY);
+        }
         
-        // Para cada participante, buscar no banco de dados
-        for (const participante of participantes) {
-            const userSnapshot = await db.collection('users')
-                .where('name', '==', participante.trim())
-                .limit(1)
-                .get();
-            
-            if (!userSnapshot.empty) {
-                const user = userSnapshot.docs[0].data();
-                if (user.email) {
-                    emails.push(user.email);
-                }
+        // Configurar botão de e-mail
+        this.setupEmailButton();
+        
+        // Gerar CAPTCHA inicial
+        this.generateCaptcha();
+        
+        console.log('Sistema de e-mail Porter inicializado');
+    },
+    
+    setupEmailButton() {
+        const emailButton = document.getElementById('email-button');
+        if (emailButton) {
+            emailButton.onclick = () => this.openEmailModal();
+        }
+    },
+    
+    generateCaptcha() {
+        const questions = [
+            { question: "Quanto é 3 + 4?", answer: "7" },
+            { question: "Quanto é 5 + 2?", answer: "7" },
+            { question: "Quanto é 8 - 1?", answer: "7" },
+            { question: "Quanto é 10 - 3?", answer: "7" },
+            { question: "Digite o número sete por extenso", answer: "sete" },
+            { question: "Ano atual? (apenas últimos 2 números)", answer: "26" },
+            { question: "Quantas letras tem 'PORTER'?", answer: "6" }
+        ];
+        
+        const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
+        
+        if (document.getElementById('captcha-question')) {
+            document.getElementById('captcha-question').textContent = randomQuestion.question;
+            document.getElementById('captcha-question').dataset.answer = randomQuestion.answer.toLowerCase();
+        }
+    },
+    
+    openEmailModal() {
+        // Fechar outros modais abertos
+        document.querySelectorAll('.modal.show').forEach(modal => {
+            modal.classList.remove('show');
+        });
+        
+        // Preencher nome automaticamente se usuário estiver logado
+        if (app.currentUser) {
+            document.getElementById('email-sender-name').value = app.currentUser.nome;
+        } else {
+            document.getElementById('email-sender-name').value = '';
+        }
+        
+        // Limpar outros campos
+        document.getElementById('email-condominio').value = '';
+        document.getElementById('email-subject').value = '';
+        document.getElementById('email-message').value = '';
+        document.getElementById('captcha-answer').value = '';
+        
+        // Resetar status
+        const statusDiv = document.getElementById('email-status');
+        statusDiv.className = 'email-status';
+        statusDiv.style.display = 'none';
+        statusDiv.innerHTML = '';
+        
+        // Gerar novo CAPTCHA
+        this.generateCaptcha();
+        
+        // Mostrar modal
+        document.getElementById('email-modal').classList.add('show');
+        
+        // Focar no primeiro campo
+        setTimeout(() => {
+            const nameField = document.getElementById('email-sender-name');
+            if (nameField && !nameField.value) {
+                nameField.focus();
+            } else {
+                document.getElementById('email-subject').focus();
             }
+        }, 300);
+    },
+    
+    closeEmailModal() {
+        document.getElementById('email-modal').classList.remove('show');
+    },
+    
+    validateEmailForm() {
+        const name = document.getElementById('email-sender-name').value.trim();
+        const subject = document.getElementById('email-subject').value.trim();
+        const message = document.getElementById('email-message').value.trim();
+        const captchaAnswer = document.getElementById('captcha-answer').value.trim().toLowerCase();
+        const correctAnswer = document.getElementById('captcha-question').dataset.answer;
+        
+        // Validações básicas
+        if (!name || name.length < 3) {
+            this.showStatus('Por favor, digite seu nome completo.', 'error');
+            return false;
         }
         
-        return emails;
-        
-    } catch (error) {
-        console.error('Erro ao buscar emails dos participantes:', error);
-        return [];
-    }
-}
-
-// Função para obter email do responsável
-async function obterEmailResponsavel(responsavelNome) {
-    try {
-        const userSnapshot = await db.collection('users')
-            .where('name', '==', responsavelNome.trim())
-            .limit(1)
-            .get();
-        
-        if (!userSnapshot.empty) {
-            const user = userSnapshot.docs[0].data();
-            return user.email || null;
+        if (!subject || subject.length < 5) {
+            this.showStatus('Por favor, digite um assunto.', 'error');
+            return false;
         }
         
-        return null;
-        
-    } catch (error) {
-        console.error('Erro ao buscar email do responsável:', error);
-        return null;
-    }
-}
-
-// Função para enviar email para participantes
-async function enviarEmailParticipantes(ataData, ataId, tipo, emails) {
-    try {
-        const templateId = tipo === 'criacao' ? EMAIL_TEMPLATES.criacao_ata : EMAIL_TEMPLATES.atualizacao_ata;
-        
-        for (const email of emails) {
-            const templateParams = {
-                to_name: "Participante",
-                to_email: email,
-                ata_titulo: ataData.titulo,
-                ata_descricao: ataData.descricao,
-                ata_data: formatarData(ataData.data),
-                ata_condominio: ataData.condominio,
-                ata_status: ataData.status,
-                ata_id: ataId,
-                responsavel: ataData.responsavel,
-                criado_por: ataData.criadoPorNome,
-                data_criacao: new Date().toLocaleDateString('pt-BR'),
-                link_ata: `${window.location.origin}/ata/${ataId}`,
-                tipo_operacao: tipo === 'criacao' ? 'criação' : 'atualização'
-            };
-            
-            await emailjs.send(
-                EMAIL_CONFIG.service_id,
-                templateId,
-                templateParams
-            );
-            
-            console.log(`Email de cópia enviado para ${email}`);
-            
-            // Pequena pausa para evitar limite de taxa
-            await new Promise(resolve => setTimeout(resolve, 500));
+        if (!message || message.length < 10) {
+            this.showStatus('Por favor, digite uma mensagem mais detalhada.', 'error');
+            return false;
         }
         
-    } catch (error) {
-        console.error('Erro ao enviar email para participantes:', error);
-    }
-}
-
-// Função para formatar data
-function formatarData(dataString) {
-    const data = new Date(dataString);
-    return data.toLocaleDateString('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-    });
-}
-
-// Função para notificar sobre mudança de status
-async function notificarMudancaStatus(ataId, antigoStatus, novoStatus) {
-    try {
-        const ataDoc = await db.collection('atas').doc(ataId).get();
-        if (!ataDoc.exists) return;
+        if (!captchaAnswer || captchaAnswer !== correctAnswer) {
+            this.showStatus('Resposta de segurança incorreta. Tente novamente.', 'error');
+            this.generateCaptcha();
+            return false;
+        }
         
-        const ataData = ataDoc.data();
+        return true;
+    },
+    
+    showStatus(message, type) {
+        const statusDiv = document.getElementById('email-status');
+        statusDiv.className = `email-status ${type}`;
         
-        // Preparar dados do email de notificação
-        const templateParams = {
-            to_name: ataData.responsavel,
-            to_email: await obterEmailResponsavel(ataData.responsavel),
-            ata_titulo: ataData.titulo,
-            ata_id: ataId,
-            antigo_status: antigoStatus,
-            novo_status: novoStatus,
-            data_mudanca: new Date().toLocaleDateString('pt-BR'),
-            hora_mudanca: new Date().toLocaleTimeString('pt-BR'),
-            link_ata: `${window.location.origin}/ata/${ataId}`
+        const icons = {
+            'success': 'fa-check-circle',
+            'error': 'fa-exclamation-circle',
+            'sending': 'fa-spinner fa-spin'
         };
         
-        // Enviar email de notificação
-        await emailjs.send(
-            EMAIL_CONFIG.service_id,
-            "template_mudanca_status",
-            templateParams
-        );
+        statusDiv.innerHTML = `
+            <i class="fas ${icons[type] || 'fa-info-circle'}"></i>
+            ${message}
+        `;
+        statusDiv.style.display = 'block';
         
-        console.log(`Notificação de mudança de status enviada para ${templateParams.to_email}`);
+        // Rolar para mostrar o status
+        statusDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
         
-    } catch (error) {
-        console.error('Erro ao enviar notificação de status:', error);
-    }
-}
+        if (type === 'success') {
+            setTimeout(() => {
+                this.closeEmailModal();
+            }, 3000);
+        }
+    },
+    
+    async sendEmail() {
+        // Validar formulário
+        if (!this.validateEmailForm()) return;
+        
+        const name = document.getElementById('email-sender-name').value.trim();
+        const condominio = document.getElementById('email-condominio').value.trim();
+        const subject = document.getElementById('email-subject').value.trim();
+        const message = document.getElementById('email-message').value.trim();
+        
+        // Obter informações adicionais
+        const userInfo = app.currentUser ? `
+Operador: ${app.currentUser.nome}
+Turno: ${app.currentUser.turno}
+Data/Hora: ${new Date().toLocaleString('pt-BR')}
+        ` : `
+Remetente: ${name}
+Data/Hora: ${new Date().toLocaleString('pt-BR')}
+        `;
+        
+        const condominioInfo = condominio ? `Condomínio: ${condominio}\n` : '';
+        
+        // Construir mensagem completa
+        const fullMessage = `${message}
 
-// Exportar funções para uso em app.js
-window.enviarEmailAta = enviarEmailAta;
-window.notificarMudancaStatus = notificarMudancaStatus;
+----------------------------------------
+INFORMAÇÕES ADICIONAIS:
+${condominioInfo}${userInfo}
+----------------------------------------
+* E-mail enviado via Sistema Porter Operacional *
+        `;
+        
+        // Mostrar status de envio
+        this.showStatus('Enviando e-mail para a equipe técnica...', 'sending');
+        
+        // Desabilitar botão
+        const sendBtn = document.getElementById('email-send-btn');
+        const originalText = sendBtn.innerHTML;
+        sendBtn.disabled = true;
+        sendBtn.innerHTML = '<div class="loading"></div> Enviando...';
+        
+        try {
+            // Tentar usar EmailJS para envio real
+            if (typeof emailjs !== 'undefined' && this.EMAIL_CONFIG.EMAILJS_PUBLIC_KEY) {
+                // Enviar para cada destinatário técnico
+                const sendPromises = this.EMAIL_CONFIG.TO_EMAILS.map(toEmail => {
+                    const templateParams = {
+                        from_name: name,
+                        from_email: this.EMAIL_CONFIG.FROM_EMAIL,
+                        to_name: "Equipe Técnica Porter",
+                        to_email: toEmail,
+                        subject: `[PORTER] ${subject}`,
+                        message: fullMessage,
+                        condominio: condominio || 'Não informado',
+                        data_envio: new Date().toLocaleString('pt-BR'),
+                        reply_to: this.EMAIL_CONFIG.FROM_EMAIL
+                    };
+                    
+                    return emailjs.send(
+                        this.EMAIL_CONFIG.EMAILJS_SERVICE_ID,
+                        this.EMAIL_CONFIG.EMAILJS_TEMPLATE_ID,
+                        templateParams
+                    );
+                });
+                
+                // Aguardar todos os envios
+                await Promise.all(sendPromises);
+                
+                this.showStatus(`✅ E-mail enviado com sucesso para ${this.EMAIL_CONFIG.TO_EMAILS.length} destinatário(s)!`, 'success');
+                
+            } else {
+                // Fallback: Simulação de envio (para demonstração)
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                // Registrar no localStorage para histórico
+                this.saveEmailToHistory({
+                    name: name,
+                    condominio: condominio,
+                    subject: subject,
+                    message: message,
+                    to_emails: this.EMAIL_CONFIG.TO_EMAILS,
+                    from_email: this.EMAIL_CONFIG.FROM_EMAIL,
+                    date: new Date().toLocaleString('pt-BR'),
+                    status: 'sent_simulation',
+                    user: app.currentUser?.nome || 'Visitante'
+                });
+                
+                this.showStatus(`✅ E-mail registrado! (Modo simulação) Seria enviado para ${this.EMAIL_CONFIG.TO_EMAILS.length} destinatário(s).`, 'success');
+                
+                // Log para demonstração
+                console.log('📧 E-mail simulado:', {
+                    from: this.EMAIL_CONFIG.FROM_EMAIL,
+                    to: this.EMAIL_CONFIG.TO_EMAILS,
+                    subject: `[PORTER] ${subject}`,
+                    message: fullMessage
+                });
+            }
+            
+            // Registrar no sistema de notificações
+            this.registerEmailNotification(name, subject, condominio);
+            
+        } catch (error) {
+            console.error('Erro ao enviar e-mail:', error);
+            
+            // Salvar como falha no histórico
+            this.saveEmailToHistory({
+                name: name,
+                condominio: condominio,
+                subject: subject,
+                message: message,
+                to_emails: this.EMAIL_CONFIG.TO_EMAILS,
+                from_email: this.EMAIL_CONFIG.FROM_EMAIL,
+                date: new Date().toLocaleString('pt-BR'),
+                status: 'error',
+                error: error.message,
+                user: app.currentUser?.nome || 'Visitante'
+            });
+            
+            this.showStatus('❌ Erro ao enviar e-mail. Tente novamente ou contate o administrador.', 'error');
+            
+        } finally {
+            // Reabilitar botão
+            sendBtn.disabled = false;
+            sendBtn.innerHTML = originalText;
+            
+            // Gerar novo CAPTCHA
+            this.generateCaptcha();
+        }
+    },
+    
+    saveEmailToHistory(emailData) {
+        let emailsHistory = JSON.parse(localStorage.getItem('porter_emails_history') || '[]');
+        
+        const historyEntry = {
+            id: Date.now(),
+            ...emailData,
+            timestamp: new Date().toISOString()
+        };
+        
+        emailsHistory.unshift(historyEntry);
+        
+        // Manter apenas os últimos 100 e-mails
+        if (emailsHistory.length > 100) {
+            emailsHistory = emailsHistory.slice(0, 100);
+        }
+        
+        localStorage.setItem('porter_emails_history', JSON.stringify(emailsHistory));
+    },
+    
+    registerEmailNotification(senderName, subject, condominio) {
+        const notification = {
+            id: Date.now(),
+            condo: condominio || 'Sistema Porter',
+            tipo: 'email',
+            desc: `E-mail enviado por ${senderName}: ${subject}`,
+            data: new Date().toLocaleDateString('pt-BR'),
+            hora: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
+            timestamp: new Date().toISOString(),
+            lida: false
+        };
+        
+        let notificacoes = JSON.parse(localStorage.getItem('porter_notificacoes') || '[]');
+        notificacoes.unshift(notification);
+        
+        if (notificacoes.length > 50) notificacoes.pop();
+        localStorage.setItem('porter_notificacoes', JSON.stringify(notificacoes));
+        
+        // Atualizar notificações no sistema principal
+        if (app.loadNotifications) {
+            app.loadNotifications();
+            app.updateNotificationBadges();
+        }
+    }
+};
