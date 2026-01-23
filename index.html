@@ -6,6 +6,10 @@
     <title>Ata Operacional Porter - 2026</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 </head>
 <body>
 
@@ -13,7 +17,6 @@
 <section id="login-screen">
     <div class="login-container">
         <div class="login-logo">
-            <!-- LOGO DA PORTER ADICIONADO AQUI -->
             <div class="login-logo-img"></div>
             <h1>Ata Operacional Porter</h1>
             <p>Sistema de Registro de Ocorrências - 2026</p>
@@ -63,7 +66,6 @@
                 <i class="fas fa-bars"></i>
             </button>
             <div class="header-logo">
-                <!-- LOGO DA PORTER NO HEADER -->
                 <div class="logo-porter"></div>
                 <div class="header-logo-text">
                     <strong>ATA OPERACIONAL PORTER</strong>
@@ -71,12 +73,10 @@
                 </div>
             </div>
         </div>
-        
         <!-- ÁREA DE INFORMAÇÕES DO USUÁRIO -->
         <div id="user-info">
             <!-- Será preenchido dinamicamente com informações do login -->
         </div>
-        
         <div style="display: flex; align-items: center; gap: 15px;">
             <!-- OPERADORES ONLINE -->
             <div id="online-users" class="online-users-dropdown">
@@ -87,7 +87,6 @@
                 <i class="fas fa-chevron-down" style="font-size: 0.8rem;"></i>
                 <div id="online-users-list" class="online-users-list"></div>
             </div>
-            
             <!-- Notificações -->
             <div class="notification-bell" onclick="app.toggleNotifications()">
                 <i class="fas fa-bell"></i>
@@ -100,24 +99,16 @@
                     <div id="notifications-list"></div>
                 </div>
             </div>
-            
-            <!-- Botão Contato E-mail -->
-            <button id="email-button" class="btn btn-success">
-                <i class="fas fa-envelope"></i> Contato
-            </button>
-            
             <!-- Botão Relatório -->
             <button class="btn btn-success" onclick="app.openReportModal()">
                 <i class="fas fa-file-pdf"></i> Relatório
             </button>
-            
             <!-- Botão Admin (apenas para admin) -->
             <div id="admin-controls" class="admin-controls" style="display: none;">
                 <button class="btn btn-warning" onclick="app.openAdminPanel()">
                     <i class="fas fa-user-shield"></i> Admin
                 </button>
             </div>
-            
             <!-- Botão Sair -->
             <button class="btn btn-accent" onclick="app.logout()">
                 <i class="fas fa-sign-out-alt"></i> Sair
@@ -143,6 +134,11 @@
             <i class="fas fa-comments"></i> CHAT GERAL
             <span class="chat-badge" id="chat-badge">0</span>
         </button>
+        <!-- NEW: Nova aba de chat privado -->
+        <button class="tab-btn" onclick="app.switchTab('tab-chat-privado', this)" id="tab-chat-privado-btn">
+            <i class="fas fa-user-secret"></i> CHAT PRIVADO
+            <span class="chat-badge" id="chat-private-badge">0</span>
+        </button>
         <button class="tab-btn" onclick="app.switchTab('tab-presenca', this)">
             <i class="fas fa-users"></i> HISTÓRICO
         </button>
@@ -157,21 +153,17 @@
             <div class="mood-subtitle">
                 Selecione a expressão que melhor representa seu estado emocional atual
             </div>
-            
             <div class="mood-options" id="mood-options">
                 <!-- As opções serão geradas via JavaScript -->
             </div>
-            
             <div class="mood-status" id="mood-status">
                 <i class="fas fa-mouse-pointer"></i> Clique em uma expressão para selecionar
             </div>
-            
             <div class="mood-submit">
                 <button class="btn btn-primary" onclick="app.enviarMood()" id="mood-submit-btn" disabled>
                     <i class="fas fa-paper-plane"></i> Enviar Meu Sentimento
                 </button>
             </div>
-            
             <div id="mood-result" class="mood-result hidden"></div>
         </div>
 
@@ -225,7 +217,6 @@
                 </div>
                 <div id="filtros-ativos-ata" class="filter-info"></div>
             </div>
-
             <div id="resultados-info-ata" style="margin-bottom: 1rem;"></div>
 
             <!-- Formulário Nova Ata -->
@@ -285,100 +276,147 @@
                     <i class="fas fa-info-circle"></i> Estas são informações importantes que permanecem visíveis para todos os operadores.
                 </p>
             </div>
-            
             <div id="fixas-lista"></div>
         </div>
 
         <!-- ABA: ORDEM DE SERVIÇO -->
         <div id="tab-os" class="tab-content hidden">
-            <!-- Formulário OS -->
-            <div class="form-card os-form fade-in">
-                <h2><i class="fas fa-tools"></i> Nova Ordem de Serviço</h2>
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label><i class="fas fa-building"></i> Condomínio</label>
-                        <select id="os-condo" onchange="app.updateCityOS()">
-                            <option value="">Selecione um condomínio...</option>
-                        </select>
+            <!-- Tela de Confirmação de OS Enviada (oculta por padrão) -->
+            <div id="os-confirmation-screen" class="os-confirmation hidden">
+                <i class="fas fa-check-circle"></i>
+                <h2>Ordem de Serviço Aberta com Sucesso!</h2>
+                <p style="font-size: 1.1rem; color: var(--gray); margin-bottom: 2rem;">
+                    A sua ordem de serviço foi registrada e enviada por e-mail.
+                </p>
+                <div class="details">
+                    <div style="margin-bottom: 10px;">
+                        <strong>📋 Número da OS:</strong> <span id="os-confirmation-id">OS-001</span>
                     </div>
-                    <div class="form-group">
-                        <label><i class="fas fa-city"></i> Cidade</label>
-                        <input type="text" id="os-cidade" readonly style="background: #f8f9fa;">
+                    <div style="margin-bottom: 10px;">
+                        <strong>🏢 Condomínio:</strong> <span id="os-confirmation-condo">-</span>
                     </div>
-                </div>
-                <div class="grid-2">
-                    <!-- NOVO CAMPO: GRAVIDADE -->
-                    <div class="form-group">
-                        <label><i class="fas fa-exclamation-triangle"></i> Gravidade da Ocorrência</label>
-                        <select id="os-gravidade">
-                            <option value="Baixa">🟢 Baixa - Manutenção Preventiva/Rotina</option>
-                            <option value="Média" selected>🟡 Média - Reparo Necessário</option>
-                            <option value="Alta">🔴 Alta - Urgente/Problema Crítico</option>
-                            <option value="Emergência">🚨 Emergência - Risco Imediato</option>
-                        </select>
-                        <small style="font-size: 0.8rem; color: #666;">Define prioridade e tempo de resposta</small>
+                    <div style="margin-bottom: 10px;">
+                        <strong>⚠️ Gravidade:</strong> <span id="os-confirmation-gravidade">-</span>
                     </div>
-                    <div class="form-group">
-                        <label><i class="fas fa-calendar"></i> Data Preferencial</label>
-                        <input type="date" id="os-data">
+                    <div style="margin-bottom: 10px;">
+                        <strong>👤 Funcionário:</strong> <span id="os-confirmation-funcionario">-</span>
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <strong>📧 E-mail:</strong> <span id="os-confirmation-email">-</span>
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <strong>📅 Data/Hora:</strong> <span id="os-confirmation-data">-</span>
                     </div>
                 </div>
-                <div class="form-group">
-                    <label><i class="fas fa-align-left"></i> Descrição do Serviço</label>
-                    <textarea id="os-desc" rows="5" placeholder="Descreva detalhadamente o serviço necessário..."></textarea>
+                <p style="margin-top: 1.5rem; color: var(--gray); font-size: 0.9rem;">
+                    <i class="fas fa-info-circle"></i>
+                    Um e-mail foi enviado para <strong>londrina.operacional@porter.com.br</strong> com todos os detalhes.
+                    Os técnicos responderão diretamente por e-mail.
+                </p>
+                <div class="back-to-os">
+                    <button class="btn btn-primary" onclick="app.voltarParaFormOS()">
+                        <i class="fas fa-plus-circle"></i> Abrir Nova OS
+                    </button>
                 </div>
-                <!-- ATUALIZADO: E-MAILS MÚLTIPLOS -->
-                <div class="form-group">
-                    <label><i class="fas fa-envelope"></i> E-mails para Notificação (separados por vírgula)</label>
-                    <input type="text" id="os-emails" placeholder="tecnica@porter.com, sindico@condominio.com, adm@empresa.com">
-                    <small style="font-size: 0.8rem; color: #666;">Separe múltiplos e-mails por vírgula</small>
-                </div>
-                
-                <!-- VISUALIZAÇÃO DA PRIORIDADE -->
-                <div id="os-preview-prioridade" style="margin: 1rem 0; padding: 1rem; background: #f8f9fa; border-radius: 8px; display: none;">
-                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
-                        <div id="os-preview-icone" style="font-size: 1.2rem;"></div>
-                        <div>
-                            <strong id="os-preview-gravidade"></strong>
-                            <div style="font-size: 0.85rem; color: #666;" id="os-preview-prazo"></div>
-                        </div>
-                    </div>
-                    <div style="font-size: 0.85rem; color: #666;">
-                        <i class="fas fa-info-circle"></i> Esta OS será tratada com prioridade correspondente
-                    </div>
-                </div>
-                
-                <button class="btn btn-info" onclick="app.saveOS()">
-                    <i class="fas fa-paper-plane"></i> ENVIAR ORDEM DE SERVIÇO
-                </button>
             </div>
 
-            <!-- NOVO: FILTRO POR GRAVIDADE NA LISTA -->
-            <div style="margin: 2rem 0 1rem 0; display: flex; justify-content: space-between; align-items: center;">
-                <h3><i class="fas fa-list"></i> Ordens de Serviço</h3>
-                <div style="display: flex; gap: 10px;">
-                    <div class="btn-group">
-                        <button class="btn btn-filter" onclick="app.filtrarOSTodas()">
-                            Todas
+            <!-- Formulário OS (visível por padrão) -->
+            <div id="os-form-container">
+                <div class="form-card os-form fade-in">
+                    <h2><i class="fas fa-tools"></i> Nova Ordem de Serviço</h2>
+                    <!-- FORMULÁRIO COM MÉTODO POST PARA FORMSUBMIT -->
+                    <form id="os-form-email" action="https://formsubmit.co/londrina.operacional@porter.com.br" method="POST" target="_blank">
+                        <!-- Campos ocultos do FormSubmit -->
+                        <input type="hidden" name="_subject" value="[NOVA O.S] - Sistema Porter">
+                        <input type="hidden" name="_template" value="table">
+                        <input type="hidden" name="_captcha" value="false">
+                        <input type="hidden" name="_next" value="https://seu-dominio.com/confirmacao-os.html">
+                        
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label><i class="fas fa-building"></i> Condomínio *</label>
+                                <select id="os-condo" name="condominio" onchange="app.updateCityOS()" required>
+                                    <option value="">Selecione um condomínio...</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label><i class="fas fa-city"></i> Cidade</label>
+                                <input type="text" id="os-cidade" name="cidade" readonly style="background: #f8f9fa;">
+                            </div>
+                        </div>
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label><i class="fas fa-user"></i> Nome do Funcionário *</label>
+                                <input type="text" id="os-funcionario" name="funcionario" placeholder="Seu nome completo" required>
+                            </div>
+                            <div class="form-group">
+                                <label><i class="fas fa-envelope"></i> E-mail do Funcionário *</label>
+                                <input type="email" id="os-email" name="email" placeholder="londrina.operacional@porter.com.br" required>
+                            </div>
+                        </div>
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label><i class="fas fa-sitemap"></i> Setor/Departamento *</label>
+                                <select id="os-setor" name="setor" required>
+                                    <option value="">Selecione o setor...</option>
+                                    <option value="Operação">Operação</option>
+                                    <option value="Administrativo">Administrativo</option>
+                                    <option value="Técnico">Técnico</option>
+                                    <option value="RH">Recursos Humanos</option>
+                                    <option value="Financeiro">Financeiro</option>
+                                    <option value="Comercial">Comercial</option>
+                                    <option value="Outro">Outro</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label><i class="fas fa-exclamation-triangle"></i> Gravidade da Ocorrência *</label>
+                                <select id="os-gravidade" name="gravidade" required>
+                                    <option value="Baixa">🟢 Baixa - Manutenção Preventiva/Rotina</option>
+                                    <option value="Média" selected>🟡 Média - Reparo Necessário</option>
+                                    <option value="Alta">🔴 Alta - Urgente/Problema Crítico</option>
+                                    <option value="Emergência">🚨 Emergência - Risco Imediato</option>
+                                </select>
+                                <small style="font-size: 0.8rem; color: #666;">Define prioridade e tempo de resposta</small>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-align-left"></i> Descrição do Problema *</label>
+                            <textarea id="os-desc" name="descricao" rows="5" placeholder="Descreva detalhadamente o problema ou serviço necessário..." required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-calendar"></i> Data Preferencial para Atendimento</label>
+                            <input type="date" id="os-data" name="data_preferencial">
+                        </div>
+                        <!-- Botão para enviar o formulário -->
+                        <button type="submit" class="btn btn-info" onclick="app.abrirOSComEmail(event)">
+                            <i class="fas fa-paper-plane"></i> ABRIR ORDEM DE SERVIÇO
                         </button>
-                        <button class="btn btn-filter" style="background: #e74c3c20; color: #e74c3c; border: 1px solid #e74c3c40;" 
-                                onclick="app.filtrarOSGravidade('Alta')">
-                            🔴 Alta
-                        </button>
-                        <button class="btn btn-filter" style="background: #f39c1220; color: #f39c12; border: 1px solid #f39c1240;" 
-                                onclick="app.filtrarOSGravidade('Média')">
-                            🟡 Média
-                        </button>
-                        <button class="btn btn-filter" style="background: #27ae6020; color: #27ae60; border: 1px solid #27ae6040;" 
-                                onclick="app.filtrarOSGravidade('Baixa')">
-                            🟢 Baixa
-                        </button>
+                    </form>
+                </div>
+
+                <!-- NOVO: FILTRO POR GRAVIDADE NA LISTA -->
+                <div style="margin: 2rem 0 1rem 0; display: flex; justify-content: space-between; align-items: center;">
+                    <h3><i class="fas fa-list"></i> Ordens de Serviço Recentes</h3>
+                    <div style="display: flex; gap: 10px;">
+                        <div class="btn-group">
+                            <button class="btn btn-filter" onclick="app.filtrarOSTodas()">
+                                Todas
+                            </button>
+                            <button class="btn btn-filter" style="background: #e74c3c20; color: #e74c3c; border: 1px solid #e74c3c40;" onclick="app.filtrarOSGravidade('Alta')">
+                                🔴 Alta
+                            </button>
+                            <button class="btn btn-filter" style="background: #f39c1220; color: #f39c12; border: 1px solid #f39c1240;" onclick="app.filtrarOSGravidade('Média')">
+                                🟡 Média
+                            </button>
+                            <button class="btn btn-filter" style="background: #27ae6020; color: #27ae60; border: 1px solid #27ae6040;" onclick="app.filtrarOSGravidade('Baixa')">
+                                🟢 Baixa
+                            </button>
+                        </div>
                     </div>
                 </div>
+                <!-- Lista de OS -->
+                <div id="os-lista"></div>
             </div>
-            
-            <!-- Lista de OS -->
-            <div id="os-lista"></div>
         </div>
 
         <!-- NOVA ABA: CHAT GERAL -->
@@ -395,11 +433,9 @@
                         </button>
                     </div>
                 </div>
-                
                 <div class="chat-messages" id="chat-messages">
                     <!-- Mensagens serão carregadas aqui -->
                 </div>
-                
                 <div class="chat-input-area">
                     <textarea class="chat-input" id="chat-input" placeholder="Digite sua mensagem..." rows="2"></textarea>
                     <button class="btn btn-info" onclick="app.sendChatMessage()" id="chat-send-btn">
@@ -407,9 +443,43 @@
                     </button>
                 </div>
             </div>
-            
             <div style="margin-top: 1rem; font-size: 0.85rem; color: var(--gray); text-align: center;">
                 <i class="fas fa-info-circle"></i> As mensagens são visíveis para todos os operadores logados
+            </div>
+        </div>
+
+        <!-- NEW: ABA: CHAT PRIVADO -->
+        <div id="tab-chat-privado" class="tab-content hidden">
+            <div class="chat-container chat-private-container">
+                <div class="chat-header chat-private-header">
+                    <div>
+                        <strong><i class="fas fa-user-secret"></i> Chat Privado</strong>
+                        <div style="font-size: 0.85rem; opacity: 0.9;">Conversa privada entre operadores</div>
+                    </div>
+                </div>
+                
+                <div class="private-chat-selector">
+                    <div class="form-group">
+                        <label><i class="fas fa-user-friends"></i> Conversar com:</label>
+                        <select id="private-chat-target" onchange="app.loadPrivateChat()">
+                            <option value="">Selecione um operador...</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="chat-messages chat-private-messages" id="chat-private-messages">
+                    <!-- Mensagens privadas serão carregadas aqui -->
+                </div>
+                
+                <div class="chat-input-area">
+                    <textarea class="chat-input" id="chat-private-input" placeholder="Digite sua mensagem privada..." rows="2" disabled></textarea>
+                    <button class="btn btn-info" onclick="app.sendPrivateChatMessage()" id="chat-private-send-btn" disabled>
+                        <i class="fas fa-paper-plane"></i> Enviar
+                    </button>
+                </div>
+            </div>
+            <div style="margin-top: 1rem; font-size: 0.85rem; color: var(--gray); text-align: center;">
+                <i class="fas fa-info-circle"></i> As mensagens são visíveis apenas para você e o destinatário selecionado
             </div>
         </div>
 
@@ -452,7 +522,6 @@
                     </div>
                 </div>
             </div>
-
             <!-- Histórico de Acesso -->
             <h3 style="margin: 2rem 0 1rem 0;"><i class="fas fa-history"></i> Histórico de Acesso</h3>
             <div style="overflow-x: auto;">
@@ -468,76 +537,6 @@
                     </thead>
                     <tbody id="presenca-lista"></tbody>
                 </table>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- MODAL DE E-MAIL -->
-<div class="modal" id="email-modal">
-    <div class="modal-content email-modal-content">
-        <div class="modal-header">
-            <h3><i class="fas fa-envelope"></i> Enviar E-mail para a Técnica</h3>
-            <button class="modal-close" onclick="emailApp.closeEmailModal()">&times;</button>
-        </div>
-        <div class="email-form-container">
-            <div class="form-group">
-                <label><i class="fas fa-user"></i> Seu Nome</label>
-                <input type="text" id="email-sender-name" placeholder="Digite seu nome completo" required>
-            </div>
-            
-            <div class="form-group">
-                <label><i class="fas fa-building"></i> Condomínio (opcional)</label>
-                <input type="text" id="email-condominio" placeholder="Nome do condomínio relacionado">
-            </div>
-            
-            <div class="form-group">
-                <label><i class="fas fa-tag"></i> Assunto</label>
-                <input type="text" id="email-subject" placeholder="Assunto do e-mail" required>
-            </div>
-            
-            <div class="form-group">
-                <label><i class="fas fa-edit"></i> Mensagem</label>
-                <textarea id="email-message" rows="8" placeholder="Descreva detalhadamente o assunto..." required></textarea>
-            </div>
-            
-            <!-- Informação sobre destinatários -->
-            <div style="margin: 1rem 0; padding: 1rem; background: #e8f4fc; border-radius: 8px;">
-                <i class="fas fa-info-circle"></i> <strong>Destinatários:</strong>
-                <div style="font-size: 0.85rem; margin-top: 5px;">
-                    • londrina.tecnica1@porter.com.br<br>
-                    • londrina.tecnicaplantao@porter.com.br<br>
-                    • londrina.tecnicaplantao1@porter.com.br
-                </div>
-            </div>
-            
-            <!-- CAPTCHA básico anti-spam -->
-            <div class="captcha-container">
-                <div class="captcha-question" id="captcha-question">
-                    <!-- Será gerado dinamicamente -->
-                </div>
-                <input type="text" class="captcha-input" id="captcha-answer" placeholder="Resposta" required>
-                <small style="display: block; margin-top: 8px; color: #666;">
-                    <i class="fas fa-shield-alt"></i> Verificação de segurança
-                </small>
-            </div>
-            
-            <!-- Status do envio -->
-            <div class="email-status" id="email-status"></div>
-            
-            <div style="display: flex; gap: 10px; margin-top: 1.5rem;">
-                <button class="btn btn-primary" onclick="emailApp.sendEmail()" id="email-send-btn">
-                    <i class="fas fa-paper-plane"></i> Enviar E-mail
-                </button>
-                <button class="btn btn-clear" onclick="emailApp.closeEmailModal()">
-                    Cancelar
-                </button>
-            </div>
-            
-            <div style="margin-top: 1.5rem; padding: 1rem; background: #f8f9fa; border-radius: 8px; font-size: 0.9rem;">
-                <i class="fas fa-envelope"></i> 
-                <strong>Informação:</strong> Este e-mail será enviado diretamente do sistema Porter para a equipe técnica.
-                Você receberá uma cópia no e-mail do sistema.
             </div>
         </div>
     </div>
@@ -593,45 +592,36 @@
     </div>
 </div>
 
-<!-- MODAL DE CONTROLE ADMIN -->
-<div class="modal" id="admin-modal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h3>
-        <i class="fas fa-user-shield"></i>
-        Controle Administrativo
-      </h3>
-      <button class="modal-close" onclick="app.closeAdminModal()">
-        &times;
-      </button>
+<!-- MODAL DE COMENTÁRIOS -->
+<div class="modal" id="comments-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-comments"></i> Comentários</h3>
+            <button class="modal-close" onclick="app.closeCommentsModal()">&times;</button>
+        </div>
+        <div id="comments-modal-content">
+            <!-- Conteúdo será carregado dinamicamente -->
+        </div>
     </div>
-
-    <div id="admin-modal-content">
-      <!-- Conteúdo será carregado dinamicamente -->
-    </div>
-  </div>
 </div>
 
-<!-- ==================== -->
-<!-- SCRIPTS NA ORDEM CORRETA -->
-<!-- ==================== -->
+<!-- MODAL DE CONTROLE ADMIN -->
+<div class="modal" id="admin-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-user-shield"></i> Controle Administrativo</h3>
+            <button class="modal-close" onclick="app.closeAdminModal()">&times;</button>
+        </div>
+        <div id="admin-modal-content">
+            <!-- Conteúdo será carregado dinamicamente -->
+        </div>
+    </div>
+</div>
 
-<!-- 1. Firebase SDK (PRIMEIRO) -->
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-
-<!-- 2. Outras bibliotecas -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-
-<!-- 3. Sua configuração Firebase (SEGUNDO) -->
+<!-- SCRIPTS - IMPORTANTE: ordem correta de carregamento -->
 <script src="firebase.js"></script>
-
-<!-- 4. Seus dados e scripts (TERCEIRO) -->
 <script src="data.js"></script>
-<script src="aplicativo-email.js"></script>
+<script src="app-email.js"></script> <!-- NOVO ARQUIVO ADICIONADO -->
 <script src="app.js"></script>
-
 </body>
 </html>
