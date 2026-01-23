@@ -12,16 +12,16 @@
     --header-height: 70px;
 }
 
-* { 
-    box-sizing: border-box; 
-    font-family: 'Segoe UI', Roboto, sans-serif; 
-    margin: 0; 
-    padding: 0; 
+* {
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Roboto, sans-serif;
+    margin: 0;
+    padding: 0;
 }
 
-body { 
-    background: var(--bg); 
-    color: #333; 
+body {
+    background: var(--bg);
+    color: #333;
     min-height: 100vh;
     display: flex;
 }
@@ -33,112 +33,6 @@ input:-webkit-autofill:active {
     -webkit-box-shadow: 0 0 0 30px white inset !important;
     box-shadow: 0 0 0 30px white inset !important;
     -webkit-text-fill-color: #333 !important;
-}
-
-/* LOGO RESPONSIVA - ADIÇÃO */
-.logo-porter {
-    background-image: url('https://managing-azure-iu7mo6meja.edgeone.dev/Porter_Horizontal_Preto__1__page-0001-removebg-preview.png') !important;
-}
-
-.login-logo-img {
-    background-image: url('https://managing-azure-iu7mo6meja.edgeone.dev/Porter_Horizontal_Preto__1__page-0001-removebg-preview.png') !important;
-}
-
-/* Ajustes responsivos para a logo */
-@media (max-width: 768px) {
-    .logo-porter {
-        width: 120px !important;
-        background-size: contain !important;
-    }
-    
-    .login-logo-img {
-        width: 200px !important;
-        background-size: contain !important;
-    }
-}
-
-/* Ajuste para telas muito pequenas */
-@media (max-width: 480px) {
-    .logo-porter {
-        width: 100px !important;
-    }
-}
-
-/* MODAL DE E-MAIL - ADIÇÃO */
-#email-modal {
-    z-index: 1001;
-}
-
-.email-modal-content {
-    max-width: 600px;
-    width: 95%;
-}
-
-.email-form-container {
-    max-height: 70vh;
-    overflow-y: auto;
-    padding-right: 10px;
-}
-
-.email-status {
-    margin-top: 1rem;
-    padding: 1rem;
-    border-radius: 8px;
-    display: none;
-}
-
-.email-status.success {
-    background-color: #d4edda;
-    border: 1px solid #c3e6cb;
-    color: #155724;
-    display: block;
-}
-
-.email-status.error {
-    background-color: #f8d7da;
-    border: 1px solid #f5c6cb;
-    color: #721c24;
-    display: block;
-}
-
-.email-status.sending {
-    background-color: #d1ecf1;
-    border: 1px solid #bee5eb;
-    color: #0c5460;
-    display: block;
-}
-
-/* CAPTCHA básico anti-spam */
-.captcha-container {
-    margin: 1rem 0;
-    padding: 1rem;
-    background: #f8f9fa;
-    border-radius: 8px;
-    text-align: center;
-}
-
-.captcha-question {
-    margin-bottom: 10px;
-    font-weight: 600;
-}
-
-.captcha-input {
-    width: 100px;
-    margin: 0 auto;
-    text-align: center;
-}
-
-/* Melhorias no formulário */
-.form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 15px;
-}
-
-@media (max-width: 768px) {
-    .form-row {
-        grid-template-columns: 1fr;
-    }
 }
 
 /* SIDEBAR */
@@ -163,7 +57,6 @@ input:-webkit-autofill:active {
         transform: translateX(0);
         display: block;
     }
-    
     #main-content {
         margin-left: var(--sidebar-width);
     }
@@ -269,12 +162,12 @@ input:-webkit-autofill:active {
 }
 
 /* HEADER */
-header { 
-    background: linear-gradient(135deg, var(--primary) 0%, #2c3e50 100%); 
-    color: white; 
-    padding: 0.8rem 2rem; 
-    display: flex; 
-    justify-content: space-between; 
+header {
+    background: linear-gradient(135deg, var(--primary) 0%, #2c3e50 100%);
+    color: white;
+    padding: 0.8rem 2rem;
+    display: flex;
+    justify-content: space-between;
     align-items: center;
     min-height: var(--header-height);
     position: sticky;
@@ -313,13 +206,16 @@ header {
     gap: 15px;
 }
 
-/* LOGO ATUALIZADO COM IMAGEM */
+/* LOGO SEM FUNDO */
 .logo-porter {
-    width: 150px;
+    width: 160px;
     height: 40px;
+    background-image: url('https://managing-azure-iu7mo6meja.edgeone.dev/Porter_Horizontal_Preto__1__page-0001-removebg-preview.png');
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
+    padding: 5px 10px;
+    border-radius: 6px;
 }
 
 .header-logo-text {
@@ -486,11 +382,12 @@ header {
     background: rgba(255,255,255,0.1);
 }
 
+/* FIX: alteração da cor da notificação para azul escuro */
 .notification-badge {
     position: absolute;
     top: -5px;
     right: -5px;
-    background: var(--danger);
+    background: #0a1e3f; /* azul escuro elegante - AJUSTADO */
     color: white;
     font-size: 0.7rem;
     padding: 2px 6px;
@@ -540,6 +437,7 @@ header {
     cursor: pointer;
     transition: background 0.2s;
     background: white;
+    color: #333;
 }
 
 .notification-item:hover {
@@ -549,11 +447,13 @@ header {
 .notification-item.unread {
     background: #e8f4fc !important;
     border-left: 4px solid var(--info);
+    color: #333;
 }
 
 .notification-item.destaque {
     background: #e8f4fc !important;
     border-left: 4px solid #3498db;
+    color: #333;
 }
 
 .notification-condo {
@@ -569,11 +469,11 @@ header {
 }
 
 /* TABS */
-.tabs { 
-    display: flex; 
-    background: white; 
-    padding: 0 2rem; 
-    gap: 0.5rem; 
+.tabs {
+    display: flex;
+    background: white;
+    padding: 0 2rem;
+    gap: 0.5rem;
     border-bottom: 2px solid #e0e0e0;
     overflow-x: auto;
     white-space: nowrap;
@@ -585,11 +485,11 @@ header {
     }
 }
 
-.tab-btn { 
-    padding: 1rem 1.8rem; 
-    border: none; 
-    background: none; 
-    cursor: pointer; 
+.tab-btn {
+    padding: 1rem 1.8rem;
+    border: none;
+    background: none;
+    cursor: pointer;
     font-weight: 600;
     color: #666;
     border-bottom: 3px solid transparent;
@@ -606,9 +506,9 @@ header {
     }
 }
 
-.tab-btn.active { 
-    color: var(--accent); 
-    border-bottom-color: var(--accent); 
+.tab-btn.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
     background-color: rgba(230, 126, 34, 0.05);
 }
 
@@ -640,10 +540,10 @@ header {
 }
 
 /* CONTAINER PRINCIPAL */
-.container { 
+.container {
     flex: 1;
-    padding: 2rem; 
-    max-width: 1400px; 
+    padding: 2rem;
+    max-width: 1400px;
     margin: 0 auto;
     width: 100%;
 }
@@ -877,6 +777,12 @@ header {
     background: #f8f9fa;
 }
 
+/* FIX: scroll do chat otimizado */
+.chat-messages {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+}
+
 .chat-message {
     max-width: 80%;
     padding: 0.8rem 1rem;
@@ -1021,26 +927,26 @@ header {
     .filter-actions {
         flex-direction: column;
     }
-    
     .filter-actions .btn {
         width: 100%;
     }
 }
 
 .form-group { margin-bottom: 1.4rem; }
+
 label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: #444; }
 
-input, select, textarea { 
-    width: 100%; 
-    padding: 0.9rem; 
-    border: 1.5px solid #ddd; 
-    border-radius: 8px; 
+input, select, textarea {
+    width: 100%;
+    padding: 0.9rem;
+    border: 1.5px solid #ddd;
+    border-radius: 8px;
     font-size: 1rem;
     transition: all 0.3s;
 }
 
-input:focus, select:focus, textarea:focus { 
-    outline: none; 
+input:focus, select:focus, textarea:focus {
+    outline: none;
     border-color: var(--accent);
     box-shadow: 0 0 0 3px rgba(230, 126, 34, 0.2);
 }
@@ -1062,12 +968,12 @@ input:focus, select:focus, textarea:focus {
 }
 
 /* BOTÕES */
-.btn { 
-    padding: 0.9rem 1.8rem; 
-    border: none; 
-    border-radius: 8px; 
-    cursor: pointer; 
-    font-weight: bold; 
+.btn {
+    padding: 0.9rem 1.8rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
     transition: all 0.3s;
     display: inline-flex;
     align-items: center;
@@ -1075,31 +981,31 @@ input:focus, select:focus, textarea:focus {
     gap: 8px;
 }
 
-.btn-primary { 
-    background: linear-gradient(135deg, var(--primary) 0%, #2c3e50 100%); 
-    color: white; 
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary) 0%, #2c3e50 100%);
+    color: white;
     width: 100%;
 }
 
-.btn-primary:hover { 
+.btn-primary:hover {
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(26, 58, 95, 0.4);
 }
 
-.btn-accent { 
-    background: linear-gradient(135deg, var(--accent) 0%, #d35400 100%); 
-    color: white; 
+.btn-accent {
+    background: linear-gradient(135deg, var(--accent) 0%, #d35400 100%);
+    color: white;
 }
 
 .btn-accent:hover {
     background: linear-gradient(135deg, #d35400 0%, var(--accent) 100%);
 }
 
-.btn-danger { 
-    background: var(--danger); 
-    color: white; 
-    padding: 0.5rem 1rem; 
-    font-size: 0.85rem; 
+.btn-danger {
+    background: var(--danger);
+    color: white;
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
 }
 
 .btn-danger:hover {
@@ -1157,11 +1063,11 @@ input:focus, select:focus, textarea:focus {
 }
 
 /* CARDS DE ATA */
-.ata-card { 
-    background: white; 
-    padding: 1.5rem; 
-    border-radius: 10px; 
-    margin-bottom: 1.2rem; 
+.ata-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 10px;
+    margin-bottom: 1.2rem;
     box-shadow: 0 4px 8px rgba(0,0,0,0.08);
     border-left: 5px solid var(--accent);
     position: relative;
@@ -1183,18 +1089,18 @@ input:focus, select:focus, textarea:focus {
     background: linear-gradient(to right, #d6eaf810, white);
 }
 
-.ata-header { 
-    display: flex; 
-    justify-content: space-between; 
+.ata-header {
+    display: flex;
+    justify-content: space-between;
     align-items: center;
-    margin-bottom: 0.8rem; 
-    font-size: 0.85rem; 
-    color: var(--gray); 
+    margin-bottom: 0.8rem;
+    font-size: 0.85rem;
+    color: var(--gray);
 }
 
-.ata-condo { 
-    font-size: 1.3rem; 
-    font-weight: bold; 
+.ata-condo {
+    font-size: 1.3rem;
+    font-weight: bold;
     color: var(--primary);
     margin-bottom: 0.5rem;
     display: flex;
@@ -1202,10 +1108,10 @@ input:focus, select:focus, textarea:focus {
     gap: 10px;
 }
 
-.status-badge { 
-    padding: 4px 12px; 
-    border-radius: 20px; 
-    font-size: 0.75rem; 
+.status-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
     text-transform: uppercase;
     font-weight: bold;
     display: inline-flex;
@@ -1312,10 +1218,10 @@ input:focus, select:focus, textarea:focus {
 
 /* FORMULÁRIO OS */
 .form-card {
-    background: white; 
-    padding: 1.8rem; 
-    border-radius: 12px; 
-    margin-bottom: 2rem; 
+    background: white;
+    padding: 1.8rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
     box-shadow: 0 5px 15px rgba(0,0,0,0.05);
     border-top: 4px solid var(--accent);
 }
@@ -1412,22 +1318,23 @@ input:focus, select:focus, textarea:focus {
     font-size: 0.9rem;
 }
 
-/* LOGO IMAGEM NO LOGIN */
+/* LOGO IMAGEM NO LOGIN - SEM FUNDO */
 .login-logo-img {
-    width: 150px;
+    width: 180px;
     height: 50px;
-    margin: 0 auto 1rem;
+    margin: 0 auto 1.2rem;
+    background-image: url('https://managing-azure-iu7mo6meja.edgeone.dev/Porter_Horizontal_Preto__1__page-0001-removebg-preview.png');
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
 }
 
 /* UTILITÁRIOS */
-.hidden { 
+.hidden {
     display: none !important;
 }
 
-.visible { 
+.visible {
     display: block !important;
 }
 
@@ -1786,4 +1693,78 @@ table tr:hover {
     0% { box-shadow: 0 0 0 0 rgba(230, 126, 34, 0.7); }
     70% { box-shadow: 0 0 0 15px rgba(230, 126, 34, 0); }
     100% { box-shadow: 0 0 0 0 rgba(230, 126, 34, 0); }
+}
+
+/* NOVOS ESTILOS PARA CONFIRMAÇÃO DE OS */
+.os-confirmation {
+    text-align: center;
+    padding: 3rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    margin: 2rem 0;
+    animation: fadeIn 0.5s ease-out;
+    border-top: 5px solid var(--success);
+}
+
+.os-confirmation i {
+    font-size: 4rem;
+    color: var(--success);
+    margin-bottom: 1.5rem;
+    animation: pulse 2s infinite;
+}
+
+.os-confirmation h2 {
+    color: var(--primary);
+    margin-bottom: 1rem;
+}
+
+.os-confirmation .details {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 8px;
+    text-align: left;
+    margin: 1.5rem 0;
+    border-left: 4px solid var(--info);
+}
+
+.os-confirmation .details strong {
+    color: var(--primary);
+    display: inline-block;
+    min-width: 120px;
+}
+
+.back-to-os {
+    margin-top: 2rem;
+}
+
+/* NEW: Estilos para chat privado */
+.chat-private-container {
+    border: 2px solid #3498db;
+    margin-top: 10px;
+}
+
+.chat-private-header {
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+}
+
+.private-chat-selector {
+    margin-bottom: 10px;
+}
+
+.private-chat-selector select {
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    font-size: 0.9rem;
+}
+
+.chat-private-messages {
+    min-height: 200px;
+    max-height: 300px;
+}
+
+.chat-private-controls {
+    display: flex;
+    gap: 5px;
 }
