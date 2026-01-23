@@ -31,7 +31,7 @@ const DATA = {
         { nome: "DEISY SANTOS CRUZ", user: "deisy.cruz", pass: "Porter@2026", role: "OPERADOR" },
         { nome: "DANIELE DA SILVA ROCHA", user: "daniele.rocha", pass: "Porter@2026", role: "OPERADOR" },
         { nome: "ANA BEATRIZ PEREIRA", user: "ana.pereira", pass: "Porter@2026", role: "OPERADOR" },
-        { nome: "LUCAS DANIEL", user: "lucas.daniel", pass: "Porter@2026", role: "ADMIN" },
+        { nome: "LUCAS DANIEL", user: "lucas.daniel", pass: "Porter@2026", role: "OPERADOR" },
         { nome: "ADMINISTRADOR PORTER", user: "admin.porter", pass: "Admin@2026", role: "ADMIN" }
     ],
     condominios: [
@@ -72,4 +72,3 @@ const DATA = {
         { n: "VIVALDI BOULEVARD", c: "Londrina" }, { n: "VIVENDA DOS PESCADORES", c: "Maringá" }
     ]
 };
-
