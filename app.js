@@ -1,12 +1,5 @@
-// ============================================
-// SISTEMA PORTER VERCEL - VERSÃO COMPLETA UNIFICADA
-// Combinação total de app (1).js (3718 linhas) + app(5).js
-// ============================================
-
+// Sistema principal
 const app = {
-    // ============================================
-    // PROPRIEDADES DO SISTEMA
-    // ============================================
     currentUser: null,
     selectedMood: null,
     currentCondoFilter: '',
@@ -16,118 +9,75 @@ const app = {
     moodInterval: null,
     onlineInterval: null,
     onlineUsers: [],
-    firebaseEnabled: false,
-    
-    // Firebase listeners (do app(5).js)
-    unsubscribeAtas: null,
-    unsubscribeChat: null,
-    unsubscribeUsers: null,
-    
-    // Filtros
+    firebaseEnabled: false, // 🆕 Controle do Firebase
     filtrosAtas: { condo: '', dataInicio: '', dataFim: '', tipo: '', status: '' },
     filtrosPresenca: { operador: '', dataInicio: '', dataFim: '', turno: '' },
     
-    // ============================================
-    // INICIALIZAÇÃO COMPLETA
-    // ============================================
     init() {
-        console.log("🚀 Sistema Porter Vercel - Inicializando versão completa...");
-        
-        // 1. Verificar Firebase
+        // TESTAR FIREBASE PRIMEIRO
         this.verificarFirebase();
         
-        // 2. Configurar interface inicial
-        this.configurarInterfaceInicial();
+        // GARANTIR que começa na tela de login
+        if (document.getElementById('login-screen')) {
+            document.getElementById('login-screen').classList.remove('hidden');
+        }
+        if (document.getElementById('main-content')) {
+            document.getElementById('main-content').classList.add('hidden');
+        }
         
-        // 3. Carregar todos os dados
+        // Limpar auto-preenchimento dos campos de login
+        setTimeout(() => {
+            if (document.getElementById('login-user')) {
+                document.getElementById('login-user').value = '';
+            }
+            if (document.getElementById('login-pass')) {
+                document.getElementById('login-pass').value = '';
+            }
+            if (document.getElementById('login-turno')) {
+                document.getElementById('login-turno').value = 'Diurno';
+            }
+        }, 100);
+        
         this.loadCondos();
         this.loadFiltros();
         this.loadNotifications();
-        
-        // 4. Configurar todos os event listeners
         this.setupEventListeners();
         this.setupAutoSave();
         this.setupOSPreview();
         this.setupResponsive();
         
-        // 5. Configurar datas padrão
-        this.configurarDatasPadrao();
-        
-        // 6. Carregar filtros salvos
-        this.carregarFiltrosSalvos();
-        
-        // 7. Configurar cliques fora de elementos
-        this.configurarCliqueForaElementos();
-        
-        // 8. Inicializar sistema de e-mail
-        setTimeout(() => {
-            if (typeof emailApp !== 'undefined' && emailApp.init) {
-                emailApp.init();
-            }
-        }, 500);
-        
-        // 9. Botão de sincronização Vercel
-        setTimeout(() => {
-            this.adicionarBotaoSincronizacaoVercel();
-        }, 1000);
-        
-        // 10. Correções de dados
-        setTimeout(() => {
-            this.corrigirDadosExistentes();
-        }, 1500);
-        
-        // 11. Inicializar sistema de navegação (app(5).js)
-        this.setupNavegacao();
-        
-        console.log("✅ Sistema Porter inicializado com sucesso!");
-    },
-    
-    configurarInterfaceInicial() {
-        // Garantir que começa na tela de login
-        const loginScreen = document.getElementById('login-screen');
-        const mainContent = document.getElementById('main-content');
-        
-        if (loginScreen) loginScreen.classList.remove('hidden');
-        if (mainContent) mainContent.classList.add('hidden');
-        
-        // Limpar auto-preenchimento
-        setTimeout(() => {
-            const campos = [
-                { id: 'login-user', valor: '' },
-                { id: 'login-pass', valor: '' },
-                { id: 'login-turno', valor: 'Diurno' }
-            ];
-            
-            campos.forEach(campo => {
-                const el = document.getElementById(campo.id);
-                if (el) el.value = campo.valor;
-            });
-        }, 100);
-    },
-    
-    configurarDatasPadrao() {
+        // Configurar datas padrão
         const hoje = new Date();
         const umaSemanaAtras = new Date();
         umaSemanaAtras.setDate(umaSemanaAtras.getDate() - 7);
         
-        const datas = [
-            { id: 'filter-data-inicio', valor: umaSemanaAtras },
-            { id: 'filter-data-fim', valor: hoje },
-            { id: 'filter-presenca-inicio', valor: umaSemanaAtras },
-            { id: 'filter-presenca-fim', valor: hoje },
-            { id: 'os-data', valor: hoje },
-            { id: 'report-data-inicio', valor: umaSemanaAtras },
-            { id: 'report-data-fim', valor: hoje }
-        ];
+        if (document.getElementById('filter-data-inicio')) {
+            document.getElementById('filter-data-inicio').value = umaSemanaAtras.toISOString().split('T')[0];
+        }
+        if (document.getElementById('filter-data-fim')) {
+            document.getElementById('filter-data-fim').value = hoje.toISOString().split('T')[0];
+        }
+        if (document.getElementById('filter-presenca-inicio')) {
+            document.getElementById('filter-presenca-inicio').value = umaSemanaAtras.toISOString().split('T')[0];
+        }
+        if (document.getElementById('filter-presenca-fim')) {
+            document.getElementById('filter-presenca-fim').value = hoje.toISOString().split('T')[0];
+        }
+        if (document.getElementById('os-data')) {
+            document.getElementById('os-data').value = hoje.toISOString().split('T')[0];
+        }
         
-        datas.forEach(d => {
-            const el = document.getElementById(d.id);
-            if (el) el.value = d.valor.toISOString().split('T')[0];
-        });
-    },
-    
-    configurarCliqueForaElementos() {
-        // Clique fora da lista de online
+        // Preencher datas do relatório
+        if (document.getElementById('report-data-inicio')) {
+            document.getElementById('report-data-inicio').value = umaSemanaAtras.toISOString().split('T')[0];
+        }
+        if (document.getElementById('report-data-fim')) {
+            document.getElementById('report-data-fim').value = hoje.toISOString().split('T')[0];
+        }
+        
+        this.carregarFiltrosSalvos();
+        
+        // Configurar clique fora da lista de online
         document.addEventListener('click', (e) => {
             const onlineList = document.getElementById('online-users-list');
             const onlineDropdown = document.getElementById('online-users');
@@ -138,45 +88,220 @@ const app = {
             }
         });
         
-        // Clique fora das notificações
+        // Configurar clique fora das notificações
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.notification-bell') && !e.target.closest('.notifications-panel')) {
                 const panel = document.getElementById('notifications-panel');
                 if (panel) panel.classList.remove('show');
             }
         });
+        
+        // Inicializar sistema de e-mail se existir
+        setTimeout(() => {
+            if (typeof emailApp !== 'undefined' && emailApp.init) {
+                emailApp.init();
+            }
+        }, 500);
+        
+        // 🔧 ADICIONAR BOTÃO DE SINCRONIZAÇÃO VERCEL
+        setTimeout(() => {
+            this.adicionarBotaoSincronizacaoVercel();
+        }, 1000);
+        
+        // 🔧 CORRIGIR DADOS EXISTENTES
+        setTimeout(() => {
+            this.corrigirDadosExistentes();
+        }, 1500);
     },
     
-    setupNavegacao() {
-        // Funções de navegação do app(5).js
-        window.showDashboard = () => {
-            this.hideAllSections();
-            document.getElementById('dashboard').classList.remove('d-none');
-            this.loadDashboardStats();
+    // 🔧 FUNÇÃO PARA CORRIGIR DADOS EXISTENTES
+    corrigirDadosExistentes() {
+        console.log("🔧 Corrigindo dados existentes...");
+        
+        // Corrigir ATAs
+        const atas = JSON.parse(localStorage.getItem('porter_atas') || '[]');
+        if (atas.length > 0) {
+            const atasCorrigidas = atas.map((ata, index) => {
+                // Garantir campos obrigatórios
+                return {
+                    id: ata.id || `vercel_${Date.now()}_${index}`,
+                    condo: ata.condo || "Não especificado",
+                    cidade: ata.cidade || "",
+                    tipo: ata.tipo || "Ocorrência",
+                    status: ata.status || "Em andamento",
+                    desc: ata.desc || "",
+                    operador: ata.operador || "Operador desconhecido",
+                    user: ata.user || "anonimo",
+                    turno: ata.turno || "Diurno",
+                    data: ata.data || new Date().toLocaleDateString('pt-BR'),
+                    dataISO: ata.dataISO || new Date().toISOString().split('T')[0],
+                    hora: ata.hora || new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
+                    timestamp: ata.timestamp || new Date().toISOString(),
+                    comentarios: Array.isArray(ata.comentarios) ? ata.comentarios : [],
+                    fixa: ata.fixa || false
+                };
+            });
+            
+            localStorage.setItem('porter_atas', JSON.stringify(atasCorrigidas));
+            console.log(`✅ ${atasCorrigidas.length} ATAs corrigidas`);
+        }
+        
+        // Corrigir Chat
+        const chat = JSON.parse(localStorage.getItem('porter_chat') || '[]');
+        if (chat.length > 0) {
+            const chatCorrigido = chat.map((msg, index) => {
+                return {
+                    id: msg.id || `chat_${Date.now()}_${index}`,
+                    sender: msg.sender || msg.nome || "Usuário",
+                    senderRole: msg.senderRole || msg.role || "OPERADOR",
+                    senderMood: msg.senderMood || msg.mood || "😐",
+                    senderUser: msg.senderUser || msg.user || "anonimo",
+                    message: msg.message || "(mensagem vazia)",
+                    time: msg.time || new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
+                    timestamp: msg.timestamp || new Date().toISOString(),
+                    date: msg.date || new Date().toLocaleDateString('pt-BR')
+                };
+            });
+            
+            localStorage.setItem('porter_chat', JSON.stringify(chatCorrigido));
+            console.log(`✅ ${chatCorrigido.length} mensagens de chat corrigidas`);
+        }
+    },
+    
+    // 🔧 FUNÇÃO PARA ADICIONAR BOTÃO DE SINCRONIZAÇÃO VERCEL
+    adicionarBotaoSincronizacaoVercel() {
+        // Remover botão antigo se existir
+        const btnAntigo = document.getElementById('btn-sync-vercel');
+        if (btnAntigo) btnAntigo.remove();
+        
+        // Criar novo botão
+        const btnSync = document.createElement('button');
+        btnSync.id = 'btn-sync-vercel';
+        btnSync.innerHTML = '🔄 Sincronizar Agora';
+        btnSync.title = 'Atualizar dados com servidor central Vercel';
+        
+        btnSync.style.cssText = `
+            position: fixed;
+            bottom: 120px;
+            right: 20px;
+            background: linear-gradient(135deg, #00b09b 0%, #96c93d 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            z-index: 10000;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        `;
+        
+        // Efeitos hover
+        btnSync.onmouseover = () => {
+            btnSync.style.transform = 'scale(1.05)';
+            btnSync.style.boxShadow = '0 8px 25px rgba(0,0,0,0.4)';
         };
         
-        window.showAtas = () => {
-            this.hideAllSections();
-            document.getElementById('atas').classList.remove('d-none');
-            this.loadAtas();
+        btnSync.onmouseout = () => {
+            btnSync.style.transform = 'scale(1)';
+            btnSync.style.boxShadow = '0 6px 20px rgba(0,0,0,0.3)';
         };
         
-        window.showChat = () => {
-            this.hideAllSections();
-            document.getElementById('chat').classList.remove('d-none');
-            this.loadChat();
+        // Ação do botão
+        btnSync.onclick = () => {
+            if (confirm("🔄 SINCRONIZAR COM SERVIDOR CENTRAL?\n\nIsso atualizará todos os dados com as informações mais recentes da equipe.")) {
+                // Mostrar loading
+                btnSync.innerHTML = '⏳ Sincronizando...';
+                btnSync.disabled = true;
+                
+                // Sincronizar com Firebase se disponível
+                if (typeof db !== 'undefined') {
+                    Promise.all([
+                        db.collection("atas").get(),
+                        db.collection("chat_messages").orderBy("timestamp", "desc").limit(50).get(),
+                        db.collection("ordens_servico").get()
+                    ])
+                    .then(([atasSnapshot, chatSnapshot, osSnapshot]) => {
+                        // Atualizar ATAs
+                        const atasServidor = [];
+                        atasSnapshot.forEach(doc => {
+                            const data = doc.data();
+                            atasServidor.push({ 
+                                id: doc.id, 
+                                ...data,
+                                // Garantir campos obrigatórios
+                                condo: data.condo || "Não especificado",
+                                desc: data.desc || "",
+                                operador: data.operador || "Operador desconhecido"
+                            });
+                        });
+                        localStorage.setItem('porter_atas', JSON.stringify(atasServidor));
+                        
+                        // Atualizar Chat
+                        const chatServidor = [];
+                        chatSnapshot.forEach(doc => {
+                            const data = doc.data();
+                            chatServidor.push({ 
+                                id: doc.id, 
+                                ...data,
+                                // Garantir campos obrigatórios
+                                sender: data.sender || "Usuário",
+                                message: data.message || "(mensagem vazia)"
+                            });
+                        });
+                        localStorage.setItem('porter_chat', JSON.stringify(chatServidor));
+                        
+                        // Atualizar OS
+                        const osServidor = [];
+                        osSnapshot.forEach(doc => {
+                            osServidor.push({ id: doc.id, ...doc.data() });
+                        });
+                        localStorage.setItem('porter_os', JSON.stringify(osServidor));
+                        
+                        console.log(`✅ ${atasServidor.length} ATAs, ${chatServidor.length} mensagens e ${osServidor.length} OS sincronizadas`);
+                        
+                        // Recarregar dados
+                        if (typeof app !== 'undefined') {
+                            if (typeof app.renderAta === 'function') app.renderAta();
+                            if (typeof app.loadChat === 'function') app.loadChat();
+                            if (typeof app.renderOS === 'function') app.renderOS();
+                        }
+                        
+                        // Restaurar botão
+                        setTimeout(() => {
+                            btnSync.innerHTML = '🔄 Sincronizado!';
+                            setTimeout(() => {
+                                btnSync.innerHTML = '🔄 Sincronizar Agora';
+                                btnSync.disabled = false;
+                            }, 2000);
+                        }, 500);
+                    })
+                    .catch(err => {
+                        console.error("❌ Erro na sincronização:", err);
+                        btnSync.innerHTML = '❌ Erro!';
+                        setTimeout(() => {
+                            btnSync.innerHTML = '🔄 Sincronizar Agora';
+                            btnSync.disabled = false;
+                        }, 2000);
+                    });
+                } else {
+                    // Se não houver Firebase, apenas recarrega a página
+                    console.log("ℹ️ Firebase não disponível, recarregando página...");
+                    location.reload();
+                }
+            }
         };
+        
+        document.body.appendChild(btnSync);
+        console.log("✅ Botão de sincronização Vercel adicionado");
     },
     
-    hideAllSections() {
-        document.querySelectorAll('.section').forEach(section => {
-            section.classList.add('d-none');
-        });
-    },
-    
-    // ============================================
-    // FIREBASE E SINCRONIZAÇÃO
-    // ============================================
+    // 🆕 VERIFICAR SE FIREBASE ESTÁ FUNCIONANDO
     verificarFirebase() {
         if (window.db && typeof db.collection === 'function') {
             this.firebaseEnabled = true;
@@ -188,7 +313,28 @@ const app = {
                 hora: new Date().toISOString()
             }).then(() => {
                 console.log("✅ Conexão Firestore confirmada!");
-                this.mostrarIndicadorFirebase();
+                
+                // Mostrar indicador visual
+                const indicator = document.createElement('div');
+                indicator.id = 'firebase-status';
+                indicator.style.cssText = `
+                    position: fixed;
+                    bottom: 10px;
+                    right: 10px;
+                    background: #27ae60;
+                    color: white;
+                    padding: 5px 10px;
+                    border-radius: 4px;
+                    font-size: 12px;
+                    z-index: 9999;
+                    display: flex;
+                    align-items: center;
+                    gap: 5px;
+                `;
+                indicator.innerHTML = '<i class="fas fa-cloud"></i> Online';
+                document.body.appendChild(indicator);
+                
+                // 🔧 CONFIGURAR SINCRONIZAÇÃO AUTOMÁTICA
                 this.configurarSincronizacaoAutomatica();
             }).catch(error => {
                 console.warn("⚠️ Firebase conectado mas com erro:", error);
@@ -200,32 +346,11 @@ const app = {
         }
     },
     
-    mostrarIndicadorFirebase() {
-        const indicator = document.createElement('div');
-        indicator.id = 'firebase-status';
-        indicator.style.cssText = `
-            position: fixed;
-            bottom: 10px;
-            right: 10px;
-            background: #27ae60;
-            color: white;
-            padding: 5px 10px;
-            border-radius: 4px;
-            font-size: 12px;
-            z-index: 9999;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        `;
-        indicator.innerHTML = '<i class="fas fa-cloud"></i> Online';
-        document.body.appendChild(indicator);
-    },
-    
+    // 🔧 CONFIGURAR SINCRONIZAÇÃO AUTOMÁTICA
     configurarSincronizacaoAutomatica() {
-        if (!this.firebaseEnabled) return;
-        
         console.log("⚡ Configurando sincronização automática...");
         
+        // Sincronizar a cada 2 minutos
         setInterval(() => {
             if (this.firebaseEnabled && navigator.onLine && this.currentUser) {
                 console.log("🔄 Sincronização automática em andamento...");
@@ -240,9 +365,12 @@ const app = {
                         snapshot.forEach(doc => {
                             atasAtualizadas.push({ id: doc.id, ...doc.data() });
                         });
+                        
                         localStorage.setItem('porter_atas', JSON.stringify(atasAtualizadas));
-                        if (typeof this.renderAta === 'function') {
-                            setTimeout(() => this.renderAta(), 500);
+                        
+                        // Atualizar interface se necessário
+                        if (typeof app.renderAta === 'function') {
+                            setTimeout(() => app.renderAta(), 500);
                         }
                     })
                     .catch(err => console.log("⚠️ Erro ao sincronizar ATAs:", err));
@@ -257,21 +385,21 @@ const app = {
                         snapshot.forEach(doc => {
                             chatAtualizado.push({ id: doc.id, ...doc.data() });
                         });
+                        
                         localStorage.setItem('porter_chat', JSON.stringify(chatAtualizado));
-                        if (typeof this.loadChat === 'function') {
-                            setTimeout(() => this.loadChat(), 500);
+                        
+                        // Atualizar interface se necessário
+                        if (typeof app.loadChat === 'function') {
+                            setTimeout(() => app.loadChat(), 500);
                         }
                     })
                     .catch(err => console.log("⚠️ Erro ao sincronizar chat:", err));
             }
-        }, 120000);
+        }, 120000); // 2 minutos
         
         console.log("✅ Sincronização automática configurada (a cada 2 minutos)");
     },
     
-    // ============================================
-    // EVENT LISTENERS COMPLETOS
-    // ============================================
     setupEventListeners() {
         // Enter no login
         const loginPass = document.getElementById('login-pass');
@@ -281,7 +409,7 @@ const app = {
             });
         }
         
-        // Enter no chat (sistema antigo)
+        // Enter no chat
         const chatInput = document.getElementById('chat-input');
         if (chatInput) {
             chatInput.addEventListener('keypress', (e) => {
@@ -292,36 +420,10 @@ const app = {
             });
         }
         
-        // Enter no chat (sistema novo)
-        const messageInput = document.getElementById('messageInput');
-        if (messageInput) {
-            messageInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    this.sendMessage();
-                }
-            });
-        }
-        
-        // Enter no formulário ATA
-        const ataForm = document.getElementById('ataForm');
-        if (ataForm) {
-            ataForm.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter' && e.target.type !== 'textarea') {
-                    e.preventDefault();
-                }
-            });
-        }
-        
-        // Beforeunload - salvar logoff
+        // Salvar logoff quando a página for fechada
         window.addEventListener('beforeunload', () => {
             if (this.currentUser) {
                 this.registrarLogoff();
-                this.atualizarStatusUsuarioFirebase(false);
-                
-                // Limpar listeners Firebase
-                if (this.unsubscribeAtas) this.unsubscribeAtas();
-                if (this.unsubscribeChat) this.unsubscribeChat();
-                if (this.unsubscribeUsers) this.unsubscribeUsers();
             }
         });
         
@@ -359,928 +461,489 @@ const app = {
         });
     },
     
-    setupOSPreview() {
-        const gravidadeSelect = document.getElementById('os-gravidade');
-        if (gravidadeSelect) {
-            gravidadeSelect.addEventListener('change', function() {
-                app.atualizarPreviewGravidade(this.value);
-            });
-            this.atualizarPreviewGravidade(gravidadeSelect.value);
-        }
+    setupOnlineTracking() {
+        // Atualizar a cada 30 segundos
+        this.onlineInterval = setInterval(() => {
+            if (this.currentUser) {
+                this.updateOnlineUsers();
+            }
+        }, 30000);
+        
+        // Inicializar imediamente
+        this.updateOnlineUsers();
     },
     
-    // ============================================
-    // SISTEMA DE LOGIN/LOGOUT
-    // ============================================
-    login() {
-        const u = document.getElementById('login-user').value.trim();
-        const p = document.getElementById('login-pass').value;
-        const t = document.getElementById('login-turno').value;
-
-        if (!DATA.funcionarios || !Array.isArray(DATA.funcionarios)) {
-            alert('Erro no sistema: Dados de funcionários não disponíveis.');
-            return;
-        }
-
-        const user = DATA.funcionarios.find(f => f.user === u && f.pass === p);
-
-        if (user) {
-            this.currentUser = { 
-                ...user, 
-                turno: t, 
-                loginTime: new Date().toLocaleString('pt-BR'),
-                loginTimestamp: new Date().toISOString(),
-                loginDate: new Date().toLocaleDateString('pt-BR'),
-                loginHour: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
-                uid: user.user,
-                displayName: user.nome,
-                email: user.user
-            };
-            localStorage.setItem('porter_session', JSON.stringify(this.currentUser));
-            
-            // Registrar login
-            this.registrarLogin(t);
-            
-            // Atualizar status no Firebase
-            this.atualizarStatusUsuarioFirebase(true);
-            
-            this.showApp();
-        } else {
-            alert('Credenciais inválidas! Verifique usuário e senha.');
-        }
+    getMoodStatusTexto(mood) {
+        const statusMap = {
+            '😠': 'Zangado hoje',
+            '😔': 'Triste hoje', 
+            '😐': 'Neutro hoje',
+            '🙂': 'Feliz hoje',
+            '😄': 'Radiante hoje'
+        };
+        return statusMap[mood] || 'Não avaliado';
     },
     
-    registrarLogin(turno) {
-        let presencas = JSON.parse(localStorage.getItem('porter_presencas') || '[]');
-        presencas.unshift({
-            nome: this.currentUser.nome,
-            turno: turno,
-            data: new Date().toLocaleDateString('pt-BR'),
-            hora: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
-            timestamp: new Date().toISOString(),
-            dataISO: new Date().toISOString().split('T')[0],
-            tipo: 'login'
+    // 📋 FUNÇÃO ATUALIZADA: updateOnlineUsers CORRIGIDA - MOSTRA APENAS USUÁRIOS REAIS
+    updateOnlineUsers() {
+        if (!this.currentUser) return;
+        
+        const agora = new Date();
+        
+        // Buscar usuários realmente online do localStorage
+        let usuariosOnline = [];
+        
+        // Adicionar usuário atual
+        const moodAtual = this.getMoodAtual();
+        const statusMood = this.getMoodStatusTexto(moodAtual);
+        
+        usuariosOnline.push({
+            ...this.currentUser,
+            lastActivity: agora.toISOString(),
+            mood: moodAtual,
+            moodStatus: statusMood,
+            isCurrentUser: true
         });
         
-        if (presencas.length > 100) presencas = presencas.slice(0, 100);
-        localStorage.setItem('porter_presencas', JSON.stringify(presencas));
+        // Verificar se há outros usuários com sessão ativa (últimos 5 minutos)
+        try {
+            const sessaoSalva = localStorage.getItem('porter_last_session');
+            if (sessaoSalva) {
+                const sessao = JSON.parse(sessaoSalva);
+                if (sessao.user !== this.currentUser.user) {
+                    const tempoSessao = new Date(sessao.lastActivity);
+                    const diferencaMinutos = (agora - tempoSessao) / (1000 * 60);
+                    
+                    if (diferencaMinutos < 5) {
+                        // Este é um usuário que está "online"
+                        const outroUsuario = DATA.funcionarios.find(f => f.user === sessao.user);
+                        if (outroUsuario) {
+                            usuariosOnline.push({
+                                ...outroUsuario,
+                                lastActivity: sessao.lastActivity,
+                                mood: '😐', // Mood padrão para usuários não ativos
+                                moodStatus: 'Online há ' + Math.floor(diferencaMinutos) + ' min',
+                                isCurrentUser: false,
+                                turno: sessao.turno || 'Diurno'
+                            });
+                        }
+                    }
+                }
+            }
+        } catch (e) {
+            console.log('Erro ao buscar sessões:', e);
+        }
+        
+        // 🔧 BUSCAR USUÁRIOS ONLINE DO FIREBASE
+        if (this.firebaseEnabled) {
+            this.buscarUsuariosOnlineFirebase().then(firebaseUsers => {
+                firebaseUsers.forEach(fbUser => {
+                    // Verificar se já está na lista
+                    const jaExiste = usuariosOnline.some(u => u.user === fbUser.user);
+                    if (!jaExiste) {
+                        usuariosOnline.push({
+                            ...fbUser,
+                            isCurrentUser: fbUser.user === this.currentUser.user,
+                            lastActivity: fbUser.lastActivity || new Date().toISOString()
+                        });
+                    }
+                });
+                
+                this.onlineUsers = usuariosOnline;
+                this.atualizarListaOnline();
+            });
+        } else {
+            this.onlineUsers = usuariosOnline;
+            this.atualizarListaOnline();
+        }
+        
+        this.salvarSessao();
+        
+        // 🆕 SINCRONIZAR COM FIREBASE SE ESTIVER HABILITADO
+        if (this.firebaseEnabled && this.currentUser) {
+            this.sincronizarOnlineFirebase();
+        }
     },
     
-    async atualizarStatusUsuarioFirebase(online) {
+    // 🔧 BUSCAR USUÁRIOS ONLINE DO FIREBASE
+    buscarUsuariosOnlineFirebase() {
+        return new Promise((resolve) => {
+            if (!this.firebaseEnabled) {
+                resolve([]);
+                return;
+            }
+            
+            try {
+                db.collection("operadores_online")
+                    .where("online", "==", true)
+                    .get()
+                    .then(snapshot => {
+                        const usuarios = [];
+                        const agora = new Date();
+                        
+                        snapshot.forEach(doc => {
+                            const data = doc.data();
+                            // Verificar se está online há menos de 10 minutos
+                            const lastActivity = data.lastActivity?.toDate ? data.lastActivity.toDate() : new Date();
+                            const diferencaMinutos = (agora - lastActivity) / (1000 * 60);
+                            
+                            if (diferencaMinutos < 10) {
+                                usuarios.push({
+                                    user: data.user,
+                                    nome: data.nome,
+                                    role: data.role,
+                                    turno: data.turno,
+                                    mood: data.mood || '😐',
+                                    lastActivity: lastActivity.toISOString(),
+                                    online: true
+                                });
+                            }
+                        });
+                        
+                        resolve(usuarios);
+                    })
+                    .catch(() => resolve([]));
+            } catch (error) {
+                console.warn("⚠️ Erro ao buscar usuários online do Firebase:", error);
+                resolve([]);
+            }
+        });
+    },
+    
+    // 🔧 ATUALIZAR LISTA ONLINE
+    atualizarListaOnline() {
+        // Atualizar contador
+        const onlineCount = document.getElementById('online-count');
+        if (onlineCount) {
+            const usuariosReais = this.onlineUsers.filter(u => u.user !== this.currentUser?.user);
+            if (usuariosReais.length === 0) {
+                onlineCount.textContent = '1 (apenas você)';
+                onlineCount.style.color = '#f39c12';
+            } else {
+                onlineCount.textContent = this.onlineUsers.length;
+                onlineCount.style.color = '#2ecc71';
+            }
+        }
+        
+        // Se a lista estiver visível, atualizar
+        const onlineList = document.getElementById('online-users-list');
+        if (onlineList && onlineList.style.display === 'block') {
+            this.renderOnlineUsersList();
+        }
+    },
+    
+    // 🆕 SINCRONIZAR STATUS ONLINE COM FIREBASE
+    sincronizarOnlineFirebase() {
         if (!this.firebaseEnabled || !this.currentUser) return;
         
         try {
-            await db.collection('users').doc(this.currentUser.user).set({
-                name: this.currentUser.nome,
-                email: this.currentUser.user,
-                online: online,
-                status: online ? 'online' : 'offline',
+            const operadorRef = db.collection("operadores_online").doc(this.currentUser.user);
+            
+            operadorRef.set({
+                nome: this.currentUser.nome,
                 role: this.currentUser.role,
+                user: this.currentUser.user,
                 turno: this.currentUser.turno,
-                lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
-                mood: this.getMoodAtual()
-            }, { merge: true });
+                mood: this.getMoodAtual(),
+                online: true,
+                lastActivity: firebase.firestore.FieldValue.serverTimestamp(),
+                loginDate: this.currentUser.loginDate,
+                loginHour: this.currentUser.loginHour
+            }, { merge: true }).then(() => {
+                console.log("✅ Status online sincronizado com Firebase");
+            }).catch(error => {
+                console.warn("⚠️ Erro ao sincronizar status online:", error);
+            });
         } catch (error) {
-            console.warn("⚠️ Erro ao atualizar status:", error);
+            console.warn("⚠️ Erro no Firebase durante sincronização:", error);
         }
     },
     
-    logout() {
-        if (confirm('Deseja realmente sair do sistema?')) {
-            this.registrarLogoff();
-            this.atualizarStatusUsuarioFirebase(false);
-            
-            // Limpar intervalos
-            this.limparIntervalos();
-            
-            // Limpar sessão
-            localStorage.removeItem('porter_session');
-            localStorage.removeItem('porter_last_session');
-            
-            this.currentUser = null;
-            
-            // Esconder aplicação
-            this.esconderAplicacao();
-            
-            // Mostrar login
-            this.mostrarTelaLogin();
-            
-            this.showMessage('Logoff realizado com sucesso!', 'success');
-        }
-    },
-    
-    limparIntervalos() {
-        const intervalos = ['chatInterval', 'moodInterval', 'onlineInterval'];
-        intervalos.forEach(intervalo => {
-            if (this[intervalo]) {
-                clearInterval(this[intervalo]);
-                this[intervalo] = null;
-            }
-        });
-    },
-    
-    esconderAplicacao() {
-        const mainContent = document.getElementById('main-content');
-        if (mainContent) mainContent.classList.add('hidden');
-    },
-    
-    mostrarTelaLogin() {
-        const loginScreen = document.getElementById('login-screen');
-        if (loginScreen) loginScreen.classList.remove('hidden');
+    // 📋 FUNÇÃO ATUALIZADA: renderOnlineUsersList CORRIGIDA
+    renderOnlineUsersList() {
+        const list = document.getElementById('online-users-list');
+        if (!list) return;
         
-        // Resetar formulário
-        const loginUser = document.getElementById('login-user');
-        const loginPass = document.getElementById('login-pass');
-        if (loginUser) loginUser.value = '';
-        if (loginPass) loginPass.value = '';
-    },
-    
-    // ============================================
-    // APLICAÇÃO PRINCIPAL
-    // ============================================
-    showApp() {
-        // Transição suave
-        const loginScreen = document.getElementById('login-screen');
-        const mainContent = document.getElementById('main-content');
+        // Limpar lista anterior
+        list.innerHTML = '';
         
-        if (loginScreen) loginScreen.classList.add('hidden');
-        if (mainContent) mainContent.classList.remove('hidden');
-        
-        // Mostrar sidebar após login
-        const sidebar = document.getElementById('sidebar');
-        if (sidebar && window.innerWidth > 1200) {
-            sidebar.style.display = 'block';
-        }
-        
-        this.updateUserInfo();
-        
-        // Configurar mood
-        this.carregarMoodOptions();
-        const jaAvaliou = this.jaAvaliouHoje();
-        if (!jaAvaliou) {
-            const moodContainer = document.getElementById('mood-check-container');
-            if (moodContainer) moodContainer.classList.remove('hidden');
-        }
-        
-        this.renderAll();
-        this.updateNotificationBadges();
-        this.salvarSessao();
-        
-        // Atualizar operadores online
-        this.updateOnlineUsers();
-        
-        // Mostrar controles admin
-        if (this.currentUser.role === 'ADMIN') {
-            const adminControls = document.getElementById('admin-controls');
-            if (adminControls) adminControls.style.display = 'flex';
-        }
-        
-        // Iniciar sistemas
-        this.iniciarSistemas();
-    },
-    
-    iniciarSistemas() {
-        // Iniciar chat
-        this.loadChat();
-        this.chatInterval = setInterval(() => this.loadChat(), 5000);
-        
-        // Iniciar tracking de online
-        this.setupOnlineTracking();
-        
-        // Registrar visualização do chat
-        this.registrarVisualizacaoChat();
-        
-        // Corrigir dados
-        setTimeout(() => {
-            this.corrigirDadosAtas();
-        }, 2000);
-        
-        // Iniciar listeners Firebase
-        if (this.firebaseEnabled) {
-            this.iniciarListenersFirebase();
-        }
-    },
-    
-    iniciarListenersFirebase() {
-        // Listener para ATAs
-        if (this.unsubscribeAtas) this.unsubscribeAtas();
-        
-        this.unsubscribeAtas = db.collection('atas')
-            .orderBy('criadoEm', 'desc')
-            .onSnapshot((snapshot) => {
-                const atasList = document.getElementById('atasList');
-                if (!atasList) return;
-                
-                atasList.innerHTML = '';
-                
-                snapshot.forEach((doc) => {
-                    const ata = { id: doc.id, ...doc.data() };
-                    this.renderAtaItemFirebase(ata);
-                });
-                
-                this.loadDashboardStats();
-            }, (error) => {
-                console.error('Erro ao carregar ATAs:', error);
-            });
-        
-        // Listener para usuários online
-        if (this.unsubscribeUsers) this.unsubscribeUsers();
-        
-        this.unsubscribeUsers = db.collection('users')
-            .where('online', '==', true)
-            .onSnapshot((snapshot) => {
-                const onlineUsersList = document.getElementById('onlineUsersList');
-                if (!onlineUsersList) return;
-                
-                onlineUsersList.innerHTML = '';
-                
-                snapshot.forEach((doc) => {
-                    const user = { id: doc.id, ...doc.data() };
-                    this.renderOnlineUserFirebase(user);
-                });
-                
-                this.loadDashboardStats();
-            }, (error) => {
-                console.error('Erro ao carregar usuários online:', error);
-            });
-    },
-    
-    updateUserInfo() {
-        const userInfo = document.getElementById('user-info');
-        if (userInfo && this.currentUser) {
-            const moodAtual = this.getMoodAtual();
-            userInfo.innerHTML = `
-                <div class="user-info-name">
-                    <span style="font-size: 1.2rem; margin-right: 5px;">${moodAtual}</span>
-                    <strong>${this.currentUser.nome.split(' ')[0]}</strong>
-                </div>
-                <div class="user-info-time">
-                    <i class="far fa-calendar"></i> ${this.currentUser.loginDate}
-                    <i class="far fa-clock"></i> ${this.currentUser.loginHour}
-                </div>
-                <div class="user-info-role">
-                    ${this.currentUser.turno} | ${this.currentUser.role}
+        if (this.onlineUsers.length === 0) {
+            list.innerHTML = `
+                <div style="padding: 2rem; text-align: center; color: #666;">
+                    <i class="fas fa-user-slash" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+                    <p>Nenhum operador online</p>
+                    <small style="font-size: 0.8rem;">Você está conectado, mas não há outros operadores ativos.</small>
                 </div>
             `;
-        }
-    },
-    
-    // ============================================
-    // NAVEGAÇÃO E ABAS
-    // ============================================
-    switchTab(tabId, btn) {
-        document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        const tabElement = document.getElementById(tabId);
-        if (tabElement) tabElement.classList.remove('hidden');
-        if (btn) btn.classList.add('active');
-        
-        // Ações específicas por aba
-        if (tabId === 'tab-chat') {
-            this.loadChat();
-            this.marcarChatComoVisualizado();
-        }
-    },
-    
-    // ============================================
-    // SISTEMA DE ATAS - VERSÃO COMPLETA
-    // ============================================
-    saveAta() {
-        // Verificar qual formulário está sendo usado
-        const formAntigo = document.getElementById('ata-condo');
-        const formNovo = document.getElementById('ataForm');
-        
-        if (formAntigo && formAntigo.value) {
-            this.saveAtaAntigo();
-        } else if (formNovo) {
-            this.saveAtaNovo();
-        }
-    },
-    
-    saveAtaAntigo() {
-        const condo = document.getElementById('ata-condo')?.value;
-        const desc = document.getElementById('ata-desc')?.value.trim();
-        const tipo = document.getElementById('ata-tipo')?.value;
-        
-        if (!condo || !desc) {
-            alert('Preencha todos os campos obrigatórios! (Condomínio e Descrição)');
-            return;
-        }
-
-        const novaAta = {
-            id: Date.now(),
-            condo,
-            cidade: document.getElementById('ata-cidade')?.value || "",
-            tipo: tipo || "Ocorrência",
-            status: document.getElementById('ata-status')?.value || "Em andamento",
-            desc,
-            operador: this.currentUser.nome,
-            user: this.currentUser.user,
-            turno: this.currentUser.turno,
-            data: new Date().toLocaleDateString('pt-BR'),
-            dataISO: new Date().toISOString().split('T')[0],
-            hora: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
-            timestamp: new Date().toISOString(),
-            comentarios: [],
-            fixa: tipo && tipo.includes('Informações Fixas')
-        };
-
-        let atas = JSON.parse(localStorage.getItem('porter_atas') || '[]');
-        atas.unshift(novaAta);
-        if (atas.length > 200) atas = atas.slice(0, 200);
-        localStorage.setItem('porter_atas', JSON.stringify(atas));
-        
-        // Sincronizar com Firebase
-        if (this.firebaseEnabled) {
-            this.sincronizarAtaFirebase(novaAta);
-        }
-        
-        this.criarNotificacao(condo, tipo, desc);
-        
-        // Limpar formulário
-        const ataDesc = document.getElementById('ata-desc');
-        const ataCondo = document.getElementById('ata-condo');
-        const ataCidade = document.getElementById('ata-cidade');
-        if (ataDesc) ataDesc.value = "";
-        if (ataCondo) ataCondo.value = "";
-        if (ataCidade) ataCidade.value = "";
-        
-        this.showMessage('Registro salvo com sucesso!', 'success');
-        this.renderAll();
-        this.updateNotificationBadges();
-    },
-    
-    async saveAtaNovo() {
-        if (!this.currentUser) {
-            alert('Você precisa estar logado!');
             return;
         }
         
-        const form = document.getElementById('ataForm');
-        if (!form.checkValidity()) {
-            form.reportValidity();
-            return;
-        }
+        // Ordenar: admin primeiro, depois por nome
+        const usuariosOrdenados = [...this.onlineUsers].sort((a, b) => {
+            if (a.role === 'ADMIN' && b.role !== 'ADMIN') return -1;
+            if (b.role === 'ADMIN' && a.role !== 'ADMIN') return 1;
+            if (a.isCurrentUser && !b.isCurrentUser) return -1;
+            if (!a.isCurrentUser && b.isCurrentUser) return 1;
+            return a.nome.localeCompare(b.nome);
+        });
         
-        const ataData = {
-            titulo: document.getElementById('titulo').value,
-            descricao: document.getElementById('descricao').value,
-            data: document.getElementById('data').value,
-            responsavel: document.getElementById('responsavel').value,
-            condominio: document.getElementById('condominio').value,
-            status: document.getElementById('status').value,
-            participantes: document.getElementById('participantes').value.split(',').map(p => p.trim()),
-            criadoPor: this.currentUser.uid,
-            criadoPorNome: this.currentUser.displayName || this.currentUser.email,
-            criadoEm: firebase.firestore.FieldValue.serverTimestamp(),
-            atualizadoEm: firebase.firestore.FieldValue.serverTimestamp()
-        };
-        
-        const ataId = document.getElementById('ataId').value;
-        
-        try {
-            if (ataId) {
-                // Atualizar ATA existente
-                await db.collection('atas').doc(ataId).update(ataData);
-                this.showAlert('success', 'ATA atualizada com sucesso!');
-            } else {
-                // Criar nova ATA
-                const docRef = await db.collection('atas').add(ataData);
-                this.showAlert('success', 'ATA criada com sucesso!');
-                
-                // Enviar email de notificação
-                this.enviarEmailAta(ataData, docRef.id, 'criacao');
-            }
+        usuariosOrdenados.forEach(user => {
+            const userItem = document.createElement('div');
+            userItem.className = 'online-user-item';
             
-            const modal = bootstrap.Modal.getInstance(document.getElementById('ataModal'));
-            if (modal) modal.hide();
+            // Calcular tempo desde última atividade
+            const tempoAtivo = user.lastActivity ? 
+                this.formatarTempoAtivo(new Date(user.lastActivity)) : 
+                'Agora mesmo';
             
-        } catch (error) {
-            console.error('Erro ao salvar ATA:', error);
-            this.showAlert('danger', 'Erro ao salvar ATA: ' + error.message);
-        }
-    },
-    
-    showAtaModal(ata = null) {
-        const modalElement = document.getElementById('ataModal');
-        if (!modalElement) return;
-        
-        const modal = new bootstrap.Modal(modalElement);
-        const form = document.getElementById('ataForm');
-        
-        if (ata) {
-            document.getElementById('modalTitle').textContent = 'Editar ATA';
-            document.getElementById('ataId').value = ata.id;
-            document.getElementById('titulo').value = ata.titulo;
-            document.getElementById('descricao').value = ata.descricao;
-            document.getElementById('data').value = ata.data;
-            document.getElementById('responsavel').value = ata.responsavel;
-            document.getElementById('condominio').value = ata.condominio;
-            document.getElementById('status').value = ata.status;
-            document.getElementById('participantes').value = ata.participantes;
-        } else {
-            document.getElementById('modalTitle').textContent = 'Nova ATA';
-            if (form) form.reset();
-            document.getElementById('data').value = new Date().toISOString().split('T')[0];
-            document.getElementById('status').value = 'pendente';
-            document.getElementById('ataId').value = '';
-        }
-        
-        modal.show();
-    },
-    
-    renderAtaItemFirebase(ata) {
-        const atasList = document.getElementById('atasList');
-        if (!atasList) return;
-        
-        const ataDate = new Date(ata.data);
-        const formattedDate = ataDate.toLocaleDateString('pt-BR');
-        
-        const statusClass = {
-            'pendente': 'text-warning',
-            'concluido': 'text-success',
-            'cancelado': 'text-danger'
-        }[ata.status] || '';
-        
-        const ataItem = document.createElement('div');
-        ataItem.className = `ata-item ${ata.status}`;
-        ataItem.innerHTML = `
-            <div class="ata-header">
-                <div>
-                    <h6 class="ata-title">${ata.titulo}</h6>
-                    <div class="ata-meta">
-                        <span class="badge ${statusClass}">${ata.status.toUpperCase()}</span>
-                        <span class="ms-2">${formattedDate}</span>
-                        <span class="ms-2">•</span>
-                        <span class="ms-2">${ata.condominio}</span>
-                        <span class="ms-2">•</span>
-                        <span class="ms-2">Responsável: ${ata.responsavel}</span>
+            // Definir cor do status baseado no humor
+            const statusColor = this.getCorPorMood(user.mood);
+            
+            userItem.innerHTML = `
+                <div class="online-user-avatar" style="background: ${statusColor}; color: ${user.mood === '😐' ? '#333' : 'white'};">
+                    ${user.mood || '😐'}
+                </div>
+                <div class="online-user-info">
+                    <div class="online-user-name">
+                        ${user.nome.split(' ')[0]}
+                        ${user.role === 'ADMIN' ? ' 👑' : ''}
+                        ${user.isCurrentUser ? '<span style="color: #3498db; font-size: 0.8rem;"> (Você)</span>' : ''}
+                    </div>
+                    <div class="online-user-role">
+                        ${user.moodStatus || 'Online'}
+                        <div style="font-size: 0.7rem; color: #888; margin-top: 2px;">
+                            <i class="far fa-clock"></i> ${tempoAtivo}
+                        </div>
                     </div>
                 </div>
-                <div class="ata-actions">
-                    ${this.currentUser && (this.currentUser.uid === ata.criadoPor || this.currentUser.uid === 'admin') ? `
-                        <button class="btn btn-sm btn-outline-primary" onclick="app.showAtaModal(${JSON.stringify(ata).replace(/"/g, '&quot;')})">
-                            Editar
-                        </button>
-                        <button class="btn btn-sm btn-outline-danger" onclick="app.deleteAtaFirebase('${ata.id}')">
-                            Excluir
-                        </button>
-                    ` : ''}
-                </div>
-            </div>
-            <p class="mb-2">${ata.descricao}</p>
-            ${ata.participantes && ata.participantes.length > 0 ? `
-                <div class="mt-2">
-                    <small class="text-muted">Participantes: ${ata.participantes.join(', ')}</small>
-                </div>
-            ` : ''}
-            <div class="mt-2 text-end">
-                <small class="text-muted">
-                    Criado por ${ata.criadoPorNome} em ${new Date(ata.criadoEm?.toDate()).toLocaleString('pt-BR')}
-                </small>
-            </div>
+                <div class="online-status" style="background: ${user.isCurrentUser ? '#3498db' : '#2ecc71'};"></div>
+            `;
+            
+            list.appendChild(userItem);
+        });
+        
+        // Adicionar rodapé
+        const rodape = document.createElement('div');
+        rodape.style.cssText = `
+            padding: 10px 15px;
+            text-align: center;
+            font-size: 0.8rem;
+            color: #666;
+            border-top: 1px solid #eee;
+            background: #f8f9fa;
+            border-radius: 0 0 10px 10px;
+        `;
+        rodape.innerHTML = `
+            <i class="fas fa-users"></i> 
+            ${this.onlineUsers.length} operador${this.onlineUsers.length > 1 ? 'es' : ''} online
+            <br>
+            <small style="font-size: 0.7rem; color: #999;">
+                Atualizado: ${new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})}
+                ${this.firebaseEnabled ? '<br><i class="fas fa-cloud" style="color:#27ae60"></i> Sincronizado' : '<br><i class="fas fa-laptop" style="color:#f39c12"></i> Local'}
+            </small>
         `;
         
-        atasList.appendChild(ataItem);
+        list.appendChild(rodape);
     },
     
-    async deleteAtaFirebase(ataId) {
-        if (!confirm('Tem certeza que deseja excluir esta ATA?')) {
-            return;
-        }
+    // 📋 FUNÇÃO ATUALIZADA: toggleOnlineUsers CORRIGIDA
+    toggleOnlineUsers() {
+        const list = document.getElementById('online-users-list');
+        if (!list) return;
         
-        try {
-            await db.collection('atas').doc(ataId).delete();
-            this.showAlert('success', 'ATA excluída com sucesso!');
-        } catch (error) {
-            console.error('Erro ao excluir ATA:', error);
-            this.showAlert('danger', 'Erro ao excluir ATA: ' + error.message);
-        }
-    },
-    
-    deleteAta(id) {
-        let atas = JSON.parse(localStorage.getItem('porter_atas') || '[]');
-        const ata = atas.find(a => a.id === id);
+        const estaVisivel = list.style.display === 'block';
         
-        if (!ata) {
-            alert('Registro não encontrado.');
-            return;
-        }
+        // Fechar notificações se estiverem abertas
+        const notificationsPanel = document.getElementById('notifications-panel');
+        if (notificationsPanel) notificationsPanel.classList.remove('show');
         
-        const ehAutor = ata.user === this.currentUser.user;
-        const ehAdmin = this.currentUser.role === 'ADMIN';
-        
-        if (!ehAdmin && !ehAutor) {
-            alert('Apenas o autor ou administradores podem excluir este registro.');
-            return;
-        }
-        
-        if (confirm('Tem certeza que deseja excluir este registro permanentemente?')) {
-            let remocoes = JSON.parse(localStorage.getItem('porter_remocoes') || '[]');
-            remocoes.unshift({
-                id: Date.now(),
-                tipo: ata.fixa ? 'Ata Fixa' : 'Ata',
-                dados: ata,
-                removidoPor: this.currentUser.nome,
-                data: new Date().toLocaleDateString('pt-BR'),
-                hora: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
-                timestamp: new Date().toISOString()
-            });
-            localStorage.setItem('porter_remocoes', JSON.stringify(remocoes));
+        if (estaVisivel) {
+            list.style.display = 'none';
+        } else {
+            // Atualizar lista ANTES de mostrar
+            this.updateOnlineUsers();
             
-            atas = atas.filter(a => a.id !== id);
-            localStorage.setItem('porter_atas', JSON.stringify(atas));
-            this.renderAll();
-            this.showMessage('Registro excluído com sucesso!', 'success');
-        }
-    },
-    
-    filterAtas() {
-        const dataFilter = document.getElementById('dataFilter').value;
-        const statusFilter = document.getElementById('statusFilter').value;
-        
-        if (this.unsubscribeAtas) this.unsubscribeAtas();
-        
-        let query = db.collection('atas').orderBy('criadoEm', 'desc');
-        
-        if (dataFilter) {
-            const selectedDate = new Date(dataFilter);
-            const startDate = new Date(selectedDate.setHours(0, 0, 0, 0));
-            const endDate = new Date(selectedDate.setHours(23, 59, 59, 999));
-            
-            query = query.where('data', '>=', startDate.toISOString().split('T')[0])
-                        .where('data', '<=', endDate.toISOString().split('T')[0]);
-        }
-        
-        if (statusFilter !== 'all') {
-            query = query.where('status', '==', statusFilter);
-        }
-        
-        this.unsubscribeAtas = query.onSnapshot((snapshot) => {
-            const atasList = document.getElementById('atasList');
-            atasList.innerHTML = '';
-            
-            snapshot.forEach((doc) => {
-                const ata = { id: doc.id, ...doc.data() };
-                this.renderAtaItemFirebase(ata);
-            });
-        }, (error) => {
-            console.error('Erro ao filtrar ATAs:', error);
-        });
-    },
-    
-    // ============================================
-    // SISTEMA DE CHAT - VERSÃO COMPLETA
-    // ============================================
-    sendChatMessage() {
-        const input = document.getElementById('chat-input');
-        const message = input?.value.trim();
-        
-        if (!message) return;
-        if (!this.currentUser) {
-            alert('Você precisa estar logado para enviar mensagens.');
-            return;
-        }
-
-        const sendBtn = document.getElementById('chat-send-btn');
-        const originalHTML = sendBtn?.innerHTML || '';
-        if (sendBtn) {
-            sendBtn.innerHTML = '<div class="loading"></div>';
-            sendBtn.disabled = true;
-        }
-        
-        const chatMessage = {
-            id: Date.now(),
-            sender: this.currentUser.nome,
-            senderRole: this.currentUser.role,
-            senderMood: this.getMoodAtual(),
-            senderUser: this.currentUser.user,
-            message: message,
-            time: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
-            timestamp: new Date().toISOString(),
-            date: new Date().toLocaleDateString('pt-BR')
-        };
-        
-        // Salvar no localStorage
-        let chat = JSON.parse(localStorage.getItem('porter_chat') || '[]');
-        chat.unshift(chatMessage);
-        if (chat.length > 100) chat = chat.slice(0, 100);
-        localStorage.setItem('porter_chat', JSON.stringify(chat));
-        
-        // Sincronizar com Firebase
-        if (this.firebaseEnabled) {
-            this.sincronizarChatFirebase(chatMessage);
-        }
-        
-        this.criarNotificacaoChatComAcao(chatMessage);
-        if (input) input.value = '';
-        
-        setTimeout(() => {
-            if (sendBtn) {
-                sendBtn.innerHTML = originalHTML;
-                sendBtn.disabled = false;
+            // Posicionar corretamente
+            const dropdown = document.getElementById('online-users');
+            if (dropdown) {
+                const rect = dropdown.getBoundingClientRect();
+                list.style.top = `${rect.bottom + 5}px`;
+                list.style.right = '10px';
+                list.style.left = 'auto';
+                list.style.width = '300px';
             }
-        }, 500);
-        
-        this.loadChat();
-        this.updateTabCounts();
-    },
-    
-    async sendMessage() {
-        if (!this.currentUser) {
-            alert('Você precisa estar logado para enviar mensagens!');
-            return;
-        }
-        
-        const messageInput = document.getElementById('messageInput');
-        const messageText = messageInput.value.trim();
-        
-        if (!messageText) return;
-        
-        try {
-            await db.collection('chat').add({
-                text: messageText,
-                userId: this.currentUser.uid,
-                userName: this.currentUser.displayName || this.currentUser.email,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            });
             
-            messageInput.value = '';
-            messageInput.focus();
+            list.style.display = 'block';
+            list.style.zIndex = '10000';
             
-        } catch (error) {
-            console.error('Erro ao enviar mensagem:', error);
-            this.showMessage('Erro ao enviar mensagem: ' + error.message, 'danger');
+            // Garantir que o conteúdo será renderizado
+            this.renderOnlineUsersList();
         }
     },
     
-    loadChat() {
-        // Carregar ambos os sistemas de chat
-        this.loadChatAntigo();
-        this.loadChatNovo();
+    formatarTempoAtivo(dataAtividade) {
+        const agora = new Date();
+        const diferenca = agora - new Date(dataAtividade);
+        const minutos = Math.floor(diferenca / (1000 * 60));
+        
+        if (minutos < 1) return 'Agora mesmo';
+        if (minutos === 1) return 'Há 1 minuto';
+        if (minutos < 60) return `Há ${minutos} minutos`;
+        
+        const horas = Math.floor(minutos / 60);
+        if (horas === 1) return 'Há 1 hora';
+        return `Há ${horas} horas`;
     },
     
-    loadChatAntigo() {
-        const container = document.getElementById('chat-messages');
-        if (!container) return;
-        
-        const chat = JSON.parse(localStorage.getItem('porter_chat') || '[]');
-        const chatCorrigido = this.corrigirDadosChat(chat);
-        
-        localStorage.setItem('porter_chat', JSON.stringify(chatCorrigido));
-        
-        if (this.currentUser && this.currentUser.role === 'ADMIN') {
-            const adminControls = document.getElementById('chat-admin-controls');
-            if (adminControls) adminControls.style.display = 'flex';
-        }
-        
-        if (chatCorrigido.length === 0) {
-            container.innerHTML = `
-                <div style="text-align: center; padding: 2rem; color: var(--gray);">
-                    <i class="fas fa-comment-slash" style="font-size: 2rem; margin-bottom: 1rem;"></i>
-                    <p>Nenhuma mensagem ainda. Seja o primeiro a enviar uma mensagem!</p>
-                </div>
-            `;
-            
-            this.mostrarVistoPor(container);
-            return;
-        }
-        
-        const chatOrdenado = [...chatCorrigido].sort((a, b) => 
-            new Date(a.timestamp) - new Date(b.timestamp)
-        );
-        
-        container.innerHTML = '';
-        
-        chatOrdenado.forEach(msg => {
-            const isSent = msg.senderUser === this.currentUser?.user;
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `chat-message ${isSent ? 'sent' : 'received'}`;
-            messageDiv.dataset.id = msg.id;
-            
-            messageDiv.innerHTML = `
-                <div class="chat-message-header">
-                    <span class="chat-message-sender">
-                        <span style="font-size: 1.1rem; margin-right: 5px;">${msg.senderMood || '😐'}</span>
-                        ${msg.sender} ${msg.senderRole === 'ADMIN' ? ' 👑' : ''}
-                    </span>
-                    <span class="chat-message-time">${msg.date} ${msg.time}</span>
-                </div>
-                <div class="chat-message-text">${msg.message}</div>
-                ${this.currentUser && this.currentUser.role === 'ADMIN' && !isSent ? 
-                    `<div style="margin-top: 5px; text-align: right;">
-                        <button class="btn btn-danger btn-sm" onclick="app.deleteChatMessage(${msg.id})">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>` : 
-                    ''
-                }
-            `;
-            
-            container.appendChild(messageDiv);
-        });
-        
-        this.mostrarVistoPor(container);
-        container.scrollTop = container.scrollHeight;
-        this.registrarVisualizacaoChat();
-        this.atualizarBadgeChat();
-        
-        // Sincronizar com Firebase
-        if (this.firebaseEnabled) {
-            this.sincronizarChatDoFirebase();
-        }
+    getCorPorMood(mood) {
+        const cores = {
+            '😠': '#ffeaa7',
+            '😔': '#fd79a8', 
+            '😐': '#dfe6e9',
+            '🙂': '#a29bfe',
+            '😄': '#55efc4'
+        };
+        return cores[mood] || '#e8f4fc';
     },
     
-    loadChatNovo() {
-        if (!this.firebaseEnabled) return;
-        
-        // Carregar mensagens do chat Firebase
-        if (this.unsubscribeChat) this.unsubscribeChat();
-        
-        this.unsubscribeChat = db.collection('chat')
-            .orderBy('timestamp', 'desc')
-            .limit(50)
-            .onSnapshot((snapshot) => {
-                const chatMessagesList = document.getElementById('chatMessagesList');
-                if (!chatMessagesList) return;
-                
-                const messages = [];
-                
-                snapshot.forEach((doc) => {
-                    messages.push({ id: doc.id, ...doc.data() });
-                });
-                
-                messages.sort((a, b) => a.timestamp?.toDate() - b.timestamp?.toDate());
-                
-                chatMessagesList.innerHTML = '';
-                messages.forEach((message) => {
-                    this.renderMessageFirebase(message);
-                });
-                
-                this.scrollChatToBottom();
-                this.loadDashboardStats();
-            }, (error) => {
-                console.error('Erro ao carregar chat:', error);
-            });
+    toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar) sidebar.classList.toggle('show');
     },
     
-    renderMessageFirebase(message) {
-        const chatMessagesList = document.getElementById('chatMessagesList');
-        if (!chatMessagesList) return;
+    registrarLogoff() {
+        if (!this.currentUser) return;
         
-        const isOwnMessage = message.userId === this.currentUser?.uid;
-        
-        const messageTime = message.timestamp?.toDate().toLocaleTimeString('pt-BR', {
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-        
-        const messageDiv = document.createElement('div');
-        messageDiv.className = `chat-message ${isOwnMessage ? 'own' : 'other'}`;
-        messageDiv.innerHTML = `
-            <div class="message-sender">${message.userName}</div>
-            <div class="message-content">${message.text}</div>
-            <div class="message-time">${messageTime}</div>
-        `;
-        
-        chatMessagesList.appendChild(messageDiv);
-    },
-    
-    scrollChatToBottom() {
-        const chatMessages = document.getElementById('chatMessagesList');
-        if (chatMessages) {
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-    },
-    
-    renderOnlineUserFirebase(user) {
-        const onlineUsersList = document.getElementById('onlineUsersList');
-        if (!onlineUsersList) return;
-        
-        const userDiv = document.createElement('div');
-        userDiv.className = 'online-user';
-        userDiv.innerHTML = `
-            <div class="online-status online"></div>
-            <div class="user-info">
-                <div class="user-name">${user.name}</div>
-                <small class="text-muted">${user.email}</small>
-            </div>
-        `;
-        
-        onlineUsersList.appendChild(userDiv);
-    },
-    
-    // ============================================
-    // SISTEMA DE ORDENS DE SERVIÇO (OS)
-    // ============================================
-    saveOS() {
-        const condo = document.getElementById('os-condo')?.value;
-        const desc = document.getElementById('os-desc')?.value.trim();
-        const gravidade = document.getElementById('os-gravidade')?.value;
-        const data = document.getElementById('os-data')?.value;
-        const emailsInput = document.getElementById('os-emails')?.value || '';
-        
-        if (!condo || !desc || !data) {
-            alert('Preencha todos os campos obrigatórios! (Condomínio, Descrição e Data)');
-            return;
-        }
-
-        const emails = emailsInput
-            .split(',')
-            .map(email => email.trim())
-            .filter(email => {
-                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                return email && emailRegex.test(email);
-            });
-
-        const novaOS = {
-            id: Date.now(),
-            condo,
-            cidade: document.getElementById('os-cidade')?.value || "",
-            gravidade: gravidade || "Média",
-            desc,
-            dataOS: data,
-            data: new Date().toLocaleDateString('pt-BR'),
-            dataISO: new Date().toISOString().split('T')[0],
-            hora: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
-            operador: this.currentUser.nome,
+        const logoffs = JSON.parse(localStorage.getItem('porter_logoffs') || '[]');
+        const logoffData = {
             user: this.currentUser.user,
-            turno: this.currentUser.turno,
-            emails: emails,
-            status: 'Pendente',
+            nome: this.currentUser.nome,
+            data: new Date().toLocaleDateString('pt-BR'),
+            hora: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
             timestamp: new Date().toISOString(),
-            prazoResposta: this.calcularPrazoPorGravidade(gravidade),
-            corGravidade: this.getCorGravidade(gravidade),
-            notificacoesEnviadas: 0
+            turno: this.currentUser.turno
         };
-
-        let osList = JSON.parse(localStorage.getItem('porter_os') || '[]');
-        osList.unshift(novaOS);
-        if (osList.length > 100) osList = osList.slice(0, 100);
-        localStorage.setItem('porter_os', JSON.stringify(osList));
         
-        // Sincronizar com Firebase
+        logoffs.unshift(logoffData);
+        if (logoffs.length > 200) logoffs.pop();
+        localStorage.setItem('porter_logoffs', JSON.stringify(logoffs));
+        
+        this.lastLogoffTime = new Date().toISOString();
+        localStorage.setItem('porter_last_logoff', this.lastLogoffTime);
+        
+        // 🆕 REGISTRAR LOGOFF NO FIREBASE
         if (this.firebaseEnabled) {
-            this.sincronizarOSFirebase(novaOS);
-        }
-        
-        this.criarNotificacao(condo, 'Ordem de Serviço', `Nova OS: ${gravidade} - ${desc.substring(0, 50)}...`);
-        
-        // Limpar formulário
-        const campos = ['os-desc', 'os-condo', 'os-cidade', 'os-emails'];
-        campos.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) {
-                if (id === 'os-data') {
-                    el.value = new Date().toISOString().split('T')[0];
-                } else {
-                    el.value = "";
-                }
+            try {
+                const operadorRef = db.collection("operadores_online").doc(this.currentUser.user);
+                operadorRef.update({
+                    online: false,
+                    lastLogoff: firebase.firestore.FieldValue.serverTimestamp(),
+                    logoffTime: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})
+                }).catch(error => {
+                    console.warn("⚠️ Erro ao registrar logoff no Firebase:", error);
+                });
+            } catch (error) {
+                console.warn("⚠️ Erro no Firebase durante logoff:", error);
             }
-        });
+        }
         
-        this.showMessage('Ordem de Serviço salva com sucesso!', 'success');
-        this.renderOS();
-        this.updateNotificationBadges();
+        // Limpar intervalos
+        if (this.chatInterval) {
+            clearInterval(this.chatInterval);
+            this.chatInterval = null;
+        }
         
-        if (emails.length > 0) {
-            this.registrarEnvioDetalhadoOS(novaOS, emails);
+        if (this.moodInterval) {
+            clearInterval(this.moodInterval);
+            this.moodInterval = null;
+        }
+        
+        if (this.onlineInterval) {
+            clearInterval(this.onlineInterval);
+            this.onlineInterval = null;
+        }
+        
+        // Limpar sessão do usuário atual
+        localStorage.removeItem('porter_last_session');
+    },
+    
+    salvarSessao() {
+        if (!this.currentUser) return;
+        
+        const sessionData = {
+            user: this.currentUser.user,
+            nome: this.currentUser.nome,
+            lastActivity: new Date().toISOString(),
+            turno: this.currentUser.turno,
+            role: this.currentUser.role
+        };
+        
+        localStorage.setItem('porter_last_session', JSON.stringify(sessionData));
+    },
+    
+    loadCondos() {
+        const sidebarList = document.getElementById('condo-list');
+        if (!sidebarList) return;
+        
+        sidebarList.innerHTML = '';
+        
+        const ataSelect = document.getElementById('ata-condo');
+        const osSelect = document.getElementById('os-condo');
+        const filterSelect = document.getElementById('filter-condo');
+        const reportSelect = document.getElementById('report-condo');
+        
+        if (ataSelect) ataSelect.innerHTML = '<option value="">Selecione um condomínio...</option>';
+        if (osSelect) osSelect.innerHTML = '<option value="">Selecione um condomínio...</option>';
+        if (filterSelect) filterSelect.innerHTML = '<option value="">Todos os condomínios</option>';
+        if (reportSelect) reportSelect.innerHTML = '<option value="">Todos os condomínios</option>';
+        
+        if (!DATA.condominios || !Array.isArray(DATA.condominios)) {
+            console.error("❌ DATA.condominios não está definido ou não é um array");
+            return;
+        }
+        
+        DATA.condominios.sort((a,b) => a.n.localeCompare(b.n)).forEach(c => {
+            const condoItem = document.createElement('div');
+            condoItem.className = 'condo-item';
+            condoItem.dataset.condo = c.n;
+            condoItem.onclick = () => this.filtrarPorCondominio(c.n);
             
-            setTimeout(() => {
-                this.showMessage(`✅ OS registrada! ${emails.length} e-mail(s) agendado(s)`, 'success');
-                this.mostrarDetalhesEmailOS(novaOS, emails);
-            }, 500);
-        }
+            condoItem.innerHTML = `
+                <div class="condo-name">${c.n}</div>
+                <div class="condo-badge" id="badge-${c.n.replace(/\s+/g, '-')}">0</div>
+            `;
+            sidebarList.appendChild(condoItem);
+            
+            [ataSelect, osSelect, filterSelect, reportSelect].forEach(select => {
+                if (select) {
+                    const opt = document.createElement('option');
+                    opt.value = c.n;
+                    opt.textContent = c.n;
+                    select.appendChild(opt);
+                }
+            });
+        });
     },
     
-    deleteOS(id) {
-        let osList = JSON.parse(localStorage.getItem('porter_os') || '[]');
-        const os = osList.find(o => o.id === id);
+    loadFiltros() {
+        const filterOperador = document.getElementById('filter-presenca-operador');
+        if (!filterOperador) return;
         
-        if (!os) {
-            alert('Ordem de Serviço não encontrada.');
+        filterOperador.innerHTML = '<option value="">Todos os operadores</option>';
+        
+        if (!DATA.funcionarios || !Array.isArray(DATA.funcionarios)) {
+            console.error("❌ DATA.funcionarios não está definido ou não é um array");
             return;
         }
         
-        const ehAutor = os.user === this.currentUser.user;
-        const ehAdmin = this.currentUser.role === 'ADMIN';
-        
-        if (!ehAdmin && !ehAutor) {
-            alert('Apenas o autor ou administradores podem excluir esta Ordem de Serviço.');
-            return;
-        }
-        
-        if (confirm('Tem certeza que deseja excluir esta Ordem de Serviço?')) {
-            osList = osList.filter(os => os.id !== id);
-            localStorage.setItem('porter_os', JSON.stringify(osList));
-            this.renderOS();
-            this.showMessage('Ordem de Serviço excluída!', 'success');
-        }
+        DATA.funcionarios.sort((a,b) => a.nome.localeCompare(b.nome)).forEach(f => {
+            let opt = document.createElement('option');
+            opt.value = f.nome;
+            opt.textContent = f.nome;
+            filterOperador.appendChild(opt);
+        });
     },
     
-    // ============================================
-    // SISTEMA DE MOOD/HUMOR
-    // ============================================
     carregarMoodOptions() {
         const container = document.getElementById('mood-options');
         if (!container) return;
@@ -1383,7 +1046,7 @@ const app = {
         if (moods.length > 500) moods = moods.slice(0, 500);
         localStorage.setItem('porter_moods', JSON.stringify(moods));
         
-        // Sincronizar com Firebase
+        // 🆕 SINCRONIZAR COM FIREBASE
         if (this.firebaseEnabled) {
             this.sincronizarMoodFirebase(moodData);
         }
@@ -1413,22 +1076,24 @@ const app = {
         }, 5000);
     },
     
-    jaAvaliouHoje() {
-        if (!this.currentUser) return true;
+    // 🆕 SINCRONIZAR MOOD COM FIREBASE
+    sincronizarMoodFirebase(moodData) {
+        if (!this.firebaseEnabled) return;
         
-        const hojeISO = new Date().toISOString().split('T')[0];
-        const moods = JSON.parse(localStorage.getItem('porter_moods') || '[]');
-        return moods.some(m => m.user === this.currentUser.user && m.dataISO === hojeISO);
-    },
-    
-    getMoodAtual() {
-        if (!this.currentUser) return '😐';
-        
-        const hojeISO = new Date().toISOString().split('T')[0];
-        const moods = JSON.parse(localStorage.getItem('porter_moods') || '[]');
-        const moodHoje = moods.find(m => m.user === this.currentUser.user && m.dataISO === hojeISO);
-        
-        return moodHoje ? moodHoje.moodStatus.split(' ')[0] : '😐';
+        try {
+            const moodRef = db.collection("moods").doc(`${moodData.user}_${moodData.dataISO}`);
+            
+            moodRef.set({
+                ...moodData,
+                firebaseTimestamp: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true }).then(() => {
+                console.log("✅ Mood sincronizado com Firebase");
+            }).catch(error => {
+                console.warn("⚠️ Erro ao sincronizar mood:", error);
+            });
+        } catch (error) {
+            console.warn("⚠️ Erro no Firebase durante sincronização do mood:", error);
+        }
     },
     
     verificarMoodHoje() {
@@ -1446,356 +1111,357 @@ const app = {
         }
     },
     
-    // ============================================
-    // SISTEMA DE NOTIFICAÇÕES
-    // ============================================
-    loadNotifications() {
-        const notificacoes = JSON.parse(localStorage.getItem('porter_notificacoes') || '[]');
-        this.notifications = notificacoes;
+    getMoodAtual() {
+        if (!this.currentUser) return '😐';
         
-        const list = document.getElementById('notifications-list');
-        if (!list) return;
+        const hojeISO = new Date().toISOString().split('T')[0];
+        const moods = JSON.parse(localStorage.getItem('porter_moods') || '[]');
+        const moodHoje = moods.find(m => m.user === this.currentUser.user && m.dataISO === hojeISO);
         
-        list.innerHTML = '';
-        
-        if (notificacoes.length === 0) {
-            list.innerHTML = `
-                <div class="notification-item">
-                    <div style="text-align: center; color: var(--gray); padding: 2rem;">
-                        <i class="fas fa-bell-slash" style="font-size: 2rem; margin-bottom: 1rem;"></i>
-                        <p>Nenhuma notificação</p>
-                    </div>
-                </div>
-            `;
+        return moodHoje ? moodHoje.moodStatus.split(' ')[0] : '😐';
+    },
+    
+    updateCity() {
+        const condoName = document.getElementById('ata-condo').value;
+        const condo = DATA.condominios.find(c => c.n === condoName);
+        const cidadeInput = document.getElementById('ata-cidade');
+        if (cidadeInput) cidadeInput.value = condo ? condo.c : "";
+    },
+    
+    updateCityOS() {
+        const condoName = document.getElementById('os-condo').value;
+        const condo = DATA.condominios.find(c => c.n === condoName);
+        const cidadeInput = document.getElementById('os-cidade');
+        if (cidadeInput) cidadeInput.value = condo ? condo.c : "";
+    },
+    
+    login() {
+        const u = document.getElementById('login-user').value.trim();
+        const p = document.getElementById('login-pass').value;
+        const t = document.getElementById('login-turno').value;
+
+        if (!DATA.funcionarios || !Array.isArray(DATA.funcionarios)) {
+            alert('Erro no sistema: Dados de funcionários não disponíveis.');
             return;
         }
-        
-        notificacoes.forEach(notif => {
-            const item = document.createElement('div');
-            item.className = `notification-item ${notif.lida ? '' : 'unread'} ${notif.destaque ? 'destaque' : ''}`;
-            item.dataset.tipo = notif.tipo;
-            
-            item.onclick = (e) => {
-                e.stopPropagation();
-                this.processarNotificacao(notif);
+
+        const user = DATA.funcionarios.find(f => f.user === u && f.pass === p);
+
+        if (user) {
+            this.currentUser = { 
+                ...user, 
+                turno: t, 
+                loginTime: new Date().toLocaleString('pt-BR'),
+                loginTimestamp: new Date().toISOString(),
+                loginDate: new Date().toLocaleDateString('pt-BR'),
+                loginHour: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})
             };
+            localStorage.setItem('porter_session', JSON.stringify(this.currentUser));
             
-            let icon = '📝';
-            if (notif.tipo === 'chat_mensagem') icon = '💬';
-            if (notif.tipo && notif.tipo.includes('Ocorrência')) icon = '⚠️';
-            if (notif.tipo && notif.tipo.includes('Incidente')) icon = '🚨';
-            if (notif.tipo && notif.tipo.includes('Fixas')) icon = '📌';
-            if (notif.tipo === 'chat') icon = '💬';
-            if (notif.tipo === 'Ordem de Serviço') icon = '🔧';
-            if (notif.tipo === 'email') icon = '📧';
+            // Registrar login
+            let presencas = JSON.parse(localStorage.getItem('porter_presencas') || '[]');
+            presencas.unshift({
+                nome: user.nome,
+                turno: t,
+                data: new Date().toLocaleDateString('pt-BR'),
+                hora: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
+                timestamp: new Date().toISOString(),
+                dataISO: new Date().toISOString().split('T')[0],
+                tipo: 'login'
+            });
             
-            const acaoRapida = notif.tipo === 'chat_mensagem' && notif.acao?.mensagemId ? 
-                `<button class="btn btn-sm btn-success" style="margin-top: 8px; padding: 4px 10px; font-size: 0.8rem;" 
-                        onclick="app.irParaChatAgora(event, ${notif.acao.mensagemId})">
-                    <i class="fas fa-comment"></i> Ver no Chat
-                </button>` : '';
+            if (presencas.length > 100) presencas = presencas.slice(0, 100);
+            localStorage.setItem('porter_presencas', JSON.stringify(presencas));
             
-            item.innerHTML = `
-                <div class="notification-condo">${icon} ${notif.condo || 'Não especificado'}</div>
-                <div style="margin: 5px 0;">${notif.desc || 'Sem descrição'}</div>
-                <div class="notification-time">${notif.data || ''} ${notif.hora || ''}</div>
-                ${acaoRapida}
-            `;
-            list.appendChild(item);
-        });
-        
-        this.updateNotificationBadges();
+            this.showApp();
+        } else {
+            alert('Credenciais inválidas! Verifique usuário e senha.');
+        }
     },
     
-    criarNotificacao(condo, tipo, desc) {
-        const notificacao = {
-            id: Date.now(),
-            condo: condo || "Não especificado",
-            tipo: tipo || "Ocorrência",
-            desc: desc ? (desc.length > 100 ? desc.substring(0, 100) + '...' : desc) : "Sem descrição",
-            data: new Date().toLocaleDateString('pt-BR'),
-            hora: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
-            timestamp: new Date().toISOString(),
-            lida: false
-        };
+    showApp() {
+        // Transição suave
+        const loginScreen = document.getElementById('login-screen');
+        const mainContent = document.getElementById('main-content');
         
-        let notificacoes = JSON.parse(localStorage.getItem('porter_notificacoes') || '[]');
-        notificacoes.unshift(notificacao);
-        if (notificacoes.length > 50) notificacoes.pop();
-        localStorage.setItem('porter_notificacoes', JSON.stringify(notificacoes));
+        if (loginScreen) loginScreen.classList.add('hidden');
+        if (mainContent) mainContent.classList.remove('hidden');
         
-        if (tipo === 'Ordem de Serviço') {
-            this.criarNotificacaoChat(`Nova OS criada em ${condo}: ${desc ? desc.substring(0, 80) + '...' : 'Sem descrição'}`);
+        // MOSTRAR SIDEBAR APÓS LOGIN
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar && window.innerWidth > 1200) {
+            sidebar.style.display = 'block';
         }
         
-        this.loadNotifications();
-    },
-    
-    criarNotificacaoChat(texto) {
-        let notificacoes = JSON.parse(localStorage.getItem('porter_notificacoes') || '[]');
-        const notificacao = {
-            id: Date.now(),
-            condo: 'Chat Geral',
-            tipo: 'chat',
-            desc: texto || "Nova mensagem no chat",
-            data: new Date().toLocaleDateString('pt-BR'),
-            hora: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
-            timestamp: new Date().toISOString(),
-            lida: false
-        };
+        this.updateUserInfo();
         
-        notificacoes.unshift(notificacao);
-        if (notificacoes.length > 50) notificacoes.pop();
-        localStorage.setItem('porter_notificacoes', JSON.stringify(notificacoes));
-        this.loadNotifications();
-    },
-    
-    criarNotificacaoChatComAcao(chatMessage) {
-        const notificacao = {
-            id: Date.now(),
-            condo: 'Chat Geral',
-            tipo: 'chat_mensagem',
-            desc: `Nova mensagem de ${chatMessage.sender}: ${chatMessage.message ? (chatMessage.message.substring(0, 50) + (chatMessage.message.length > 50 ? '...' : '')) : 'Sem mensagem'}`,
-            data: new Date().toLocaleDateString('pt-BR'),
-            hora: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
-            timestamp: new Date().toISOString(),
-            lida: false,
-            acao: {
-                tipo: 'ir_para_chat',
-                mensagemId: chatMessage.id,
-                sender: chatMessage.sender
-            },
-            destaque: true
-        };
+        this.carregarMoodOptions();
+        const jaAvaliou = this.jaAvaliouHoje();
+        if (!jaAvaliou) {
+            const moodContainer = document.getElementById('mood-check-container');
+            if (moodContainer) moodContainer.classList.remove('hidden');
+        }
         
-        let notificacoes = JSON.parse(localStorage.getItem('porter_notificacoes') || '[]');
-        notificacoes.unshift(notificacao);
-        
-        if (notificacoes.length > 50) notificacoes.pop();
-        localStorage.setItem('porter_notificacoes', JSON.stringify(notificacoes));
-        
-        this.loadNotifications();
+        this.renderAll();
         this.updateNotificationBadges();
+        this.salvarSessao();
+        
+        // 🆕 ATUALIZAR OPERADORES ONLINE IMEDIATAMENTE
+        this.updateOnlineUsers();
+        
+        // Se for admin, mostrar controles
+        const adminControls = document.getElementById('admin-controls');
+        if (adminControls && this.currentUser.role === 'ADMIN') {
+            adminControls.style.display = 'flex';
+        }
+        
+        // Iniciar chat
+        this.loadChat();
+        this.chatInterval = setInterval(() => this.loadChat(), 5000);
+        
+        // Iniciar tracking de online
+        this.setupOnlineTracking();
+        
+        // 🆕 Inicializar visto por
+        this.registrarVisualizacaoChat();
+        
+        // 🔧 CORRIGIR DADOS DE ATAS SE NECESSÁRIO
+        setTimeout(() => {
+            this.corrigirDadosAtas();
+        }, 2000);
+    },
+    
+    // 🔧 CORRIGIR DADOS DE ATAS
+    corrigirDadosAtas() {
+        console.log("🔧 Corrigindo dados de ATAs...");
+        
+        try {
+            const atas = JSON.parse(localStorage.getItem('porter_atas') || '[]');
+            
+            if (atas.length > 0) {
+                const atasCorrigidas = atas.map((ata, index) => {
+                    // Garantir que cada ATA tenha todos os campos obrigatórios
+                    const ataCorrigida = {
+                        id: ata.id || `vercel_${Date.now()}_${index}`,
+                        condo: ata.condo || "Não especificado",
+                        cidade: ata.cidade || "",
+                        tipo: ata.tipo || "Ocorrência",
+                        status: ata.status || "Em andamento",
+                        desc: ata.desc || "",
+                        operador: ata.operador || "Operador desconhecido",
+                        user: ata.user || JSON.parse(localStorage.getItem('porter_session') || '{}').user || "admin",
+                        turno: ata.turno || "Diurno",
+                        data: ata.data || new Date().toLocaleDateString('pt-BR'),
+                        dataISO: ata.dataISO || new Date().toISOString().split('T')[0],
+                        hora: ata.hora || new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
+                        timestamp: ata.timestamp || new Date().toISOString(),
+                        comentarios: Array.isArray(ata.comentarios) ? ata.comentarios : [],
+                        fixa: ata.fixa || false
+                    };
+                    
+                    // Copiar outros campos
+                    Object.keys(ata).forEach(key => {
+                        if (!ataCorrigida.hasOwnProperty(key)) {
+                            ataCorrigida[key] = ata[key];
+                        }
+                    });
+                    
+                    return ataCorrigida;
+                });
+                
+                localStorage.setItem('porter_atas', JSON.stringify(atasCorrigidas));
+                console.log(`✅ ${atasCorrigidas.length} ATAs corrigidas`);
+                
+                // Renderizar ATAs novamente
+                if (typeof this.renderAta === 'function') {
+                    setTimeout(() => this.renderAta(), 500);
+                }
+            }
+        } catch (error) {
+            console.error("❌ Erro ao corrigir ATAs:", error);
+        }
+    },
+    
+    updateUserInfo() {
+        const userInfo = document.getElementById('user-info');
+        if (userInfo && this.currentUser) {
+            const moodAtual = this.getMoodAtual();
+            userInfo.innerHTML = `
+                <div class="user-info-name">
+                    <span style="font-size: 1.2rem; margin-right: 5px;">${moodAtual}</span>
+                    <strong>${this.currentUser.nome.split(' ')[0]}</strong>
+                </div>
+                <div class="user-info-time">
+                    <i class="far fa-calendar"></i> ${this.currentUser.loginDate}
+                    <i class="far fa-clock"></i> ${this.currentUser.loginHour}
+                </div>
+                <div class="user-info-role">
+                    ${this.currentUser.turno} | ${this.currentUser.role}
+                </div>
+            `;
+        }
+    },
+    
+    jaAvaliouHoje() {
+        if (!this.currentUser) return true;
+        
+        const hojeISO = new Date().toISOString().split('T')[0];
+        const moods = JSON.parse(localStorage.getItem('porter_moods') || '[]');
+        return moods.some(m => m.user === this.currentUser.user && m.dataISO === hojeISO);
+    },
+    
+    logout() {
+        if (confirm('Deseja realmente sair do sistema?')) {
+            this.registrarLogoff();
+            
+            // Limpar intervalos primeiro
+            if (this.chatInterval) {
+                clearInterval(this.chatInterval);
+                this.chatInterval = null;
+            }
+            
+            if (this.moodInterval) {
+                clearInterval(this.moodInterval);
+                this.moodInterval = null;
+            }
+            
+            if (this.onlineInterval) {
+                clearInterval(this.onlineInterval);
+                this.onlineInterval = null;
+            }
+            
+            // Limpar sessão
+            localStorage.removeItem('porter_session');
+            localStorage.removeItem('porter_last_session');
+            
+            this.currentUser = null;
+            
+            // Esconder aplicação
+            const mainContent = document.getElementById('main-content');
+            if (mainContent) mainContent.classList.add('hidden');
+            
+            // Mostrar login com transição suave
+            const loginScreen = document.getElementById('login-screen');
+            if (loginScreen) loginScreen.classList.remove('hidden');
+            
+            // Resetar formulário de login
+            const loginUser = document.getElementById('login-user');
+            const loginPass = document.getElementById('login-pass');
+            if (loginUser) loginUser.value = '';
+            if (loginPass) loginPass.value = '';
+            
+            this.showMessage('Logoff realizado com sucesso!', 'success');
+        }
+    },
+    
+    switchTab(tabId, btn) {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        const tabElement = document.getElementById(tabId);
+        if (tabElement) tabElement.classList.remove('hidden');
+        if (btn) btn.classList.add('active');
+        
+        // Se for a aba de chat, carregar mensagens e marcar como visualizado
+        if (tabId === 'tab-chat') {
+            this.loadChat();
+            this.marcarChatComoVisualizado();
+        }
+    },
+    
+    updateTabCounts() {
+        const atas = JSON.parse(localStorage.getItem('porter_atas') || '[]');
+        const fixas = atas.filter(a => a.tipo && a.tipo.includes('Informações Fixas'));
+        const os = JSON.parse(localStorage.getItem('porter_os') || '[]');
+        
+        const tabCountAta = document.getElementById('tab-count-ata');
+        const tabCountFixas = document.getElementById('tab-count-fixas');
+        const tabCountOs = document.getElementById('tab-count-os');
+        
+        if (tabCountAta) tabCountAta.textContent = atas.length;
+        if (tabCountFixas) tabCountFixas.textContent = fixas.length;
+        if (tabCountOs) tabCountOs.textContent = os.length;
+        
+        // 🆕 Usar função atualizarBadgeChat
         this.atualizarBadgeChat();
     },
     
-    processarNotificacao(notificacao) {
-        this.marcarNotificacaoComoLida(notificacao.id);
+    atualizarBadgeChat() {
+        const chat = JSON.parse(localStorage.getItem('porter_chat') || '[]');
+        const ultimaVisualizacao = localStorage.getItem('porter_chat_last_view') || '0';
+        const ultimaVisualizacaoTime = parseInt(ultimaVisualizacao);
         
-        if (notificacao.acao) {
-            switch(notificacao.acao.tipo) {
-                case 'ir_para_chat':
-                    this.irParaChat(notificacao.acao.mensagemId);
-                    break;
-            }
-        }
+        const mensagensNaoVisualizadas = chat.filter(msg => {
+            if (!msg.timestamp) return false;
+            const msgTime = new Date(msg.timestamp).getTime();
+            return msgTime > ultimaVisualizacaoTime;
+        }).length;
         
-        const panel = document.getElementById('notifications-panel');
-        if (panel) panel.classList.remove('show');
-    },
-    
-    irParaChat(mensagemId = null) {
-        const chatTabBtn = document.querySelector('.chat-tab');
-        if (chatTabBtn) {
-            this.switchTab('tab-chat', chatTabBtn);
-        } else {
-            const chatTab = document.querySelector('.tab-btn.chat-tab');
-            if (chatTab) {
-                this.switchTab('tab-chat', chatTab);
-            }
-        }
+        const badge = document.getElementById('chat-badge');
         
-        this.loadChat();
-        this.marcarChatComoVisualizado();
-        
-        if (mensagemId) {
-            setTimeout(() => {
-                this.destacarMensagemChat(mensagemId);
-            }, 500);
-        }
-        
-        setTimeout(() => {
-            const chatInput = document.getElementById('chat-input');
-            if (chatInput) {
-                chatInput.focus();
-            }
-        }, 300);
-    },
-    
-    irParaChatAgora(event, mensagemId) {
-        event.stopPropagation();
-        event.preventDefault();
-        this.irParaChat(mensagemId);
-    },
-    
-    updateNotificationBadges() {
-        const notificacoes = JSON.parse(localStorage.getItem('porter_notificacoes') || '[]');
-        const naoLidas = notificacoes.filter(n => !n.lida).length;
-        
-        const badge = document.getElementById('notification-count');
         if (badge) {
-            if (naoLidas > 0) {
-                badge.textContent = naoLidas > 99 ? '99+' : naoLidas;
-                badge.style.display = 'block';
+            if (mensagensNaoVisualizadas > 0) {
+                badge.textContent = mensagensNaoVisualizadas > 99 ? '99+' : mensagensNaoVisualizadas;
+                badge.style.display = 'inline-block';
+                
+                const chatTab = document.querySelector('.chat-tab');
+                if (chatTab) {
+                    chatTab.classList.add('has-new-message');
+                }
             } else {
+                badge.textContent = '0';
                 badge.style.display = 'none';
+                const chatTab = document.querySelector('.chat-tab');
+                if (chatTab) {
+                    chatTab.classList.remove('has-new-message');
+                }
             }
         }
         
-        // Atualizar badges dos condomínios
-        if (DATA.condominios && Array.isArray(DATA.condominios)) {
-            DATA.condominios.forEach(condo => {
-                const condoNotificacoes = notificacoes.filter(n => n.condo === condo.n && !n.lida);
-                const condoBadge = document.getElementById(`badge-${condo.n.replace(/\s+/g, '-')}`);
-                if (condoBadge) {
-                    if (condoNotificacoes.length > 0) {
-                        condoBadge.textContent = condoNotificacoes.length > 9 ? '9+' : condoNotificacoes.length;
-                        condoBadge.classList.add('has-notification');
-                    } else {
-                        condoBadge.classList.remove('has-notification');
-                    }
-                }
-            });
-        }
-        
-        this.updateTabCounts();
+        return mensagensNaoVisualizadas;
     },
     
-    toggleNotifications() {
-        const panel = document.getElementById('notifications-panel');
-        if (!panel) return;
-        
-        const estaAberto = panel.classList.contains('show');
-        
-        if (!estaAberto) {
-            this.marcarTodasNotificacoesComoLidas();
-        }
-        
-        panel.classList.toggle('show');
+    marcarChatComoVisualizado() {
+        localStorage.setItem('porter_chat_last_view', Date.now().toString());
+        this.atualizarBadgeChat();
+        this.registrarVisualizacaoChat();
     },
     
-    marcarTodasNotificacoesComoLidas() {
-        let notificacoes = JSON.parse(localStorage.getItem('porter_notificacoes') || '[]');
-        notificacoes = notificacoes.map(notif => ({ ...notif, lida: true }));
-        localStorage.setItem('porter_notificacoes', JSON.stringify(notificacoes));
-        this.loadNotifications();
-    },
-    
-    marcarNotificacaoComoLida(id) {
-        let notificacoes = JSON.parse(localStorage.getItem('porter_notificacoes') || '[]');
-        const index = notificacoes.findIndex(n => n.id === id);
-        if (index !== -1) {
-            notificacoes[index].lida = true;
-            localStorage.setItem('porter_notificacoes', JSON.stringify(notificacoes));
-            this.loadNotifications();
-        }
-    },
-    
-    clearNotifications() {
-        localStorage.removeItem('porter_notificacoes');
-        this.loadNotifications();
-    },
-    
-    // ============================================
-    // DASHBOARD E ESTATÍSTICAS
-    // ============================================
-    async loadDashboardStats() {
-        try {
-            // Contar usuários online
-            const onlineUsersSnapshot = await db.collection('users')
-                .where('online', '==', true)
-                .get();
-            document.getElementById('onlineUsers').textContent = onlineUsersSnapshot.size;
-            
-            // Contar ATAs de hoje
-            const hoje = new Date();
-            hoje.setHours(0, 0, 0, 0);
-            
-            const atasHojeSnapshot = await db.collection('atas')
-                .where('data', '>=', hoje)
-                .get();
-            document.getElementById('atasHoje').textContent = atasHojeSnapshot.size;
-            
-            // Contar mensagens do chat
-            const chatSnapshot = await db.collection('chat')
-                .orderBy('timestamp', 'desc')
-                .limit(100)
-                .get();
-            document.getElementById('chatMessages').textContent = chatSnapshot.size;
-            
-            // Contar total de usuários
-            const totalUsersSnapshot = await db.collection('users').get();
-            document.getElementById('totalUsers').textContent = totalUsersSnapshot.size;
-            
-        } catch (error) {
-            console.error('Erro ao carregar estatísticas:', error);
-        }
-    },
-    
-    // ============================================
-    // SISTEMA DE FILTROS
-    // ============================================
-    loadCondos() {
-        const sidebarList = document.getElementById('condo-list');
-        if (!sidebarList) return;
+    registrarVisualizacaoChat() {
+        if (!this.currentUser) return;
         
-        sidebarList.innerHTML = '';
+        const visualizacoes = JSON.parse(localStorage.getItem('porter_chat_views') || '{}');
+        const agora = Date.now();
         
-        const ataSelect = document.getElementById('ata-condo');
-        const osSelect = document.getElementById('os-condo');
-        const filterSelect = document.getElementById('filter-condo');
-        const reportSelect = document.getElementById('report-condo');
+        visualizacoes[this.currentUser.user] = {
+            nome: this.currentUser.nome,
+            hora: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
+            data: new Date().toLocaleDateString('pt-BR'),
+            timestamp: agora,
+            mood: this.getMoodAtual()
+        };
         
-        if (ataSelect) ataSelect.innerHTML = '<option value="">Selecione um condomínio...</option>';
-        if (osSelect) osSelect.innerHTML = '<option value="">Selecione um condomínio...</option>';
-        if (filterSelect) filterSelect.innerHTML = '<option value="">Todos os condomínios</option>';
-        if (reportSelect) reportSelect.innerHTML = '<option value="">Todos os condomínios</option>';
-        
-        if (!DATA.condominios || !Array.isArray(DATA.condominios)) {
-            console.error("❌ DATA.condominios não está definido ou não é um array");
-            return;
-        }
-        
-        DATA.condominios.sort((a,b) => a.n.localeCompare(b.n)).forEach(c => {
-            const condoItem = document.createElement('div');
-            condoItem.className = 'condo-item';
-            condoItem.dataset.condo = c.n;
-            condoItem.onclick = () => this.filtrarPorCondominio(c.n);
-            
-            condoItem.innerHTML = `
-                <div class="condo-name">${c.n}</div>
-                <div class="condo-badge" id="badge-${c.n.replace(/\s+/g, '-')}">0</div>
-            `;
-            sidebarList.appendChild(condoItem);
-            
-            [ataSelect, osSelect, filterSelect, reportSelect].forEach(select => {
-                if (select) {
-                    const opt = document.createElement('option');
-                    opt.value = c.n;
-                    opt.textContent = c.n;
-                    select.appendChild(opt);
-                }
-            });
+        Object.keys(visualizacoes).forEach(user => {
+            if (agora - visualizacoes[user].timestamp > 60 * 60 * 1000) {
+                delete visualizacoes[user];
+            }
         });
+        
+        localStorage.setItem('porter_chat_views', JSON.stringify(visualizacoes));
     },
-    
-    loadFiltros() {
-        const filterOperador = document.getElementById('filter-presenca-operador');
-        if (!filterOperador) return;
+
+    obterVisualizacoesRecentes() {
+        const visualizacoes = JSON.parse(localStorage.getItem('porter_chat_views') || '{}');
+        const agora = Date.now();
+        const cincoMinutos = 5 * 60 * 1000;
         
-        filterOperador.innerHTML = '<option value="">Todos os operadores</option>';
+        const visualizacoesRecentes = Object.entries(visualizacoes)
+            .filter(([user, data]) => agora - data.timestamp <= cincoMinutos)
+            .map(([user, data]) => ({
+                user,
+                ...data
+            }));
         
-        if (!DATA.funcionarios || !Array.isArray(DATA.funcionarios)) {
-            console.error("❌ DATA.funcionarios não está definido ou não é um array");
-            return;
-        }
-        
-        DATA.funcionarios.sort((a,b) => a.nome.localeCompare(b.nome)).forEach(f => {
-            let opt = document.createElement('option');
-            opt.value = f.nome;
-            opt.textContent = f.nome;
-            filterOperador.appendChild(opt);
-        });
+        return visualizacoesRecentes;
     },
     
     aplicarFiltrosAtas() {
@@ -1941,9 +1607,422 @@ const app = {
         }
     },
     
-    // ============================================
-    // SISTEMA DE COMENTÁRIOS
-    // ============================================
+    formatarDataBR(dataISO) {
+        if (!dataISO) return '';
+        const [ano, mes, dia] = dataISO.split('-');
+        return `${dia}/${mes}/${ano}`;
+    },
+    
+    setupOSPreview() {
+        const gravidadeSelect = document.getElementById('os-gravidade');
+        if (gravidadeSelect) {
+            gravidadeSelect.addEventListener('change', function() {
+                app.atualizarPreviewGravidade(this.value);
+            });
+            this.atualizarPreviewGravidade(gravidadeSelect.value);
+        }
+    },
+    
+    atualizarPreviewGravidade(gravidade) {
+        const previewDiv = document.getElementById('os-preview-prioridade');
+        if (!previewDiv) return;
+        
+        const previewTexto = document.getElementById('os-preview-gravidade');
+        const previewIcone = document.getElementById('os-preview-icone');
+        const previewPrazo = document.getElementById('os-preview-prazo');
+        
+        const configs = {
+            'Baixa': {
+                texto: '🟢 GRAVIDADE BAIXA',
+                icone: 'fa-info-circle',
+                cor: '#27ae60',
+                prazo: 'Prazo: 7 dias úteis'
+            },
+            'Média': {
+                texto: '🟡 GRAVIDADE MÉDIA', 
+                icone: 'fa-exclamation-circle',
+                cor: '#f39c12',
+                prazo: 'Prazo: 3 dias úteis'
+            },
+            'Alta': {
+                texto: '🔴 GRAVIDADE ALTA',
+                icone: 'fa-exclamation-triangle',
+                cor: '#e74c3c',
+                prazo: 'Prazo: 24 horas'
+            },
+            'Emergência': {
+                texto: '🚨 EMERGÊNCIA',
+                icone: 'fa-bell',
+                cor: '#8b0000',
+                prazo: 'Prazo: 4 horas - ATENÇÃO MÁXIMA'
+            }
+        };
+        
+        const config = configs[gravidade] || configs['Média'];
+        
+        if (previewTexto) previewTexto.textContent = config.texto;
+        if (previewTexto) previewTexto.style.color = config.cor;
+        if (previewIcone) previewIcone.innerHTML = `<i class="fas ${config.icone}" style="color: ${config.cor}"></i>`;
+        if (previewPrazo) previewPrazo.textContent = config.prazo;
+        previewDiv.style.display = 'block';
+        previewDiv.style.borderLeft = `4px solid ${config.cor}`;
+    },
+    
+    calcularPrazoPorGravidade(gravidade) {
+        const prazos = {
+            'Baixa': '7 dias úteis',
+            'Média': '3 dias úteis', 
+            'Alta': '24 horas',
+            'Emergência': '4 horas'
+        };
+        return prazos[gravidade] || '3 dias úteis';
+    },
+
+    getCorGravidade(gravidade) {
+        const cores = {
+            'Baixa': '#27ae60',
+            'Média': '#f39c12',
+            'Alta': '#e74c3c',
+            'Emergência': '#8b0000'
+        };
+        return cores[gravidade] || '#666';
+    },
+
+    getIconeGravidade(gravidade) {
+        const icones = {
+            'Baixa': 'fa-info-circle',
+            'Média': 'fa-exclamation-circle',
+            'Alta': 'fa-exclamation-triangle',
+            'Emergência': 'fa-bell'
+        };
+        return icones[gravidade] || 'fa-circle';
+    },
+    
+    saveAta() {
+        const condo = document.getElementById('ata-condo')?.value;
+        const desc = document.getElementById('ata-desc')?.value.trim();
+        const tipo = document.getElementById('ata-tipo')?.value;
+        
+        if (!condo || !desc) {
+            alert('Preencha todos os campos obrigatórios! (Condomínio e Descrição)');
+            return;
+        }
+
+        const novaAta = {
+            id: Date.now(),
+            condo,
+            cidade: document.getElementById('ata-cidade')?.value || "",
+            tipo: tipo || "Ocorrência",
+            status: document.getElementById('ata-status')?.value || "Em andamento",
+            desc,
+            operador: this.currentUser.nome,
+            user: this.currentUser.user,
+            turno: this.currentUser.turno,
+            data: new Date().toLocaleDateString('pt-BR'),
+            dataISO: new Date().toISOString().split('T')[0],
+            hora: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
+            timestamp: new Date().toISOString(),
+            comentarios: [],
+            fixa: tipo && tipo.includes('Informações Fixas')
+        };
+
+        let atas = JSON.parse(localStorage.getItem('porter_atas') || '[]');
+        atas.unshift(novaAta);
+        if (atas.length > 200) atas = atas.slice(0, 200);
+        localStorage.setItem('porter_atas', JSON.stringify(atas));
+        
+        // 🆕 SINCRONIZAR COM FIREBASE
+        if (this.firebaseEnabled) {
+            this.sincronizarAtaFirebase(novaAta);
+        }
+        
+        this.criarNotificacao(condo, tipo, desc);
+        
+        // Limpar formulário
+        const ataDesc = document.getElementById('ata-desc');
+        const ataCondo = document.getElementById('ata-condo');
+        const ataCidade = document.getElementById('ata-cidade');
+        if (ataDesc) ataDesc.value = "";
+        if (ataCondo) ataCondo.value = "";
+        if (ataCidade) ataCidade.value = "";
+        
+        this.showMessage('Registro salvo com sucesso!', 'success');
+        this.renderAll();
+        this.updateNotificationBadges();
+    },
+    
+    // 🆕 SINCRONIZAR ATA COM FIREBASE
+    sincronizarAtaFirebase(ataData) {
+        if (!this.firebaseEnabled) return;
+        
+        try {
+            const ataRef = db.collection("atas").doc(ataData.id.toString());
+            
+            const firebaseAta = {
+                ...ataData,
+                firebaseTimestamp: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            
+            // Remover o campo id para evitar duplicação
+            delete firebaseAta.id;
+            
+            ataRef.set(firebaseAta, { merge: true }).then(() => {
+                console.log("✅ ATA sincronizada com Firebase");
+            }).catch(error => {
+                console.warn("⚠️ Erro ao sincronizar ATA:", error);
+            });
+        } catch (error) {
+            console.warn("⚠️ Erro no Firebase durante sincronização da ATA:", error);
+        }
+    },
+    
+    criarNotificacao(condo, tipo, desc) {
+        const notificacao = {
+            id: Date.now(),
+            condo: condo || "Não especificado",
+            tipo: tipo || "Ocorrência",
+            desc: desc ? (desc.length > 100 ? desc.substring(0, 100) + '...' : desc) : "Sem descrição",
+            data: new Date().toLocaleDateString('pt-BR'),
+            hora: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
+            timestamp: new Date().toISOString(),
+            lida: false
+        };
+        
+        let notificacoes = JSON.parse(localStorage.getItem('porter_notificacoes') || '[]');
+        notificacoes.unshift(notificacao);
+        if (notificacoes.length > 50) notificacoes.pop();
+        localStorage.setItem('porter_notificacoes', JSON.stringify(notificacoes));
+        
+        if (tipo === 'Ordem de Serviço') {
+            this.criarNotificacaoChat(`Nova OS criada em ${condo}: ${desc ? desc.substring(0, 80) + '...' : 'Sem descrição'}`);
+        }
+        
+        this.loadNotifications();
+    },
+    
+    criarNotificacaoChat(texto) {
+        let notificacoes = JSON.parse(localStorage.getItem('porter_notificacoes') || '[]');
+        const notificacao = {
+            id: Date.now(),
+            condo: 'Chat Geral',
+            tipo: 'chat',
+            desc: texto || "Nova mensagem no chat",
+            data: new Date().toLocaleDateString('pt-BR'),
+            hora: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
+            timestamp: new Date().toISOString(),
+            lida: false
+        };
+        
+        notificacoes.unshift(notificacao);
+        if (notificacoes.length > 50) notificacoes.pop();
+        localStorage.setItem('porter_notificacoes', JSON.stringify(notificacoes));
+        this.loadNotifications();
+    },
+    
+    criarNotificacaoChatComAcao(chatMessage) {
+        const notificacao = {
+            id: Date.now(),
+            condo: 'Chat Geral',
+            tipo: 'chat_mensagem',
+            desc: `Nova mensagem de ${chatMessage.sender}: ${chatMessage.message ? (chatMessage.message.substring(0, 50) + (chatMessage.message.length > 50 ? '...' : '')) : 'Sem mensagem'}`,
+            data: new Date().toLocaleDateString('pt-BR'),
+            hora: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
+            timestamp: new Date().toISOString(),
+            lida: false,
+            acao: {
+                tipo: 'ir_para_chat',
+                mensagemId: chatMessage.id,
+                sender: chatMessage.sender
+            },
+            destaque: true
+        };
+        
+        let notificacoes = JSON.parse(localStorage.getItem('porter_notificacoes') || '[]');
+        notificacoes.unshift(notificacao);
+        
+        if (notificacoes.length > 50) notificacoes.pop();
+        localStorage.setItem('porter_notificacoes', JSON.stringify(notificacoes));
+        
+        this.loadNotifications();
+        this.updateNotificationBadges();
+        this.atualizarBadgeChat();
+    },
+    
+    loadNotifications() {
+        const notificacoes = JSON.parse(localStorage.getItem('porter_notificacoes') || '[]');
+        this.notifications = notificacoes;
+        
+        const list = document.getElementById('notifications-list');
+        if (!list) return;
+        
+        list.innerHTML = '';
+        
+        if (notificacoes.length === 0) {
+            list.innerHTML = `
+                <div class="notification-item">
+                    <div style="text-align: center; color: var(--gray); padding: 2rem;">
+                        <i class="fas fa-bell-slash" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+                        <p>Nenhuma notificação</p>
+                    </div>
+                </div>
+            `;
+            return;
+        }
+        
+        notificacoes.forEach(notif => {
+            const item = document.createElement('div');
+            item.className = `notification-item ${notif.lida ? '' : 'unread'} ${notif.destaque ? 'destaque' : ''}`;
+            item.dataset.tipo = notif.tipo;
+            
+            item.onclick = (e) => {
+                e.stopPropagation();
+                this.processarNotificacao(notif);
+            };
+            
+            let icon = '📝';
+            if (notif.tipo === 'chat_mensagem') icon = '💬';
+            if (notif.tipo && notif.tipo.includes('Ocorrência')) icon = '⚠️';
+            if (notif.tipo && notif.tipo.includes('Incidente')) icon = '🚨';
+            if (notif.tipo && notif.tipo.includes('Fixas')) icon = '📌';
+            if (notif.tipo === 'chat') icon = '💬';
+            if (notif.tipo === 'Ordem de Serviço') icon = '🔧';
+            if (notif.tipo === 'email') icon = '📧';
+            
+            const acaoRapida = notif.tipo === 'chat_mensagem' && notif.acao?.mensagemId ? 
+                `<button class="btn btn-sm btn-success" style="margin-top: 8px; padding: 4px 10px; font-size: 0.8rem;" 
+                        onclick="app.irParaChatAgora(event, ${notif.acao.mensagemId})">
+                    <i class="fas fa-comment"></i> Ver no Chat
+                </button>` : '';
+            
+            item.innerHTML = `
+                <div class="notification-condo">${icon} ${notif.condo || 'Não especificado'}</div>
+                <div style="margin: 5px 0;">${notif.desc || 'Sem descrição'}</div>
+                <div class="notification-time">${notif.data || ''} ${notif.hora || ''}</div>
+                ${acaoRapida}
+            `;
+            list.appendChild(item);
+        });
+        
+        this.updateNotificationBadges();
+    },
+    
+    processarNotificacao(notificacao) {
+        this.marcarNotificacaoComoLida(notificacao.id);
+        
+        if (notificacao.acao) {
+            switch(notificacao.acao.tipo) {
+                case 'ir_para_chat':
+                    this.irParaChat(notificacao.acao.mensagemId);
+                    break;
+            }
+        }
+        
+        const panel = document.getElementById('notifications-panel');
+        if (panel) panel.classList.remove('show');
+    },
+    
+    irParaChat(mensagemId = null) {
+        const chatTabBtn = document.querySelector('.chat-tab');
+        if (chatTabBtn) {
+            this.switchTab('tab-chat', chatTabBtn);
+        } else {
+            const chatTab = document.querySelector('.tab-btn.chat-tab');
+            if (chatTab) {
+                this.switchTab('tab-chat', chatTab);
+            }
+        }
+        
+        this.loadChat();
+        this.marcarChatComoVisualizado();
+        
+        if (mensagemId) {
+            setTimeout(() => {
+                this.destacarMensagemChat(mensagemId);
+            }, 500);
+        }
+        
+        setTimeout(() => {
+            const chatInput = document.getElementById('chat-input');
+            if (chatInput) {
+                chatInput.focus();
+            }
+        }, 300);
+    },
+    
+    irParaChatAgora(event, mensagemId) {
+        event.stopPropagation();
+        event.preventDefault();
+        this.irParaChat(mensagemId);
+    },
+    
+    updateNotificationBadges() {
+        const notificacoes = JSON.parse(localStorage.getItem('porter_notificacoes') || '[]');
+        const naoLidas = notificacoes.filter(n => !n.lida).length;
+        
+        const badge = document.getElementById('notification-count');
+        if (badge) {
+            if (naoLidas > 0) {
+                badge.textContent = naoLidas > 99 ? '99+' : naoLidas;
+                badge.style.display = 'block';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+        
+        // Atualizar badges dos condomínios
+        if (DATA.condominios && Array.isArray(DATA.condominios)) {
+            DATA.condominios.forEach(condo => {
+                const condoNotificacoes = notificacoes.filter(n => n.condo === condo.n && !n.lida);
+                const condoBadge = document.getElementById(`badge-${condo.n.replace(/\s+/g, '-')}`);
+                if (condoBadge) {
+                    if (condoNotificacoes.length > 0) {
+                        condoBadge.textContent = condoNotificacoes.length > 9 ? '9+' : condoNotificacoes.length;
+                        condoBadge.classList.add('has-notification');
+                    } else {
+                        condoBadge.classList.remove('has-notification');
+                    }
+                }
+            });
+        }
+        
+        this.updateTabCounts();
+    },
+    
+    toggleNotifications() {
+        const panel = document.getElementById('notifications-panel');
+        if (!panel) return;
+        
+        const estaAberto = panel.classList.contains('show');
+        
+        if (!estaAberto) {
+            this.marcarTodasNotificacoesComoLidas();
+        }
+        
+        panel.classList.toggle('show');
+    },
+    
+    marcarTodasNotificacoesComoLidas() {
+        let notificacoes = JSON.parse(localStorage.getItem('porter_notificacoes') || '[]');
+        notificacoes = notificacoes.map(notif => ({ ...notif, lida: true }));
+        localStorage.setItem('porter_notificacoes', JSON.stringify(notificacoes));
+        this.loadNotifications();
+    },
+    
+    marcarNotificacaoComoLida(id) {
+        let notificacoes = JSON.parse(localStorage.getItem('porter_notificacoes') || '[]');
+        const index = notificacoes.findIndex(n => n.id === id);
+        if (index !== -1) {
+            notificacoes[index].lida = true;
+            localStorage.setItem('porter_notificacoes', JSON.stringify(notificacoes));
+            this.loadNotifications();
+        }
+    },
+    
+    clearNotifications() {
+        localStorage.removeItem('porter_notificacoes');
+        this.loadNotifications();
+    },
+    
     adicionarComentario(ataId, texto) {
         if (!texto.trim()) return;
         
@@ -2054,9 +2133,6 @@ const app = {
         if (modal) modal.classList.remove('show');
     },
     
-    // ============================================
-    // SISTEMA DE INFORMAÇÕES FIXAS
-    // ============================================
     renderFixas() {
         const list = document.getElementById('fixas-lista');
         if (!list) return;
@@ -2114,9 +2190,110 @@ const app = {
         });
     },
     
-    // ============================================
-    // SISTEMA DE E-MAIL PARA OS
-    // ============================================
+    saveOS() {
+        const condo = document.getElementById('os-condo')?.value;
+        const desc = document.getElementById('os-desc')?.value.trim();
+        const gravidade = document.getElementById('os-gravidade')?.value;
+        const data = document.getElementById('os-data')?.value;
+        const emailsInput = document.getElementById('os-emails')?.value || '';
+        
+        if (!condo || !desc || !data) {
+            alert('Preencha todos os campos obrigatórios! (Condomínio, Descrição e Data)');
+            return;
+        }
+
+        const emails = emailsInput
+            .split(',')
+            .map(email => email.trim())
+            .filter(email => {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                return email && emailRegex.test(email);
+            });
+
+        const novaOS = {
+            id: Date.now(),
+            condo,
+            cidade: document.getElementById('os-cidade')?.value || "",
+            gravidade: gravidade || "Média",
+            desc,
+            dataOS: data,
+            data: new Date().toLocaleDateString('pt-BR'),
+            dataISO: new Date().toISOString().split('T')[0],
+            hora: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
+            operador: this.currentUser.nome,
+            user: this.currentUser.user,
+            turno: this.currentUser.turno,
+            emails: emails,
+            status: 'Pendente',
+            timestamp: new Date().toISOString(),
+            prazoResposta: this.calcularPrazoPorGravidade(gravidade),
+            corGravidade: this.getCorGravidade(gravidade),
+            notificacoesEnviadas: 0
+        };
+
+        let osList = JSON.parse(localStorage.getItem('porter_os') || '[]');
+        osList.unshift(novaOS);
+        if (osList.length > 100) osList = osList.slice(0, 100);
+        localStorage.setItem('porter_os', JSON.stringify(osList));
+        
+        // 🆕 SINCRONIZAR COM FIREBASE
+        if (this.firebaseEnabled) {
+            this.sincronizarOSFirebase(novaOS);
+        }
+        
+        this.criarNotificacao(condo, 'Ordem de Serviço', `Nova OS: ${gravidade} - ${desc.substring(0, 50)}...`);
+        
+        const osDesc = document.getElementById('os-desc');
+        const osCondo = document.getElementById('os-condo');
+        const osCidade = document.getElementById('os-cidade');
+        const osData = document.getElementById('os-data');
+        const osEmails = document.getElementById('os-emails');
+        
+        if (osDesc) osDesc.value = "";
+        if (osCondo) osCondo.value = "";
+        if (osCidade) osCidade.value = "";
+        if (osData) osData.value = new Date().toISOString().split('T')[0];
+        if (osEmails) osEmails.value = "";
+        
+        this.showMessage('Ordem de Serviço salva com sucesso!', 'success');
+        this.renderOS();
+        this.updateNotificationBadges();
+        
+        if (emails.length > 0) {
+            this.registrarEnvioDetalhadoOS(novaOS, emails);
+            
+            setTimeout(() => {
+                this.showMessage(`✅ OS registrada! ${emails.length} e-mail(s) agendado(s)`, 'success');
+                this.mostrarDetalhesEmailOS(novaOS, emails);
+            }, 500);
+        }
+    },
+    
+    // 🆕 SINCRONIZAR OS COM FIREBASE
+    sincronizarOSFirebase(osData) {
+        if (!this.firebaseEnabled) return;
+        
+        try {
+            const osRef = db.collection("ordens_servico").doc(osData.id.toString());
+            
+            const firebaseOS = {
+                ...osData,
+                firebaseTimestamp: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            
+            // Remover o campo id para evitar duplicação
+            delete firebaseOS.id;
+            
+            osRef.set(firebaseOS, { merge: true }).then(() => {
+                console.log("✅ OS sincronizada com Firebase");
+            }).catch(error => {
+                console.warn("⚠️ Erro ao sincronizar OS:", error);
+            });
+        } catch (error) {
+            console.warn("⚠️ Erro no Firebase durante sincronização da OS:", error);
+        }
+    },
+    
     registrarEnvioDetalhadoOS(osData, emails) {
         let historico = JSON.parse(localStorage.getItem('porter_os_emails') || '[]');
         
@@ -2272,66 +2449,6 @@ E-mail automático - Não responda
         this.showMessage('Cliente de e-mail aberto! Preencha o corpo com os detalhes da OS.', 'info');
     },
     
-    verDetalhesEmailOS(osId) {
-        let osList = JSON.parse(localStorage.getItem('porter_os') || '[]');
-        let historico = JSON.parse(localStorage.getItem('porter_os_emails') || '[]');
-        
-        const os = osList.find(o => o.id === osId);
-        
-        if (!os) return;
-        
-        const corpoEmail = this.gerarCorpoEmailOS(os);
-        const emails = os.emails || [];
-        
-        const modalContent = `
-            <div style="padding: 20px;">
-                <h3><i class="fas fa-envelope"></i> E-mail da OS - ${os.condo || ''}</h3>
-                
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0;">
-                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
-                        <h4><i class="fas fa-info-circle"></i> Informações</h4>
-                        <p><strong>Destinatários:</strong> ${emails.length}</p>
-                        <p><strong>Gravidade:</strong> ${os.gravidade || ''}</p>
-                        <p><strong>Data:</strong> ${os.data || ''} ${os.hora || ''}</p>
-                    </div>
-                    
-                    <div style="background: #e8f4fc; padding: 15px; border-radius: 8px;">
-                        <h4><i class="fas fa-users"></i> Destinatários</h4>
-                        <div style="max-height: 100px; overflow-y: auto;">
-                            ${emails.map(email => `<div>📧 ${email}</div>`).join('')}
-                        </div>
-                    </div>
-                </div>
-                
-                <div style="margin: 20px 0;">
-                    <h4><i class="fas fa-file-alt"></i> Conteúdo do E-mail</h4>
-                    <div style="background: white; border: 1px solid #ddd; padding: 15px; 
-                                border-radius: 6px; font-family: monospace; white-space: pre-wrap;
-                                max-height: 300px; overflow-y: auto; margin-top: 10px;">
-                        ${corpoEmail}
-                    </div>
-                </div>
-                
-                <div style="display: flex; gap: 10px; margin-top: 20px;">
-                    <button class="btn btn-primary" onclick="app.copiarConteudoEmail()">
-                        <i class="fas fa-copy"></i> Copiar Conteúdo
-                    </button>
-                    <button class="btn btn-success" onclick="app.abrirClienteEmail('${os.condo}', '${emails.join(',')}')">
-                        <i class="fas fa-envelope-open"></i> Abrir no Cliente de E-mail
-                    </button>
-                    <button class="btn btn-clear" onclick="app.fecharModalEmail()">
-                        Fechar
-                    </button>
-                </div>
-            </div>
-        `;
-        
-        this.criarModal(`E-mail da OS - ${os.condo}`, modalContent);
-    },
-    
-    // ============================================
-    // SISTEMA DE VISUALIZAÇÃO DE ATAS
-    // ============================================
     filtrarOSTodas() {
         this.renderOS();
     },
@@ -2421,9 +2538,293 @@ E-mail automático - Não responda
         this.renderOSList(osList);
     },
     
-    // ============================================
-    // SISTEMA DE RENDERIZAÇÃO DE ATAS
-    // ============================================
+    verDetalhesEmailOS(osId) {
+        let osList = JSON.parse(localStorage.getItem('porter_os') || '[]');
+        let historico = JSON.parse(localStorage.getItem('porter_os_emails') || '[]');
+        
+        const os = osList.find(o => o.id === osId);
+        
+        if (!os) return;
+        
+        const corpoEmail = this.gerarCorpoEmailOS(os);
+        const emails = os.emails || [];
+        
+        const modalContent = `
+            <div style="padding: 20px;">
+                <h3><i class="fas fa-envelope"></i> E-mail da OS - ${os.condo || ''}</h3>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0;">
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                        <h4><i class="fas fa-info-circle"></i> Informações</h4>
+                        <p><strong>Destinatários:</strong> ${emails.length}</p>
+                        <p><strong>Gravidade:</strong> ${os.gravidade || ''}</p>
+                        <p><strong>Data:</strong> ${os.data || ''} ${os.hora || ''}</p>
+                    </div>
+                    
+                    <div style="background: #e8f4fc; padding: 15px; border-radius: 8px;">
+                        <h4><i class="fas fa-users"></i> Destinatários</h4>
+                        <div style="max-height: 100px; overflow-y: auto;">
+                            ${emails.map(email => `<div>📧 ${email}</div>`).join('')}
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="margin: 20px 0;">
+                    <h4><i class="fas fa-file-alt"></i> Conteúdo do E-mail</h4>
+                    <div style="background: white; border: 1px solid #ddd; padding: 15px; 
+                                border-radius: 6px; font-family: monospace; white-space: pre-wrap;
+                                max-height: 300px; overflow-y: auto; margin-top: 10px;">
+                        ${corpoEmail}
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button class="btn btn-primary" onclick="app.copiarConteudoEmail()">
+                        <i class="fas fa-copy"></i> Copiar Conteúdo
+                    </button>
+                    <button class="btn btn-success" onclick="app.abrirClienteEmail('${os.condo}', '${emails.join(',')}')">
+                        <i class="fas fa-envelope-open"></i> Abrir no Cliente de E-mail
+                    </button>
+                    <button class="btn btn-clear" onclick="app.fecharModalEmail()">
+                        Fechar
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        this.criarModal(`E-mail da OS - ${os.condo}`, modalContent);
+    },
+    
+    deleteOS(id) {
+        let osList = JSON.parse(localStorage.getItem('porter_os') || '[]');
+        const os = osList.find(o => o.id === id);
+        
+        if (!os) {
+            alert('Ordem de Serviço não encontrada.');
+            return;
+        }
+        
+        const ehAutor = os.user === this.currentUser.user;
+        const ehAdmin = this.currentUser.role === 'ADMIN';
+        
+        if (!ehAdmin && !ehAutor) {
+            alert('Apenas o autor ou administradores podem excluir esta Ordem de Serviço.');
+            return;
+        }
+        
+        if (confirm('Tem certeza que deseja excluir esta Ordem de Serviço?')) {
+            osList = osList.filter(os => os.id !== id);
+            localStorage.setItem('porter_os', JSON.stringify(osList));
+            this.renderOS();
+            this.showMessage('Ordem de Serviço excluída!', 'success');
+        }
+    },
+    
+    deleteAta(id) {
+        let atas = JSON.parse(localStorage.getItem('porter_atas') || '[]');
+        const ata = atas.find(a => a.id === id);
+        
+        if (!ata) {
+            alert('Registro não encontrado.');
+            return;
+        }
+        
+        const ehAutor = ata.user === this.currentUser.user;
+        const ehAdmin = this.currentUser.role === 'ADMIN';
+        
+        if (!ehAdmin && !ehAutor) {
+            alert('Apenas o autor ou administradores podem excluir este registro.');
+            return;
+        }
+        
+        if (confirm('Tem certeza que deseja excluir este registro permanentemente?')) {
+            let remocoes = JSON.parse(localStorage.getItem('porter_remocoes') || '[]');
+            remocoes.unshift({
+                id: Date.now(),
+                tipo: ata.fixa ? 'Ata Fixa' : 'Ata',
+                dados: ata,
+                removidoPor: this.currentUser.nome,
+                data: new Date().toLocaleDateString('pt-BR'),
+                hora: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
+                timestamp: new Date().toISOString()
+            });
+            localStorage.setItem('porter_remocoes', JSON.stringify(remocoes));
+            
+            atas = atas.filter(a => a.id !== id);
+            localStorage.setItem('porter_atas', JSON.stringify(atas));
+            this.renderAll();
+            this.showMessage('Registro excluído com sucesso!', 'success');
+        }
+    },
+    
+    openReportModal() {
+        const modal = document.getElementById('report-modal');
+        if (modal) modal.classList.add('show');
+    },
+    
+    closeReportModal() {
+        const modal = document.getElementById('report-modal');
+        if (modal) modal.classList.remove('show');
+    },
+    
+    generatePDF() {
+        const condo = document.getElementById('report-condo')?.value || '';
+        const dataInicio = document.getElementById('report-data-inicio')?.value || '';
+        const dataFim = document.getElementById('report-data-fim')?.value || '';
+        const tipo = document.getElementById('report-tipo')?.value || '';
+        
+        let dados = [];
+        let titulo = '';
+        
+        if (tipo === 'atas' || tipo === 'all') {
+            let atas = JSON.parse(localStorage.getItem('porter_atas') || '[]');
+            if (condo) atas = atas.filter(a => a.condo === condo);
+            if (dataInicio) atas = atas.filter(a => a.dataISO >= dataInicio);
+            if (dataFim) atas = atas.filter(a => a.dataISO <= dataFim);
+            
+            if (tipo === 'atas') {
+                dados = atas;
+                titulo = 'Relatório de Ocorrências';
+            } else {
+                dados = dados.concat(atas.map(a => ({...a, tipoRegistro: 'Ocorrência'})));
+            }
+        }
+        
+        if (tipo === 'fixas' || tipo === 'all') {
+            let atas = JSON.parse(localStorage.getItem('porter_atas') || '[]');
+            let fixas = atas.filter(a => a.fixa);
+            if (condo) fixas = fixas.filter(a => a.condo === condo);
+            if (dataInicio) fixas = fixas.filter(a => a.dataISO >= dataInicio);
+            if (dataFim) fixas = fixas.filter(a => a.dataISO <= dataFim);
+            
+            if (tipo === 'fixas') {
+                dados = fixas;
+                titulo = 'Relatório de Informações Fixas';
+            } else {
+                dados = dados.concat(fixas.map(a => ({...a, tipoRegistro: 'Informação Fixa'})));
+            }
+        }
+        
+        if (tipo === 'os' || tipo === 'all') {
+            let osList = JSON.parse(localStorage.getItem('porter_os') || '[]');
+            if (condo) osList = osList.filter(os => os.condo === condo);
+            if (dataInicio) osList = osList.filter(os => os.dataISO >= dataInicio);
+            if (dataFim) osList = osList.filter(os => os.dataISO <= dataFim);
+            
+            if (tipo === 'os') {
+                dados = osList;
+                titulo = 'Relatório de Ordens de Serviço';
+            } else {
+                dados = dados.concat(osList.map(os => ({...os, tipoRegistro: 'Ordem de Serviço'})));
+            }
+        }
+        
+        if (tipo === 'all') {
+            titulo = 'Relatório Completo';
+        }
+        
+        if (dados.length === 0) {
+            alert('Nenhum registro encontrado para os filtros selecionados.');
+            return;
+        }
+        
+        // Verificar se jsPDF está disponível
+        if (typeof jsPDF === 'undefined') {
+            alert('Biblioteca de PDF não carregada. Recarregue a página.');
+            return;
+        }
+        
+        const doc = new jsPDF();
+        
+        // Cabeçalho
+        doc.setFillColor(26, 58, 95);
+        doc.rect(0, 0, 210, 30, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(20);
+        doc.text('PORTER', 105, 15, { align: 'center' });
+        doc.setFontSize(12);
+        doc.text('Ata Operacional - 2026', 105, 22, { align: 'center' });
+        
+        // Título do relatório
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(16);
+        doc.text(titulo, 105, 40, { align: 'center' });
+        
+        // Filtros aplicados
+        doc.setFontSize(10);
+        let filtrosTexto = `Condomínio: ${condo || 'Todos'} | Período: ${dataInicio || 'Início'} a ${dataFim || 'Fim'}`;
+        doc.text(filtrosTexto, 105, 50, { align: 'center' });
+        
+        // Data de geração
+        doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR')}`, 105, 55, { align: 'center' });
+        
+        // Conteúdo
+        let y = 70;
+        dados.forEach((item, index) => {
+            if (y > 270) {
+                doc.addPage();
+                y = 20;
+            }
+            
+            doc.setFontSize(12);
+            doc.setFont(undefined, 'bold');
+            doc.text(`${index + 1}. ${item.condo || ''}`, 10, y);
+            doc.setFont(undefined, 'normal');
+            
+            y += 7;
+            doc.setFontSize(10);
+            doc.text(`Data: ${item.data || ''} ${item.hora || ''} | Tipo: ${item.tipoRegistro || item.tipo || ''}`, 10, y);
+            y += 5;
+            
+            if (item.gravidade) {
+                doc.text(`Gravidade: ${item.gravidade} | Prazo: ${item.prazoResposta || ''}`, 10, y);
+                y += 5;
+            }
+            
+            doc.text(`Operador: ${item.operador || ''} | Status: ${item.status || ''}`, 10, y);
+            y += 5;
+            
+            const desc = item.desc || '';
+            const descLines = doc.splitTextToSize(desc, 190);
+            doc.text('Descrição:', 10, y);
+            y += 5;
+            descLines.forEach(line => {
+                if (y > 270) {
+                    doc.addPage();
+                    y = 20;
+                }
+                doc.text(line, 15, y);
+                y += 5;
+            });
+            
+            y += 10;
+            
+            if (index < dados.length - 1) {
+                doc.setDrawColor(200, 200, 200);
+                doc.line(10, y, 200, y);
+                y += 5;
+            }
+        });
+        
+        // Rodapé
+        doc.setFontSize(8);
+        doc.setTextColor(100, 100, 100);
+        doc.text(`Total de registros: ${dados.length}`, 105, 285, { align: 'center' });
+        doc.text('Porter - Ata Operacional 2026', 105, 290, { align: 'center' });
+        
+        doc.save(`relatorio-porter-${new Date().toISOString().slice(0, 10)}.pdf`);
+        this.closeReportModal();
+        this.showMessage('Relatório gerado com sucesso!', 'success');
+    },
+    
+    renderAll() {
+        this.renderAta();
+        this.renderFixas();
+        this.renderOS();
+        this.renderPresenca();
+    },
+    
+    // 🔧 FUNÇÃO RENDERATA MELHORADA E DEFINITIVA
     renderAta() {
         console.log("🎯 Executando renderAta definitiva...");
         
@@ -2587,9 +2988,6 @@ E-mail automático - Não responda
         }
     },
     
-    // ============================================
-    // SISTEMA DE PRESENÇA
-    // ============================================
     renderPresenca() {
         const list = document.getElementById('presenca-lista');
         if (!list) return;
@@ -2658,528 +3056,250 @@ E-mail automático - Não responda
         `).join('');
     },
     
-    // ============================================
-    // SISTEMA DE OPERADORES ONLINE
-    // ============================================
-    setupOnlineTracking() {
-        // Atualizar a cada 30 segundos
-        this.onlineInterval = setInterval(() => {
-            if (this.currentUser) {
-                this.updateOnlineUsers();
-            }
-        }, 30000);
+    // 🔧 FUNÇÃO SENDCHATMESSAGE CORRIGIDA
+    sendChatMessage() {
+        const input = document.getElementById('chat-input');
+        const message = input?.value.trim();
         
-        // Inicializar imediamente
-        this.updateOnlineUsers();
-    },
-    
-    getMoodStatusTexto(mood) {
-        const statusMap = {
-            '😠': 'Zangado hoje',
-            '😔': 'Triste hoje', 
-            '😐': 'Neutro hoje',
-            '🙂': 'Feliz hoje',
-            '😄': 'Radiante hoje'
+        if (!message) return;
+        if (!this.currentUser) {
+            alert('Você precisa estar logado para enviar mensagens.');
+            return;
+        }
+
+        const sendBtn = document.getElementById('chat-send-btn');
+        const originalHTML = sendBtn?.innerHTML || '';
+        if (sendBtn) {
+            sendBtn.innerHTML = '<div class="loading"></div>';
+            sendBtn.disabled = true;
+        }
+        
+        const chatMessage = {
+            id: Date.now(),
+            sender: this.currentUser.nome,
+            senderRole: this.currentUser.role,
+            senderMood: this.getMoodAtual(),
+            senderUser: this.currentUser.user,
+            message: message,
+            time: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
+            timestamp: new Date().toISOString(),
+            date: new Date().toLocaleDateString('pt-BR')
         };
-        return statusMap[mood] || 'Não avaliado';
-    },
-    
-    updateOnlineUsers() {
-        if (!this.currentUser) return;
         
-        const agora = new Date();
+        // ✅ SEMPRE salvar no localStorage primeiro
+        let chat = JSON.parse(localStorage.getItem('porter_chat') || '[]');
+        chat.unshift(chatMessage);
+        if (chat.length > 100) chat = chat.slice(0, 100);
+        localStorage.setItem('porter_chat', JSON.stringify(chat));
         
-        // Buscar usuários realmente online do localStorage
-        let usuariosOnline = [];
-        
-        // Adicionar usuário atual
-        const moodAtual = this.getMoodAtual();
-        const statusMood = this.getMoodStatusTexto(moodAtual);
-        
-        usuariosOnline.push({
-            ...this.currentUser,
-            lastActivity: agora.toISOString(),
-            mood: moodAtual,
-            moodStatus: statusMood,
-            isCurrentUser: true
-        });
-        
-        // Verificar se há outros usuários com sessão ativa (últimos 5 minutos)
-        try {
-            const sessaoSalva = localStorage.getItem('porter_last_session');
-            if (sessaoSalva) {
-                const sessao = JSON.parse(sessaoSalva);
-                if (sessao.user !== this.currentUser.user) {
-                    const tempoSessao = new Date(sessao.lastActivity);
-                    const diferencaMinutos = (agora - tempoSessao) / (1000 * 60);
-                    
-                    if (diferencaMinutos < 5) {
-                        // Este é um usuário que está "online"
-                        const outroUsuario = DATA.funcionarios.find(f => f.user === sessao.user);
-                        if (outroUsuario) {
-                            usuariosOnline.push({
-                                ...outroUsuario,
-                                lastActivity: sessao.lastActivity,
-                                mood: '😐', // Mood padrão para usuários não ativos
-                                moodStatus: 'Online há ' + Math.floor(diferencaMinutos) + ' min',
-                                isCurrentUser: false,
-                                turno: sessao.turno || 'Diurno'
-                            });
-                        }
-                    }
-                }
-            }
-        } catch (e) {
-            console.log('Erro ao buscar sessões:', e);
-        }
-        
-        // 🔧 BUSCAR USUÁRIOS ONLINE DO FIREBASE
+        // ✅ TENTAR salvar no Firebase também
         if (this.firebaseEnabled) {
-            this.buscarUsuariosOnlineFirebase().then(firebaseUsers => {
-                firebaseUsers.forEach(fbUser => {
-                    // Verificar se já está na lista
-                    const jaExiste = usuariosOnline.some(u => u.user === fbUser.user);
-                    if (!jaExiste) {
-                        usuariosOnline.push({
-                            ...fbUser,
-                            isCurrentUser: fbUser.user === this.currentUser.user,
-                            lastActivity: fbUser.lastActivity || new Date().toISOString()
-                        });
-                    }
+            this.sincronizarChatFirebase(chatMessage)
+                .then(() => {
+                    console.log("✅ Mensagem sincronizada com Firebase");
+                })
+                .catch(error => {
+                    console.log("⚠️ Mensagem salva apenas localmente:", error);
                 });
-                
-                this.onlineUsers = usuariosOnline;
-                this.atualizarListaOnline();
-            });
-        } else {
-            this.onlineUsers = usuariosOnline;
-            this.atualizarListaOnline();
         }
         
-        this.salvarSessao();
+        this.criarNotificacaoChatComAcao(chatMessage);
+        if (input) input.value = '';
         
-        // 🆕 SINCRONIZAR COM FIREBASE SE ESTIVER HABILITADO
-        if (this.firebaseEnabled && this.currentUser) {
-            this.sincronizarOnlineFirebase();
-        }
+        setTimeout(() => {
+            if (sendBtn) {
+                sendBtn.innerHTML = originalHTML;
+                sendBtn.disabled = false;
+            }
+        }, 500);
+        
+        this.loadChat();
+        this.updateTabCounts();
     },
     
-    buscarUsuariosOnlineFirebase() {
-        return new Promise((resolve) => {
-            if (!this.firebaseEnabled) {
-                resolve([]);
-                return;
-            }
-            
+    // 🔧 SINCRONIZAR CHAT COM FIREBASE (CORRIGIDO)
+    sincronizarChatFirebase(chatMessage) {
+        if (!this.firebaseEnabled) return Promise.reject("Firebase não habilitado");
+        
+        return new Promise((resolve, reject) => {
             try {
-                db.collection("operadores_online")
-                    .where("online", "==", true)
-                    .get()
-                    .then(snapshot => {
-                        const usuarios = [];
-                        const agora = new Date();
-                        
-                        snapshot.forEach(doc => {
-                            const data = doc.data();
-                            // Verificar se está online há menos de 10 minutos
-                            const lastActivity = data.lastActivity?.toDate ? data.lastActivity.toDate() : new Date();
-                            const diferencaMinutos = (agora - lastActivity) / (1000 * 60);
-                            
-                            if (diferencaMinutos < 10) {
-                                usuarios.push({
-                                    user: data.user,
-                                    nome: data.nome,
-                                    role: data.role,
-                                    turno: data.turno,
-                                    mood: data.mood || '😐',
-                                    lastActivity: lastActivity.toISOString(),
-                                    online: true
-                                });
-                            }
-                        });
-                        
-                        resolve(usuarios);
+                const chatRef = db.collection("chat_messages").doc(chatMessage.id.toString());
+                
+                const firebaseMessage = {
+                    ...chatMessage,
+                    firebaseTimestamp: firebase.firestore.FieldValue.serverTimestamp()
+                };
+                
+                chatRef.set(firebaseMessage, { merge: true })
+                    .then(() => {
+                        resolve();
                     })
-                    .catch(() => resolve([]));
+                    .catch(error => {
+                        reject(error);
+                    });
             } catch (error) {
-                console.warn("⚠️ Erro ao buscar usuários online do Firebase:", error);
-                resolve([]);
+                reject(error);
             }
         });
     },
     
-    atualizarListaOnline() {
-        // Atualizar contador
-        const onlineCount = document.getElementById('online-count');
-        if (onlineCount) {
-            const usuariosReais = this.onlineUsers.filter(u => u.user !== this.currentUser?.user);
-            if (usuariosReais.length === 0) {
-                onlineCount.textContent = '1 (apenas você)';
-                onlineCount.style.color = '#f39c12';
-            } else {
-                onlineCount.textContent = this.onlineUsers.length;
-                onlineCount.style.color = '#2ecc71';
-            }
-        }
-        
-        // Se a lista estiver visível, atualizar
-        const onlineList = document.getElementById('online-users-list');
-        if (onlineList && onlineList.style.display === 'block') {
-            this.renderOnlineUsersList();
-        }
-    },
-    
-    sincronizarOnlineFirebase() {
-        if (!this.firebaseEnabled || !this.currentUser) return;
-        
-        try {
-            const operadorRef = db.collection("operadores_online").doc(this.currentUser.user);
-            
-            operadorRef.set({
-                nome: this.currentUser.nome,
-                role: this.currentUser.role,
-                user: this.currentUser.user,
-                turno: this.currentUser.turno,
-                mood: this.getMoodAtual(),
-                online: true,
-                lastActivity: firebase.firestore.FieldValue.serverTimestamp(),
-                loginDate: this.currentUser.loginDate,
-                loginHour: this.currentUser.loginHour
-            }, { merge: true }).then(() => {
-                console.log("✅ Status online sincronizado com Firebase");
-            }).catch(error => {
-                console.warn("⚠️ Erro ao sincronizar status online:", error);
-            });
-        } catch (error) {
-            console.warn("⚠️ Erro no Firebase durante sincronização:", error);
-        }
-    },
-    
-    renderOnlineUsersList() {
-        const list = document.getElementById('online-users-list');
-        if (!list) return;
-        
-        // Limpar lista anterior
-        list.innerHTML = '';
-        
-        if (this.onlineUsers.length === 0) {
-            list.innerHTML = `
-                <div style="padding: 2rem; text-align: center; color: #666;">
-                    <i class="fas fa-user-slash" style="font-size: 2rem; margin-bottom: 1rem;"></i>
-                    <p>Nenhum operador online</p>
-                    <small style="font-size: 0.8rem;">Você está conectado, mas não há outros operadores ativos.</small>
-                </div>
-            `;
+    // 🔧 FUNÇÃO LOADCHAT CORRIGIDA
+    loadChat() {
+        const container = document.getElementById('chat-messages');
+        if (!container) {
+            console.log("❌ Container de chat não encontrado");
             return;
         }
         
-        // Ordenar: admin primeiro, depois por nome
-        const usuariosOrdenados = [...this.onlineUsers].sort((a, b) => {
-            if (a.role === 'ADMIN' && b.role !== 'ADMIN') return -1;
-            if (b.role === 'ADMIN' && a.role !== 'ADMIN') return 1;
-            if (a.isCurrentUser && !b.isCurrentUser) return -1;
-            if (!a.isCurrentUser && b.isCurrentUser) return 1;
-            return a.nome.localeCompare(b.nome);
+        const chat = JSON.parse(localStorage.getItem('porter_chat') || '[]');
+        
+        // Corrigir dados do chat se necessário
+        const chatCorrigido = chat.map(msg => {
+            // Garantir que todos os campos obrigatórios existam
+            return {
+                id: msg.id || `chat_${Date.now()}`,
+                sender: msg.sender || "Usuário",
+                senderRole: msg.senderRole || "OPERADOR",
+                senderMood: msg.senderMood || "😐",
+                senderUser: msg.senderUser || "anonimo",
+                message: msg.message || "(mensagem vazia)",
+                time: msg.time || new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
+                timestamp: msg.timestamp || new Date().toISOString(),
+                date: msg.date || new Date().toLocaleDateString('pt-BR')
+            };
         });
         
-        usuariosOrdenados.forEach(user => {
-            const userItem = document.createElement('div');
-            userItem.className = 'online-user-item';
-            
-            // Calcular tempo desde última atividade
-            const tempoAtivo = user.lastActivity ? 
-                this.formatarTempoAtivo(new Date(user.lastActivity)) : 
-                'Agora mesmo';
-            
-            // Definir cor do status baseado no humor
-            const statusColor = this.getCorPorMood(user.mood);
-            
-            userItem.innerHTML = `
-                <div class="online-user-avatar" style="background: ${statusColor}; color: ${user.mood === '😐' ? '#333' : 'white'};">
-                    ${user.mood || '😐'}
+        // Atualizar localStorage com dados corrigidos
+        localStorage.setItem('porter_chat', JSON.stringify(chatCorrigido));
+        
+        if (this.currentUser && this.currentUser.role === 'ADMIN') {
+            const adminControls = document.getElementById('chat-admin-controls');
+            if (adminControls) adminControls.style.display = 'flex';
+        }
+        
+        if (chatCorrigido.length === 0) {
+            container.innerHTML = `
+                <div style="text-align: center; padding: 2rem; color: var(--gray);">
+                    <i class="fas fa-comment-slash" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+                    <p>Nenhuma mensagem ainda. Seja o primeiro a enviar uma mensagem!</p>
                 </div>
-                <div class="online-user-info">
-                    <div class="online-user-name">
-                        ${user.nome.split(' ')[0]}
-                        ${user.role === 'ADMIN' ? ' 👑' : ''}
-                        ${user.isCurrentUser ? '<span style="color: #3498db; font-size: 0.8rem;"> (Você)</span>' : ''}
-                    </div>
-                    <div class="online-user-role">
-                        ${user.moodStatus || 'Online'}
-                        <div style="font-size: 0.7rem; color: #888; margin-top: 2px;">
-                            <i class="far fa-clock"></i> ${tempoAtivo}
-                        </div>
-                    </div>
-                </div>
-                <div class="online-status" style="background: ${user.isCurrentUser ? '#3498db' : '#2ecc71'};"></div>
             `;
             
-            list.appendChild(userItem);
+            this.mostrarVistoPor(container);
+            return;
+        }
+        
+        const chatOrdenado = [...chatCorrigido].sort((a, b) => 
+            new Date(a.timestamp) - new Date(b.timestamp)
+        );
+        
+        container.innerHTML = '';
+        
+        chatOrdenado.forEach(msg => {
+            const isSent = msg.senderUser === this.currentUser?.user;
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-message ${isSent ? 'sent' : 'received'}`;
+            messageDiv.dataset.id = msg.id;
+            
+            messageDiv.innerHTML = `
+                <div class="chat-message-header">
+                    <span class="chat-message-sender">
+                        <span style="font-size: 1.1rem; margin-right: 5px;">${msg.senderMood || '😐'}</span>
+                        ${msg.sender} ${msg.senderRole === 'ADMIN' ? ' 👑' : ''}
+                    </span>
+                    <span class="chat-message-time">${msg.date} ${msg.time}</span>
+                </div>
+                <div class="chat-message-text">${msg.message}</div>
+                ${this.currentUser && this.currentUser.role === 'ADMIN' && !isSent ? 
+                    `<div style="margin-top: 5px; text-align: right;">
+                        <button class="btn btn-danger btn-sm" onclick="app.deleteChatMessage(${msg.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>` : 
+                    ''
+                }
+            `;
+            
+            container.appendChild(messageDiv);
         });
         
-        // Adicionar rodapé
-        const rodape = document.createElement('div');
-        rodape.style.cssText = `
-            padding: 10px 15px;
-            text-align: center;
-            font-size: 0.8rem;
-            color: #666;
-            border-top: 1px solid #eee;
-            background: #f8f9fa;
-            border-radius: 0 0 10px 10px;
-        `;
-        rodape.innerHTML = `
-            <i class="fas fa-users"></i> 
-            ${this.onlineUsers.length} operador${this.onlineUsers.length > 1 ? 'es' : ''} online
-            <br>
-            <small style="font-size: 0.7rem; color: #999;">
-                Atualizado: ${new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})}
-                ${this.firebaseEnabled ? '<br><i class="fas fa-cloud" style="color:#27ae60"></i> Sincronizado' : '<br><i class="fas fa-laptop" style="color:#f39c12"></i> Local'}
-            </small>
-        `;
-        
-        list.appendChild(rodape);
-    },
-    
-    toggleOnlineUsers() {
-        const list = document.getElementById('online-users-list');
-        if (!list) return;
-        
-        const estaVisivel = list.style.display === 'block';
-        
-        // Fechar notificações se estiverem abertas
-        const notificationsPanel = document.getElementById('notifications-panel');
-        if (notificationsPanel) notificationsPanel.classList.remove('show');
-        
-        if (estaVisivel) {
-            list.style.display = 'none';
-        } else {
-            // Atualizar lista ANTES de mostrar
-            this.updateOnlineUsers();
-            
-            // Posicionar corretamente
-            const dropdown = document.getElementById('online-users');
-            if (dropdown) {
-                const rect = dropdown.getBoundingClientRect();
-                list.style.top = `${rect.bottom + 5}px`;
-                list.style.right = '10px';
-                list.style.left = 'auto';
-                list.style.width = '300px';
-            }
-            
-            list.style.display = 'block';
-            list.style.zIndex = '10000';
-            
-            // Garantir que o conteúdo será renderizado
-            this.renderOnlineUsersList();
-        }
-    },
-    
-    formatarTempoAtivo(dataAtividade) {
-        const agora = new Date();
-        const diferenca = agora - new Date(dataAtividade);
-        const minutos = Math.floor(diferenca / (1000 * 60));
-        
-        if (minutos < 1) return 'Agora mesmo';
-        if (minutos === 1) return 'Há 1 minuto';
-        if (minutos < 60) return `Há ${minutos} minutos`;
-        
-        const horas = Math.floor(minutos / 60);
-        if (horas === 1) return 'Há 1 hora';
-        return `Há ${horas} horas`;
-    },
-    
-    getCorPorMood(mood) {
-        const cores = {
-            '😠': '#ffeaa7',
-            '😔': '#fd79a8', 
-            '😐': '#dfe6e9',
-            '🙂': '#a29bfe',
-            '😄': '#55efc4'
-        };
-        return cores[mood] || '#e8f4fc';
-    },
-    
-    // ============================================
-    // SISTEMA DE SIDEBAR
-    // ============================================
-    toggleSidebar() {
-        const sidebar = document.getElementById('sidebar');
-        if (sidebar) sidebar.classList.toggle('show');
-    },
-    
-    // ============================================
-    // SISTEMA DE SESSÃO E LOGOFF
-    // ============================================
-    registrarLogoff() {
-        if (!this.currentUser) return;
-        
-        const logoffs = JSON.parse(localStorage.getItem('porter_logoffs') || '[]');
-        const logoffData = {
-            user: this.currentUser.user,
-            nome: this.currentUser.nome,
-            data: new Date().toLocaleDateString('pt-BR'),
-            hora: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
-            timestamp: new Date().toISOString(),
-            turno: this.currentUser.turno
-        };
-        
-        logoffs.unshift(logoffData);
-        if (logoffs.length > 200) logoffs.pop();
-        localStorage.setItem('porter_logoffs', JSON.stringify(logoffs));
-        
-        this.lastLogoffTime = new Date().toISOString();
-        localStorage.setItem('porter_last_logoff', this.lastLogoffTime);
-        
-        // 🆕 REGISTRAR LOGOFF NO FIREBASE
-        if (this.firebaseEnabled) {
-            try {
-                const operadorRef = db.collection("operadores_online").doc(this.currentUser.user);
-                operadorRef.update({
-                    online: false,
-                    lastLogoff: firebase.firestore.FieldValue.serverTimestamp(),
-                    logoffTime: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})
-                }).catch(error => {
-                    console.warn("⚠️ Erro ao registrar logoff no Firebase:", error);
-                });
-            } catch (error) {
-                console.warn("⚠️ Erro no Firebase durante logoff:", error);
-            }
-        }
-        
-        // Limpar intervalos
-        if (this.chatInterval) {
-            clearInterval(this.chatInterval);
-            this.chatInterval = null;
-        }
-        
-        if (this.moodInterval) {
-            clearInterval(this.moodInterval);
-            this.moodInterval = null;
-        }
-        
-        if (this.onlineInterval) {
-            clearInterval(this.onlineInterval);
-            this.onlineInterval = null;
-        }
-        
-        // Limpar sessão do usuário atual
-        localStorage.removeItem('porter_last_session');
-    },
-    
-    salvarSessao() {
-        if (!this.currentUser) return;
-        
-        const sessionData = {
-            user: this.currentUser.user,
-            nome: this.currentUser.nome,
-            lastActivity: new Date().toISOString(),
-            turno: this.currentUser.turno,
-            role: this.currentUser.role
-        };
-        
-        localStorage.setItem('porter_last_session', JSON.stringify(sessionData));
-    },
-    
-    // ============================================
-    // SISTEMA DE TABELAS E CONTAGENS
-    // ============================================
-    updateTabCounts() {
-        const atas = JSON.parse(localStorage.getItem('porter_atas') || '[]');
-        const fixas = atas.filter(a => a.tipo && a.tipo.includes('Informações Fixas'));
-        const os = JSON.parse(localStorage.getItem('porter_os') || '[]');
-        
-        const tabCountAta = document.getElementById('tab-count-ata');
-        const tabCountFixas = document.getElementById('tab-count-fixas');
-        const tabCountOs = document.getElementById('tab-count-os');
-        
-        if (tabCountAta) tabCountAta.textContent = atas.length;
-        if (tabCountFixas) tabCountFixas.textContent = fixas.length;
-        if (tabCountOs) tabCountOs.textContent = os.length;
-        
-        // 🆕 Usar função atualizarBadgeChat
-        this.atualizarBadgeChat();
-    },
-    
-    atualizarBadgeChat() {
-        const chat = JSON.parse(localStorage.getItem('porter_chat') || '[]');
-        const ultimaVisualizacao = localStorage.getItem('porter_chat_last_view') || '0';
-        const ultimaVisualizacaoTime = parseInt(ultimaVisualizacao);
-        
-        const mensagensNaoVisualizadas = chat.filter(msg => {
-            if (!msg.timestamp) return false;
-            const msgTime = new Date(msg.timestamp).getTime();
-            return msgTime > ultimaVisualizacaoTime;
-        }).length;
-        
-        const badge = document.getElementById('chat-badge');
-        
-        if (badge) {
-            if (mensagensNaoVisualizadas > 0) {
-                badge.textContent = mensagensNaoVisualizadas > 99 ? '99+' : mensagensNaoVisualizadas;
-                badge.style.display = 'inline-block';
-                
-                const chatTab = document.querySelector('.chat-tab');
-                if (chatTab) {
-                    chatTab.classList.add('has-new-message');
-                }
-            } else {
-                badge.textContent = '0';
-                badge.style.display = 'none';
-                const chatTab = document.querySelector('.chat-tab');
-                if (chatTab) {
-                    chatTab.classList.remove('has-new-message');
-                }
-            }
-        }
-        
-        return mensagensNaoVisualizadas;
-    },
-    
-    marcarChatComoVisualizado() {
-        localStorage.setItem('porter_chat_last_view', Date.now().toString());
-        this.atualizarBadgeChat();
+        this.mostrarVistoPor(container);
+        container.scrollTop = container.scrollHeight;
         this.registrarVisualizacaoChat();
+        this.atualizarBadgeChat();
+        
+        // 🔧 SINCRONIZAR COM FIREBASE
+        if (this.firebaseEnabled) {
+            this.sincronizarChatDoFirebase();
+        }
     },
     
-    registrarVisualizacaoChat() {
-        if (!this.currentUser) return;
+    // 🔧 SINCRONIZAR CHAT DO FIREBASE (CORRIGIDO)
+    sincronizarChatDoFirebase() {
+        if (!this.firebaseEnabled) return;
         
-        const visualizacoes = JSON.parse(localStorage.getItem('porter_chat_views') || '{}');
-        const agora = Date.now();
-        
-        visualizacoes[this.currentUser.user] = {
-            nome: this.currentUser.nome,
-            hora: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
-            data: new Date().toLocaleDateString('pt-BR'),
-            timestamp: agora,
-            mood: this.getMoodAtual()
-        };
-        
-        Object.keys(visualizacoes).forEach(user => {
-            if (agora - visualizacoes[user].timestamp > 60 * 60 * 1000) {
-                delete visualizacoes[user];
-            }
-        });
-        
-        localStorage.setItem('porter_chat_views', JSON.stringify(visualizacoes));
+        try {
+            db.collection("chat_messages")
+                .orderBy("firebaseTimestamp", "desc")
+                .limit(50)
+                .get()
+                .then(snapshot => {
+                    if (snapshot.empty) {
+                        return;
+                    }
+                    
+                    let chatLocal = JSON.parse(localStorage.getItem('porter_chat') || '[]');
+                    let atualizou = false;
+                    
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        const msgId = parseInt(doc.id);
+                        
+                        // Verificar se já existe localmente
+                        const existeLocal = chatLocal.some(msg => msg.id === msgId);
+                        
+                        if (!existeLocal && data.sender && data.message) {
+                            // Adicionar mensagem do Firebase
+                            chatLocal.unshift({
+                                id: msgId,
+                                sender: data.sender,
+                                senderRole: data.senderRole,
+                                senderMood: data.senderMood,
+                                senderUser: data.senderUser,
+                                message: data.message,
+                                time: data.time,
+                                date: data.date,
+                                timestamp: data.timestamp || data.firebaseTimestamp?.toDate?.()?.toISOString() || new Date().toISOString()
+                            });
+                            atualizou = true;
+                        }
+                    });
+                    
+                    if (atualizou) {
+                        // Manter limite de 100 mensagens
+                        if (chatLocal.length > 100) {
+                            chatLocal = chatLocal.slice(0, 100);
+                        }
+                        
+                        localStorage.setItem('porter_chat', JSON.stringify(chatLocal));
+                        console.log("🔄 Chat sincronizado com Firebase");
+                        
+                        // Atualizar interface
+                        setTimeout(() => {
+                            if (typeof this.loadChat === 'function') {
+                                this.loadChat();
+                            }
+                        }, 500);
+                    }
+                })
+                .catch(error => {
+                    console.warn("⚠️ Erro ao sincronizar chat do Firebase:", error);
+                });
+        } catch (error) {
+            console.warn("⚠️ Erro no Firebase durante sincronização do chat:", error);
+        }
     },
 
-    obterVisualizacoesRecentes() {
-        const visualizacoes = JSON.parse(localStorage.getItem('porter_chat_views') || '{}');
-        const agora = Date.now();
-        const cincoMinutos = 5 * 60 * 1000;
-        
-        const visualizacoesRecentes = Object.entries(visualizacoes)
-            .filter(([user, data]) => agora - data.timestamp <= cincoMinutos)
-            .map(([user, data]) => ({
-                user,
-                ...data
-            }));
-        
-        return visualizacoesRecentes;
-    },
-    
     mostrarVistoPor(container) {
         const vistoPorDiv = document.createElement('div');
         vistoPorDiv.className = 'chat-visto-por';
@@ -3274,9 +3394,6 @@ E-mail automático - Não responda
         }
     },
     
-    // ============================================
-    // SISTEMA ADMIN
-    // ============================================
     openAdminPanel() {
         const modalContent = document.getElementById('admin-modal-content');
         if (!modalContent) return;
@@ -3448,458 +3565,6 @@ E-mail automático - Não responda
         }
     },
     
-    // ============================================
-    // SISTEMA DE SINCRONIZAÇÃO FIREBASE
-    // ============================================
-    sincronizarChatFirebase(chatMessage) {
-        if (!this.firebaseEnabled) return Promise.reject("Firebase não habilitado");
-        
-        return new Promise((resolve, reject) => {
-            try {
-                const chatRef = db.collection("chat_messages").doc(chatMessage.id.toString());
-                
-                const firebaseMessage = {
-                    ...chatMessage,
-                    firebaseTimestamp: firebase.firestore.FieldValue.serverTimestamp()
-                };
-                
-                chatRef.set(firebaseMessage, { merge: true })
-                    .then(() => {
-                        resolve();
-                    })
-                    .catch(error => {
-                        reject(error);
-                    });
-            } catch (error) {
-                reject(error);
-            }
-        });
-    },
-    
-    sincronizarChatDoFirebase() {
-        if (!this.firebaseEnabled) return;
-        
-        try {
-            db.collection("chat_messages")
-                .orderBy("firebaseTimestamp", "desc")
-                .limit(50)
-                .get()
-                .then(snapshot => {
-                    if (snapshot.empty) {
-                        return;
-                    }
-                    
-                    let chatLocal = JSON.parse(localStorage.getItem('porter_chat') || '[]');
-                    let atualizou = false;
-                    
-                    snapshot.forEach(doc => {
-                        const data = doc.data();
-                        const msgId = parseInt(doc.id);
-                        
-                        // Verificar se já existe localmente
-                        const existeLocal = chatLocal.some(msg => msg.id === msgId);
-                        
-                        if (!existeLocal && data.sender && data.message) {
-                            // Adicionar mensagem do Firebase
-                            chatLocal.unshift({
-                                id: msgId,
-                                sender: data.sender,
-                                senderRole: data.senderRole,
-                                senderMood: data.senderMood,
-                                senderUser: data.senderUser,
-                                message: data.message,
-                                time: data.time,
-                                date: data.date,
-                                timestamp: data.timestamp || data.firebaseTimestamp?.toDate?.()?.toISOString() || new Date().toISOString()
-                            });
-                            atualizou = true;
-                        }
-                    });
-                    
-                    if (atualizou) {
-                        // Manter limite de 100 mensagens
-                        if (chatLocal.length > 100) {
-                            chatLocal = chatLocal.slice(0, 100);
-                        }
-                        
-                        localStorage.setItem('porter_chat', JSON.stringify(chatLocal));
-                        console.log("🔄 Chat sincronizado com Firebase");
-                        
-                        // Atualizar interface
-                        setTimeout(() => {
-                            if (typeof this.loadChat === 'function') {
-                                this.loadChat();
-                            }
-                        }, 500);
-                    }
-                })
-                .catch(error => {
-                    console.warn("⚠️ Erro ao sincronizar chat do Firebase:", error);
-                });
-        } catch (error) {
-            console.warn("⚠️ Erro no Firebase durante sincronização do chat:", error);
-        }
-    },
-    
-    sincronizarMoodFirebase(moodData) {
-        if (!this.firebaseEnabled) return;
-        
-        try {
-            const moodRef = db.collection("moods").doc(`${moodData.user}_${moodData.dataISO}`);
-            
-            moodRef.set({
-                ...moodData,
-                firebaseTimestamp: firebase.firestore.FieldValue.serverTimestamp()
-            }, { merge: true }).then(() => {
-                console.log("✅ Mood sincronizado com Firebase");
-            }).catch(error => {
-                console.warn("⚠️ Erro ao sincronizar mood:", error);
-            });
-        } catch (error) {
-            console.warn("⚠️ Erro no Firebase durante sincronização do mood:", error);
-        }
-    },
-    
-    sincronizarAtaFirebase(ataData) {
-        if (!this.firebaseEnabled) return;
-        
-        try {
-            const ataRef = db.collection("atas").doc(ataData.id.toString());
-            
-            const firebaseAta = {
-                ...ataData,
-                firebaseTimestamp: firebase.firestore.FieldValue.serverTimestamp()
-            };
-            
-            // Remover o campo id para evitar duplicação
-            delete firebaseAta.id;
-            
-            ataRef.set(firebaseAta, { merge: true }).then(() => {
-                console.log("✅ ATA sincronizada com Firebase");
-            }).catch(error => {
-                console.warn("⚠️ Erro ao sincronizar ATA:", error);
-            });
-        } catch (error) {
-            console.warn("⚠️ Erro no Firebase durante sincronização da ATA:", error);
-        }
-    },
-    
-    sincronizarOSFirebase(osData) {
-        if (!this.firebaseEnabled) return;
-        
-        try {
-            const osRef = db.collection("ordens_servico").doc(osData.id.toString());
-            
-            const firebaseOS = {
-                ...osData,
-                firebaseTimestamp: firebase.firestore.FieldValue.serverTimestamp()
-            };
-            
-            // Remover o campo id para evitar duplicação
-            delete firebaseOS.id;
-            
-            osRef.set(firebaseOS, { merge: true }).then(() => {
-                console.log("✅ OS sincronizada com Firebase");
-            }).catch(error => {
-                console.warn("⚠️ Erro ao sincronizar OS:", error);
-            });
-        } catch (error) {
-            console.warn("⚠️ Erro no Firebase durante sincronização da OS:", error);
-        }
-    },
-    
-    // ============================================
-    // FUNÇÕES DE UTILIDADE
-    // ============================================
-    formatarDataBR(dataISO) {
-        if (!dataISO) return '';
-        const [ano, mes, dia] = dataISO.split('-');
-        return `${dia}/${mes}/${ano}`;
-    },
-    
-    atualizarPreviewGravidade(gravidade) {
-        const previewDiv = document.getElementById('os-preview-prioridade');
-        if (!previewDiv) return;
-        
-        const previewTexto = document.getElementById('os-preview-gravidade');
-        const previewIcone = document.getElementById('os-preview-icone');
-        const previewPrazo = document.getElementById('os-preview-prazo');
-        
-        const configs = {
-            'Baixa': {
-                texto: '🟢 GRAVIDADE BAIXA',
-                icone: 'fa-info-circle',
-                cor: '#27ae60',
-                prazo: 'Prazo: 7 dias úteis'
-            },
-            'Média': {
-                texto: '🟡 GRAVIDADE MÉDIA', 
-                icone: 'fa-exclamation-circle',
-                cor: '#f39c12',
-                prazo: 'Prazo: 3 dias úteis'
-            },
-            'Alta': {
-                texto: '🔴 GRAVIDADE ALTA',
-                icone: 'fa-exclamation-triangle',
-                cor: '#e74c3c',
-                prazo: 'Prazo: 24 horas'
-            },
-            'Emergência': {
-                texto: '🚨 EMERGÊNCIA',
-                icone: 'fa-bell',
-                cor: '#8b0000',
-                prazo: 'Prazo: 4 horas - ATENÇÃO MÁXIMA'
-            }
-        };
-        
-        const config = configs[gravidade] || configs['Média'];
-        
-        if (previewTexto) previewTexto.textContent = config.texto;
-        if (previewTexto) previewTexto.style.color = config.cor;
-        if (previewIcone) previewIcone.innerHTML = `<i class="fas ${config.icone}" style="color: ${config.cor}"></i>`;
-        if (previewPrazo) previewPrazo.textContent = config.prazo;
-        previewDiv.style.display = 'block';
-        previewDiv.style.borderLeft = `4px solid ${config.cor}`;
-    },
-    
-    calcularPrazoPorGravidade(gravidade) {
-        const prazos = {
-            'Baixa': '7 dias úteis',
-            'Média': '3 dias úteis', 
-            'Alta': '24 horas',
-            'Emergência': '4 horas'
-        };
-        return prazos[gravidade] || '3 dias úteis';
-    },
-
-    getCorGravidade(gravidade) {
-        const cores = {
-            'Baixa': '#27ae60',
-            'Média': '#f39c12',
-            'Alta': '#e74c3c',
-            'Emergência': '#8b0000'
-        };
-        return cores[gravidade] || '#666';
-    },
-
-    getIconeGravidade(gravidade) {
-        const icones = {
-            'Baixa': 'fa-info-circle',
-            'Média': 'fa-exclamation-circle',
-            'Alta': 'fa-exclamation-triangle',
-            'Emergência': 'fa-bell'
-        };
-        return icones[gravidade] || 'fa-circle';
-    },
-    
-    updateCity() {
-        const condoName = document.getElementById('ata-condo').value;
-        const condo = DATA.condominios.find(c => c.n === condoName);
-        const cidadeInput = document.getElementById('ata-cidade');
-        if (cidadeInput) cidadeInput.value = condo ? condo.c : "";
-    },
-    
-    updateCityOS() {
-        const condoName = document.getElementById('os-condo').value;
-        const condo = DATA.condominios.find(c => c.n === condoName);
-        const cidadeInput = document.getElementById('os-cidade');
-        if (cidadeInput) cidadeInput.value = condo ? condo.c : "";
-    },
-    
-    // ============================================
-    // CORREÇÕES DE DADOS
-    // ============================================
-    corrigirDadosExistentes() {
-        console.log("🔧 Corrigindo dados existentes...");
-        
-        // Corrigir ATAs
-        const atas = JSON.parse(localStorage.getItem('porter_atas') || '[]');
-        if (atas.length > 0) {
-            const atasCorrigidas = atas.map((ata, index) => {
-                // Garantir campos obrigatórios
-                return {
-                    id: ata.id || `vercel_${Date.now()}_${index}`,
-                    condo: ata.condo || "Não especificado",
-                    cidade: ata.cidade || "",
-                    tipo: ata.tipo || "Ocorrência",
-                    status: ata.status || "Em andamento",
-                    desc: ata.desc || "",
-                    operador: ata.operador || "Operador desconhecido",
-                    user: ata.user || "anonimo",
-                    turno: ata.turno || "Diurno",
-                    data: ata.data || new Date().toLocaleDateString('pt-BR'),
-                    dataISO: ata.dataISO || new Date().toISOString().split('T')[0],
-                    hora: ata.hora || new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
-                    timestamp: ata.timestamp || new Date().toISOString(),
-                    comentarios: Array.isArray(ata.comentarios) ? ata.comentarios : [],
-                    fixa: ata.fixa || false
-                };
-            });
-            
-            localStorage.setItem('porter_atas', JSON.stringify(atasCorrigidas));
-            console.log(`✅ ${atasCorrigidas.length} ATAs corrigidas`);
-        }
-        
-        // Corrigir Chat
-        const chat = JSON.parse(localStorage.getItem('porter_chat') || '[]');
-        if (chat.length > 0) {
-            const chatCorrigido = chat.map((msg, index) => {
-                return {
-                    id: msg.id || `chat_${Date.now()}_${index}`,
-                    sender: msg.sender || msg.nome || "Usuário",
-                    senderRole: msg.senderRole || msg.role || "OPERADOR",
-                    senderMood: msg.senderMood || msg.mood || "😐",
-                    senderUser: msg.senderUser || msg.user || "anonimo",
-                    message: msg.message || "(mensagem vazia)",
-                    time: msg.time || new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
-                    timestamp: msg.timestamp || new Date().toISOString(),
-                    date: msg.date || new Date().toLocaleDateString('pt-BR')
-                };
-            });
-            
-            localStorage.setItem('porter_chat', JSON.stringify(chatCorrigido));
-            console.log(`✅ ${chatCorrigido.length} mensagens de chat corrigidas`);
-        }
-    },
-    
-    // ============================================
-    // BOTÃO DE SINCRONIZAÇÃO VERCEL
-    // ============================================
-    adicionarBotaoSincronizacaoVercel() {
-        // Remover botão antigo se existir
-        const btnAntigo = document.getElementById('btn-sync-vercel');
-        if (btnAntigo) btnAntigo.remove();
-        
-        // Criar novo botão
-        const btnSync = document.createElement('button');
-        btnSync.id = 'btn-sync-vercel';
-        btnSync.innerHTML = '🔄 Sincronizar Agora';
-        btnSync.title = 'Atualizar dados com servidor central Vercel';
-        
-        btnSync.style.cssText = `
-            position: fixed;
-            bottom: 120px;
-            right: 20px;
-            background: linear-gradient(135deg, #00b09b 0%, #96c93d 100%);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 30px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: bold;
-            z-index: 10000;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
-            transition: all 0.3s ease;
-            font-family: 'Arial', sans-serif;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        `;
-        
-        // Efeitos hover
-        btnSync.onmouseover = () => {
-            btnSync.style.transform = 'scale(1.05)';
-            btnSync.style.boxShadow = '0 8px 25px rgba(0,0,0,0.4)';
-        };
-        
-        btnSync.onmouseout = () => {
-            btnSync.style.transform = 'scale(1)';
-            btnSync.style.boxShadow = '0 6px 20px rgba(0,0,0,0.3)';
-        };
-        
-        // Ação do botão
-        btnSync.onclick = () => {
-            if (confirm("🔄 SINCRONIZAR COM SERVIDOR CENTRAL?\n\nIsso atualizará todos os dados com as informações mais recentes da equipe.")) {
-                // Mostrar loading
-                btnSync.innerHTML = '⏳ Sincronizando...';
-                btnSync.disabled = true;
-                
-                // Sincronizar com Firebase se disponível
-                if (typeof db !== 'undefined') {
-                    Promise.all([
-                        db.collection("atas").get(),
-                        db.collection("chat_messages").orderBy("timestamp", "desc").limit(50).get(),
-                        db.collection("ordens_servico").get()
-                    ])
-                    .then(([atasSnapshot, chatSnapshot, osSnapshot]) => {
-                        // Atualizar ATAs
-                        const atasServidor = [];
-                        atasSnapshot.forEach(doc => {
-                            const data = doc.data();
-                            atasServidor.push({ 
-                                id: doc.id, 
-                                ...data,
-                                // Garantir campos obrigatórios
-                                condo: data.condo || "Não especificado",
-                                desc: data.desc || "",
-                                operador: data.operador || "Operador desconhecido"
-                            });
-                        });
-                        localStorage.setItem('porter_atas', JSON.stringify(atasServidor));
-                        
-                        // Atualizar Chat
-                        const chatServidor = [];
-                        chatSnapshot.forEach(doc => {
-                            const data = doc.data();
-                            chatServidor.push({ 
-                                id: doc.id, 
-                                ...data,
-                                // Garantir campos obrigatórios
-                                sender: data.sender || "Usuário",
-                                message: data.message || "(mensagem vazia)"
-                            });
-                        });
-                        localStorage.setItem('porter_chat', JSON.stringify(chatServidor));
-                        
-                        // Atualizar OS
-                        const osServidor = [];
-                        osSnapshot.forEach(doc => {
-                            osServidor.push({ id: doc.id, ...doc.data() });
-                        });
-                        localStorage.setItem('porter_os', JSON.stringify(osServidor));
-                        
-                        console.log(`✅ ${atasServidor.length} ATAs, ${chatServidor.length} mensagens e ${osServidor.length} OS sincronizadas`);
-                        
-                        // Recarregar dados
-                        if (typeof app !== 'undefined') {
-                            if (typeof app.renderAta === 'function') app.renderAta();
-                            if (typeof app.loadChat === 'function') app.loadChat();
-                            if (typeof app.renderOS === 'function') app.renderOS();
-                        }
-                        
-                        // Restaurar botão
-                        setTimeout(() => {
-                            btnSync.innerHTML = '🔄 Sincronizado!';
-                            setTimeout(() => {
-                                btnSync.innerHTML = '🔄 Sincronizar Agora';
-                                btnSync.disabled = false;
-                            }, 2000);
-                        }, 500);
-                    })
-                    .catch(err => {
-                        console.error("❌ Erro na sincronização:", err);
-                        btnSync.innerHTML = '❌ Erro!';
-                        setTimeout(() => {
-                            btnSync.innerHTML = '🔄 Sincronizar Agora';
-                            btnSync.disabled = false;
-                        }, 2000);
-                    });
-                } else {
-                    // Se não houver Firebase, apenas recarrega a página
-                    console.log("ℹ️ Firebase não disponível, recarregando página...");
-                    location.reload();
-                }
-            }
-        };
-        
-        document.body.appendChild(btnSync);
-        console.log("✅ Botão de sincronização Vercel adicionado");
-    },
-    
-    // ============================================
-    // FUNÇÕES DE ALERTA E MENSAGENS
-    // ============================================
     showMessage(text, type) {
         const message = document.createElement('div');
         message.innerHTML = `
@@ -3919,164 +3584,135 @@ E-mail automático - Não responda
         setTimeout(() => {
             message.remove();
         }, 3000);
-    },
-    
-    showAlert(type, message) {
-        const alertDiv = document.createElement('div');
-        alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
-        alertDiv.style.cssText = `
-            top: 80px;
-            right: 20px;
-            z-index: 1050;
-            min-width: 300px;
-        `;
-        alertDiv.innerHTML = `
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        `;
-        
-        document.body.appendChild(alertDiv);
-        
-        setTimeout(() => {
-            if (alertDiv.parentNode) {
-                alertDiv.parentNode.removeChild(alertDiv);
-            }
-        }, 5000);
-    },
-    
-    // ============================================
-    // FUNÇÕES DE RENDERIZAÇÃO GERAL
-    // ============================================
-    renderAll() {
-        this.renderAta();
-        this.renderFixas();
-        this.renderOS();
-        this.renderPresenca();
-    },
-    
-    // ============================================
-    // FUNÇÕES DE RELATÓRIOS
-    // ============================================
-    openReportModal() {
-        const modal = document.getElementById('report-modal');
-        if (modal) modal.classList.add('show');
-    },
-    
-    closeReportModal() {
-        const modal = document.getElementById('report-modal');
-        if (modal) modal.classList.remove('show');
-    },
-    
-    // ============================================
-    // FUNÇÕES DE E-MAIL ATA (app(5).js)
-    // ============================================
-    enviarEmailAta(ataData, ataId, tipo) {
-        // Esta função seria implementada para enviar e-mails reais
-        // Por enquanto, apenas registra no histórico
-        let emailsHistory = JSON.parse(localStorage.getItem('porter_emails_history') || '[]');
-        
-        const emailRecord = {
-            id: Date.now(),
-            ata_id: ataId,
-            subject: `ATA: ${ataData.titulo} - ${ataData.condominio}`,
-            to_emails: [], // Seriam os e-mails dos participantes
-            body: this.gerarCorpoEmailAta(ataData),
-            date: new Date().toLocaleString('pt-BR'),
-            status: 'sent_simulation',
-            tipo: tipo,
-            condominio: ataData.condominio,
-            name: ataData.criadoPorNome
-        };
-        
-        emailsHistory.unshift(emailRecord);
-        if (emailsHistory.length > 50) emailsHistory.pop();
-        localStorage.setItem('porter_emails_history', JSON.stringify(emailsHistory));
-    },
-    
-    gerarCorpoEmailAta(ataData) {
-        return `========================================
-ATA DE REUNIÃO - PORTER 2026
-========================================
+    }
+};
 
-📋 INFORMAÇÕES DA ATA
-----------------------------------------
-• Título: ${ataData.titulo}
-• Condomínio: ${ataData.condominio}
-• Data: ${ataData.data}
-• Responsável: ${ataData.responsavel}
-• Status: ${ataData.status}
+// Inicializar o sistema
+window.onload = () => {
+    app.init();
+};
 
-📅 PARTICIPANTES
-----------------------------------------
-• ${ataData.participantes ? ataData.participantes.join('\n• ') : 'Nenhum participante listado'}
+// ============================================
+// 🔧 SISTEMA DE SINCRONIZAÇÃO AUTOMÁTICA
+// ============================================
 
-📝 DESCRIÇÃO
-----------------------------------------
-${ataData.descricao}
-
-========================================
-ATA OPERACIONAL PORTER - 2026
-E-mail automático - Não responda
-========================================`;
-    },
+// Adicione isto ao final do seu app.js
+(function() {
+    'use strict';
     
-    // ============================================
-    // FUNÇÃO DE CORREÇÃO DE DADOS DO CHAT
-    // ============================================
-    corrigirDadosChat(chat) {
-        return chat.map(msg => ({
-            id: msg.id || `chat_${Date.now()}`,
-            sender: msg.sender || "Usuário",
-            senderRole: msg.senderRole || "OPERADOR",
-            senderMood: msg.senderMood || "😐",
-            senderUser: msg.senderUser || "anonimo",
+    console.log('⚡ Sistema Porter Vercel - Carregando sistema de sincronização...');
+    
+    // Função para criar um arquivo de correções para download
+    function criarArquivoCorrecoes() {
+        const codigoCompleto = `// 🚀 SISTEMA PORTER VERCEL - CORREÇÕES PERMANENTES
+// Cole este código no final do seu app.js
+
+// Sistema de correções automáticas
+setTimeout(() => {
+    // Corrigir dados de ATAs
+    const atas = JSON.parse(localStorage.getItem('porter_atas') || '[]');
+    if (atas.length > 0) {
+        const atasCorrigidas = atas.map((ata, index) => ({
+            id: ata.id || \`vercel_\${Date.now()}_\${index}\`,
+            condo: ata.condo || "Não especificado",
+            assunto: ata.assunto || "Sem assunto",
+            data: ata.data || new Date().toLocaleDateString('pt-BR'),
+            participantes: Array.isArray(ata.participantes) ? ata.participantes : [],
+            itens: Array.isArray(ata.itens) ? ata.itens : [],
+            createdAt: ata.createdAt || new Date().toISOString(),
+            user: ata.user || JSON.parse(localStorage.getItem('porter_user') || '{}').user || "admin",
+            status: ata.status || "ativo",
+            desc: ata.desc || ""
+        }));
+        localStorage.setItem('porter_atas', JSON.stringify(atasCorrigidas));
+    }
+    
+    // Corrigir dados do Chat
+    const chat = JSON.parse(localStorage.getItem('porter_chat') || '[]');
+    if (chat.length > 0) {
+        const chatCorrigido = chat.map((msg, index) => ({
+            id: msg.id || \`chat_\${Date.now()}_\${index}\`,
+            sender: msg.sender || msg.nome || "Usuário",
+            senderRole: msg.senderRole || msg.role || "OPERADOR",
+            senderMood: msg.senderMood || msg.mood || "😐",
+            senderUser: msg.senderUser || msg.user || "anonimo",
             message: msg.message || "(mensagem vazia)",
             time: msg.time || new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
             timestamp: msg.timestamp || new Date().toISOString(),
             date: msg.date || new Date().toLocaleDateString('pt-BR')
         }));
-    },
+        localStorage.setItem('porter_chat', JSON.stringify(chatCorrigido));
+    }
     
-    // ============================================
-    // FUNÇÃO PARA CARREGAR ATAS (app(5).js)
-    // ============================================
-    loadAtas() {
-        if (this.unsubscribeAtas) this.unsubscribeAtas();
+    console.log('✅ Dados corrigidos automaticamente');
+}, 2000);
+
+// Botão de sincronização permanente
+setTimeout(() => {
+    const btnSync = document.createElement('button');
+    btnSync.id = 'btn-sync-permanent';
+    btnSync.innerHTML = '🔄 Sincronizar';
+    btnSync.title = 'Sincronizar com servidor central';
+    
+    btnSync.style.cssText = \`
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 25px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: bold;
+        z-index: 9999;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        transition: all 0.3s ease;
+        font-family: Arial, sans-serif;
+    \`;
+    
+    btnSync.onclick = function() {
+        if (confirm('🔄 Sincronizar com servidor?\\n\\nIsso atualizará todos os dados.')) {
+            location.reload();
+        }
+    };
+    
+    document.body.appendChild(btnSync);
+}, 1500);`;
+
+        const blob = new Blob([codigoCompleto], { type: 'text/javascript' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'correcoes-permanentes-porter.js';
+        link.textContent = '📥 Clique para baixar correções permanentes';
+        link.style.cssText = `
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: linear-gradient(135deg, #00b09b 0%, #96c93d 100%);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: bold;
+            z-index: 10000;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        `;
         
-        this.unsubscribeAtas = db.collection('atas')
-            .orderBy('criadoEm', 'desc')
-            .onSnapshot((snapshot) => {
-                const atasList = document.getElementById('atasList');
-                if (!atasList) return;
-                
-                atasList.innerHTML = '';
-                
-                snapshot.forEach((doc) => {
-                    const ata = { id: doc.id, ...doc.data() };
-                    this.renderAtaItemFirebase(ata);
-                });
-                
-                this.loadDashboardStats();
-            }, (error) => {
-                console.error('Erro ao carregar ATAs:', error);
-            });
+        document.body.appendChild(link);
+        
+        link.onclick = function(e) {
+            e.preventDefault();
+            this.click();
+        };
     }
-};
+    
+    // Executar quando o app carregar
+    setTimeout(() => {
+        console.log('✅ Sistema de sincronização carregado');
+        
+    }, 3000);
+})();
 
-// ============================================
-// INICIALIZAÇÃO DO SISTEMA
-// ============================================
-window.onload = () => {
-    app.init();
-};
-
-// Configuração adicional do DOM
-document.addEventListener('DOMContentLoaded', function() {
-    // Verificar autenticação
-    if (!app.currentUser) {
-        // O sistema já mostra a tela de login por padrão
-    }
-});
-
-// Exportar para uso global
-window.app = app;
