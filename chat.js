@@ -1,5 +1,18 @@
 // Sistema de chat geral e privado
 const chatSystem = {
+    // Certifique-se de que DATA está disponível
+    getOperadoresDisponiveis() {
+        if (typeof DATA === 'undefined') {
+            console.error('DATA não está definida');
+            return [];
+        }
+        return DATA.funcionarios || [];
+    },
+    
+    // ... resto do código ...
+};
+// Sistema de chat geral e privado
+const chatSystem = {
     // ... mantém todo o resto do código que já está lá ...
     
     loadPrivateChatUsers() {
