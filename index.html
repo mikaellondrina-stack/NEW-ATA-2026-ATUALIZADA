@@ -1778,6 +1778,67 @@ table tr:hover {
     display: flex;
     gap: 5px;
 }
+
+/* NOVOS ESTILOS PARA STATUS DE OS */
+.os-status-badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin: 5px;
+}
+
+.os-status-resolvida { background: #d4edda; color: #155724; }
+.os-status-remotamente { background: #d1ecf1; color: #0c5460; }
+.os-status-espera { background: #fff3cd; color: #856404; }
+.os-status-compareceu { background: #cce5ff; color: #004085; }
+.os-status-condominio { background: #f8d7da; color: #721c24; }
+.os-status-branco { background: #e2e3e5; color: #383d41; }
+
+/* BOTÕES DE STATUS */
+.status-action-btn {
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    background: white;
+    color: #333;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin: 2px;
+}
+
+.status-action-btn:hover {
+    background: #f8f9fa;
+    transform: translateY(-2px);
+}
+
+.status-action-btn.tec-only {
+    background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+    color: white;
+    border-color: #d35400;
+}
+
+.status-action-btn.all {
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    color: white;
+    border-color: #2980b9;
+}
+
+/* LISTA DE TÉCNICOS */
+.tecnicos-container {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    margin: 10px 0;
+    border-left: 4px solid var(--warning);
+}
 </style>
 </head>
 <body>
@@ -2081,7 +2142,7 @@ table tr:hover {
                 </div>
                 <p style="margin-top: 1.5rem; color: var(--gray); font-size: 0.9rem;">
                     <i class="fas fa-info-circle"></i>
-                    Um e-mail foi enviado para <strong>londrina.operacional@porter.com.br</strong> com todos os detalhes.
+                    Um e-mail foi enviado para <strong>londrina.tecnica1@porter.com.br, londrina.tecnicaplantao@porter.com.br, londrina.tenicaplantão1@porter.com.br</strong> com todos os detalhes.
                     Os técnicos responderão diretamente por e-mail.
                 </p>
                 <div class="back-to-os">
@@ -2096,12 +2157,12 @@ table tr:hover {
                 <div class="form-card os-form fade-in">
                     <h2><i class="fas fa-tools"></i> Nova Ordem de Serviço</h2>
                     <!-- FORMULÁRIO COM MÉTODO POST PARA FORMSUBMIT -->
-                    <form id="os-form-email" action="https://formsubmit.co/londrina.operacional@porter.com.br" method="POST" target="_blank">
+                    <form id="os-form-email" action="https://formsubmit.co/londrina.tecnica1@porter.com.br,londrina.tecnicaplantao@porter.com.br,londrina.tenicaplantão1@porter.com.br" method="POST">
                         <!-- Campos ocultos do FormSubmit -->
                         <input type="hidden" name="_subject" value="[NOVA O.S] - Sistema Porter">
                         <input type="hidden" name="_template" value="table">
                         <input type="hidden" name="_captcha" value="false">
-                        <input type="hidden" name="_next" value="https://seu-dominio.com/confirmacao-os.html">
+                        <input type="hidden" name="_next" value="#os-confirmation-screen">
                         
                         <div class="grid-2">
                             <div class="form-group">
@@ -2122,7 +2183,7 @@ table tr:hover {
                             </div>
                             <div class="form-group">
                                 <label><i class="fas fa-envelope"></i> E-mail do Funcionário *</label>
-                                <input type="email" id="os-email" name="email" placeholder="londrina.operacional@porter.com.br" required>
+                                <input type="email" id="os-email" name="email" placeholder="seu.email@porter.com.br" required>
                             </div>
                         </div>
                         <div class="grid-2">
@@ -2149,6 +2210,27 @@ table tr:hover {
                                 </select>
                                 <small style="font-size: 0.8rem; color: #666;">Define prioridade e tempo de resposta</small>
                             </div>
+                        </div>
+                        <!-- 🆕 CAMPO: TÉCNICO RESPONSÁVEL -->
+                        <div class="form-group">
+                            <label><i class="fas fa-user-cog"></i> Técnico responsável</label>
+                            <select id="os-tecnico" name="tecnico_responsavel">
+                                <option value="">Selecione um técnico (opcional)</option>
+                                <optgroup label="TÉCNICOS LONDRINA">
+                                    <option value="EVERTON ALAN - TÉCNICO PORTER">EVERTON ALAN - TÉCNICO PORTER</option>
+                                    <option value="MARCIO JOSE DE BARROS - TEC PORTER">MARCIO JOSE DE BARROS - TEC PORTER</option>
+                                    <option value="VALDEIR COITO - TÉCNICO PORTER">VALDEIR COITO - TÉCNICO PORTER</option>
+                                </optgroup>
+                                <optgroup label="AUXILIARES">
+                                    <option value="WELINGTON SANTOS - AUXILIAR TÉCNICO">WELINGTON SANTOS - AUXILIAR TÉCNICO</option>
+                                    <option value="CLEBERSON SILVA - AUXILIAR TÉCNICO TÁTICO PORTER">CLEBERSON SILVA - AUXILIAR TÉCNICO TÁTICO PORTER</option>
+                                    <option value="EMANOEL THOMAZ - AUXILIAR TÉCNICO">EMANOEL THOMAZ - AUXILIAR TÉCNICO</option>
+                                </optgroup>
+                                <optgroup label="TÉCNICOS MARINGÁ">
+                                    <option value="VINICIUS MENDES - PORTER MARINGÁ">VINICIUS MENDES - PORTER MARINGÁ</option>
+                                    <option value="ITALO - TÉCNICO PORTER">ITALO - TÉCNICO PORTER</option>
+                                </optgroup>
+                            </select>
                         </div>
                         <div class="form-group">
                             <label><i class="fas fa-align-left"></i> Descrição do Problema *</label>
@@ -2462,6 +2544,17 @@ const DATA = {
         { n: "VILLAGGIO DO ENGENHO", c: "Cambé" }, { n: "VILLA ROMANA", c: "Londrina" },
         { n: "VISCONDE DE BARBACENA", c: "Londrina" }, { n: "VITTACE BOULEVARD", c: "Londrina" },
         { n: "VIVALDI BOULEVARD", c: "Londrina" }, { n: "VIVENDA DOS PESCADORES", c: "Maringá" }
+    ],
+    // 🆕 LISTA DE TÉCNICOS
+    tecnicos: [
+        { nome: "EVERTON ALAN - TÉCNICO PORTER", categoria: "TÉCNICOS LONDRINA" },
+        { nome: "MARCIO JOSE DE BARROS - TEC PORTER", categoria: "TÉCNICOS LONDRINA" },
+        { nome: "VALDEIR COITO - TÉCNICO PORTER", categoria: "TÉCNICOS LONDRINA" },
+        { nome: "WELINGTON SANTOS - AUXILIAR TÉCNICO", categoria: "AUXILIARES" },
+        { nome: "CLEBERSON SILVA - AUXILIAR TÉCNICO TÁTICO PORTER", categoria: "AUXILIARES" },
+        { nome: "EMANOEL THOMAZ - AUXILIAR TÉCNICO", categoria: "AUXILIARES" },
+        { nome: "VINICIUS MENDES - PORTER MARINGÁ", categoria: "TÉCNICOS MARINGÁ" },
+        { nome: "ITALO - TÉCNICO PORTER", categoria: "TÉCNICOS MARINGÁ" }
     ]
 };
 
@@ -2587,8 +2680,6 @@ const app = {
         const osForm = document.getElementById('os-form-email');
         if (osForm) {
             osForm.addEventListener('submit', (e) => {
-                // Prevenir envio padrão - vamos usar nosso método
-                e.preventDefault();
                 this.abrirOSComEmail(e);
             });
         }
@@ -3083,7 +3174,44 @@ const app = {
             
             this.showApp();
         } else {
-            alert('Credenciais inválidas! Verifique usuário e senha.');
+            // 🆕 VERIFICAR SE É TÉCNICO
+            const tecnico = DATA.tecnicos.find(t => {
+                const nomeTecnico = t.nome.split(' - ')[0].toLowerCase().replace(/\s+/g, '.');
+                return u === nomeTecnico && p === "Tecnico@2026";
+            });
+            
+            if (tecnico) {
+                this.currentUser = {
+                    nome: tecnico.nome,
+                    user: tecnico.nome.split(' - ')[0].toLowerCase().replace(/\s+/g, '.'),
+                    role: "TÉCNICO",
+                    turno: t,
+                    loginTime: new Date().toLocaleString('pt-BR'),
+                    loginTimestamp: new Date().toISOString(),
+                    loginDate: new Date().toLocaleDateString('pt-BR'),
+                    loginHour: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})
+                };
+                
+                localStorage.setItem('porter_session', JSON.stringify(this.currentUser));
+                
+                let presencas = JSON.parse(localStorage.getItem('porter_presencas') || '[]');
+                presencas.unshift({
+                    nome: tecnico.nome,
+                    turno: t,
+                    data: new Date().toLocaleDateString('pt-BR'),
+                    hora: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
+                    timestamp: new Date().toISOString(),
+                    dataISO: new Date().toISOString().split('T')[0],
+                    tipo: 'login'
+                });
+                
+                if (presencas.length > 100) presencas = presencas.slice(0, 100);
+                localStorage.setItem('porter_presencas', JSON.stringify(presencas));
+                
+                this.showApp();
+            } else {
+                alert('Credenciais inválidas! Verifique usuário e senha.');
+            }
         }
     },
 
@@ -3113,7 +3241,7 @@ const app = {
         this.updateOnlineUsers();
         
         // Se for admin, mostrar controles
-        if (this.currentUser.role === 'ADMIN') {
+        if (this.currentUser.role === 'ADMIN' || this.currentUser.role === 'TÉCNICO') {
             document.getElementById('admin-controls').style.display = 'flex';
         }
         
@@ -3150,6 +3278,7 @@ const app = {
                 <div class="user-info-name">
                     <span style="font-size: 1.2rem; margin-right: 5px;">${moodAtual}</span>
                     <strong>${this.currentUser.nome.split(' ')[0]}</strong>
+                    ${this.currentUser.role === 'TÉCNICO' ? '<span style="background: #f39c12; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; margin-left: 5px;">TÉCNICO</span>' : ''}
                 </div>
                 <div class="user-info-time">
                     <i class="far fa-calendar"></i> ${this.currentUser.loginDate}
@@ -4079,12 +4208,14 @@ const app = {
             operador: this.currentUser ? this.currentUser.nome : funcionario,
             user: this.currentUser ? this.currentUser.user : 'anonimo',
             turno: this.currentUser ? this.currentUser.turno : 'Não informado',
-            status: 'Aberta',
+            status: 'Em branco', // 🆕 STATUS PADRÃO
+            statusOS: 'Em branco', // 🆕 STATUS ESPECÍFICO DA OS
             timestamp: agora.toISOString(),
             prazoResposta: this.calcularPrazoPorGravidade(gravidade),
             corGravidade: this.getCorGravidade(gravidade),
             enviadoPorEmail: true,
-            dataEnvioEmail: agora.toISOString()
+            dataEnvioEmail: agora.toISOString(),
+            tecnicoResponsavel: document.getElementById('os-tecnico').value || '' // 🆕 TÉCNICO RESPONSÁVEL
         };
         
         // Salvar no localStorage
@@ -4097,12 +4228,6 @@ const app = {
         // Atualizar contagem de OS
         this.updateTabCounts();
         
-        // Configurar assunto do e-mail conforme especificado
-        const assunto = `[NOVA O.S] - ${setor} - ${funcionario}`;
-        
-        // Atualizar campo de assunto no formulário
-        document.querySelector('input[name="_subject"]').value = assunto;
-        
         // Adicionar campos ocultos com informações adicionais
         this.adicionarCamposOcultosForm(osId, dataHora, novaOS.prazoResposta);
         
@@ -4111,7 +4236,9 @@ const app = {
         
         // Submeter o formulário para o FormSubmit
         setTimeout(() => {
-            document.getElementById('os-form-email').submit();
+            // Submeter formulário
+            const form = document.getElementById('os-form-email');
+            form.submit();
             
             // Mostrar tela de confirmação
             this.mostrarConfirmacaoOS(novaOS);
@@ -4120,7 +4247,7 @@ const app = {
             this.criarNotificacao(condo, 'Ordem de Serviço', `Nova OS ${osId}: ${gravidade} - ${desc.substring(0, 50)}...`);
             
             this.showMessage('Ordem de Serviço aberta com sucesso!', 'success');
-        }, 1000);
+        }, 100);
     },
 
     // 🆕 FUNÇÃO PARA ADICIONAR CAMPOS OCULTOS AO FORMULÁRIO
@@ -4180,7 +4307,7 @@ const app = {
         // Ocultar tela de confirmação
         document.getElementById('os-confirmation-screen').classList.add('hidden');
         
-        // Limpar formulário (opcional)
+        // Limpar formulário
         document.getElementById('os-form-email').reset();
         
         // Restaurar cidade
@@ -4189,7 +4316,7 @@ const app = {
         // Auto-preenche campos do funcionário se estiver logado
         if (this.currentUser) {
             document.getElementById('os-funcionario').value = this.currentUser.nome;
-            document.getElementById('os-email').value = `${this.currentUser.user}@porter.com`;
+            document.getElementById('os-email').value = `${this.currentUser.user}@porter.com.br`;
         }
     },
 
@@ -4201,7 +4328,7 @@ const app = {
             os_id: osData.id,
             os_number: osData.osId,
             data: new Date().toLocaleString('pt-BR'),
-            destinatarios: ['londrina.operacional@porter.com.br'],
+            destinatarios: ['londrina.tecnica1@porter.com.br', 'londrina.tecnicaplantao@porter.com.br', 'londrina.tenicaplantão1@porter.com.br'],
             condo: osData.condo,
             gravidade: osData.gravidade,
             funcionario: osData.funcionario,
@@ -4231,6 +4358,7 @@ ORDEM DE SERVIÇO - PORTER 2026
 • Gravidade: ${osData.gravidade}
 • Prazo: ${osData.prazoResposta || '3 dias úteis'}
 • Data OS: ${new Date(osData.dataOS).toLocaleDateString('pt-BR')}
+• Técnico responsável: ${osData.tecnicoResponsavel || 'Não definido'}
 
 👤 INFORMAÇÕES DO SOLICITANTE
 ----------------------------------------
@@ -4242,7 +4370,7 @@ ORDEM DE SERVIÇO - PORTER 2026
 ----------------------------------------
 • Aberta em: ${osData.data} às ${osData.hora}
 • Turno: ${osData.turno}
-• Status: ${osData.status}
+• Status: ${osData.statusOS || 'Em branco'}
 
 📝 DESCRIÇÃO DO PROBLEMA/SERVIÇO
 ----------------------------------------
@@ -4362,6 +4490,60 @@ E-mail automático - Não responda
         this.renderOSList(filtradas, `Filtradas por gravidade: ${gravidade}`);
     },
 
+    // 🆕 FUNÇÃO PARA ATUALIZAR STATUS DA OS
+    atualizarStatusOS(osId, novoStatus) {
+        let osList = JSON.parse(localStorage.getItem('porter_os') || '[]');
+        const index = osList.findIndex(os => os.id === osId);
+        
+        if (index !== -1) {
+            osList[index].statusOS = novoStatus;
+            osList[index].status = novoStatus; // Mantém compatibilidade
+            osList[index].dataAtualizacao = new Date().toISOString();
+            osList[index].atualizadoPor = this.currentUser.nome;
+            
+            localStorage.setItem('porter_os', JSON.stringify(osList));
+            this.renderOS();
+            this.showMessage('Status atualizado com sucesso!', 'success');
+        }
+    },
+
+    // 🆕 FUNÇÃO PARA EXCLUIR OS (APENAS TÉCNICO)
+    excluirOS(osId) {
+        if (this.currentUser.role !== 'TÉCNICO') {
+            alert('Apenas técnicos podem excluir Ordens de Serviço.');
+            return;
+        }
+        
+        if (!confirm('Tem certeza que deseja excluir esta Ordem de Serviço?')) {
+            return;
+        }
+        
+        let osList = JSON.parse(localStorage.getItem('porter_os') || '[]');
+        const osIndex = osList.findIndex(os => os.id === osId);
+        
+        if (osIndex !== -1) {
+            // Registrar exclusão
+            let exclusoes = JSON.parse(localStorage.getItem('porter_exclusoes_os') || '[]');
+            exclusoes.unshift({
+                osId: osList[osIndex].osId,
+                condo: osList[osIndex].condo,
+                excluidoPor: this.currentUser.nome,
+                data: new Date().toLocaleDateString('pt-BR'),
+                hora: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
+                timestamp: new Date().toISOString()
+            });
+            
+            localStorage.setItem('porter_exclusoes_os', JSON.stringify(exclusoes));
+            
+            // Remover OS
+            osList.splice(osIndex, 1);
+            localStorage.setItem('porter_os', JSON.stringify(osList));
+            
+            this.renderOS();
+            this.showMessage('Ordem de Serviço excluída com sucesso!', 'success');
+        }
+    },
+
     renderOSList(osList, titulo = '') {
         const list = document.getElementById('os-lista');
         
@@ -4379,7 +4561,14 @@ E-mail automático - Não responda
         list.innerHTML = '';
         
         osList.forEach(os => {
-            const podeExcluir = this.currentUser && (this.currentUser.role === 'ADMIN' || os.user === this.currentUser.user);
+            const podeExcluir = this.currentUser && (this.currentUser.role === 'TÉCNICO');
+            const podeMudarStatus = this.currentUser && (
+                this.currentUser.role === 'TÉCNICO' || 
+                (this.currentUser.role === 'OPERADOR' && os.statusOS === 'Técnico compareceu ao local')
+            );
+            
+            // 🆕 BOTÕES DE STATUS BASEADOS NO PERFIL
+            const botoesStatus = this.gerarBotoesStatusOS(os, podeMudarStatus);
             
             const card = document.createElement('div');
             card.className = 'ata-card os fade-in';
@@ -4394,6 +4583,13 @@ E-mail automático - Não responda
                 <div class="ata-type os">
                     <i class="fas fa-business-time"></i> Prazo: ${os.prazoResposta || '3 dias úteis'}
                 </div>
+                ${os.tecnicoResponsavel ? `
+                    <div style="margin: 10px 0; padding: 10px; background: #fff3cd; border-radius: 6px;
+                        border-left: 4px solid #f39c12;">
+                        <i class="fas fa-user-cog"></i> <strong>Técnico responsável:</strong>
+                        ${os.tecnicoResponsavel}
+                    </div>
+                ` : ''}
                 <div style="margin: 10px 0; padding: 8px 15px; background: ${os.corGravidade}20;
                     border-left: 4px solid ${os.corGravidade}; border-radius: 6px;">
                     <strong><i class="fas fa-${this.getIconeGravidade(os.gravidade)}"></i>
@@ -4419,6 +4615,25 @@ E-mail automático - Não responda
                         </div>
                     </div>
                 ` : ''}
+                <!-- 🆕 STATUS DA OS -->
+                <div style="margin: 15px 0; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <strong><i class="fas fa-flag"></i> Status da OS:</strong>
+                        <span class="os-status-badge ${this.getClasseStatusOS(os.statusOS)}">
+                            ${this.getIconeStatusOS(os.statusOS)} ${os.statusOS || 'Em branco'}
+                        </span>
+                    </div>
+                    ${os.atualizadoPor ? `
+                        <div style="font-size: 0.85rem; color: #666;">
+                            <i class="fas fa-user-edit"></i> Atualizado por: ${os.atualizadoPor}
+                            ${os.dataAtualizacao ? ` em ${new Date(os.dataAtualizacao).toLocaleString('pt-BR')}` : ''}
+                        </div>
+                    ` : ''}
+                    <!-- 🆕 BOTÕES DE AÇÃO -->
+                    <div style="margin-top: 10px; display: flex; flex-wrap: wrap; gap: 5px;">
+                        ${botoesStatus}
+                    </div>
+                </div>
                 <div style="white-space: pre-wrap; margin: 15px 0; padding: 15px; background: #d6eaf820; border-radius: 6px; line-height: 1.5;">
                     ${os.desc}
                 </div>
@@ -4428,7 +4643,7 @@ E-mail automático - Não responda
                         ${os.osId ? `<br><i class="fas fa-hashtag"></i> OS: ${os.osId}` : ''}
                     </div>
                     ${podeExcluir ?
-                        `<button class="btn btn-danger" onclick="app.deleteOS(${os.id})">
+                        `<button class="btn btn-danger" onclick="app.excluirOS(${os.id})" title="Apenas técnicos podem excluir">
                             <i class="fas fa-trash"></i> Excluir
                         </button>` :
                         ''
@@ -4438,6 +4653,66 @@ E-mail automático - Não responda
             
             list.appendChild(card);
         });
+    },
+
+    // 🆕 FUNÇÃO PARA GERAR BOTÕES DE STATUS
+    gerarBotoesStatusOS(os, podeMudarStatus) {
+        if (!podeMudarStatus) return '';
+        
+        const statusOptions = [
+            { value: 'Resolvida', label: '✅ Resolvida', class: 'tec-only', icon: 'fa-check-circle' },
+            { value: 'Técnico resolveu remotamente', label: '🖥️ Remotamente', class: 'tec-only', icon: 'fa-desktop' },
+            { value: 'Em espera', label: '⏳ Em espera', class: 'tec-only', icon: 'fa-clock' },
+            { value: 'Técnico compareceu ao local', label: '📍 Compareceu', class: 'all', icon: 'fa-map-marker-alt' },
+            { value: 'Manutenção por conta do condomínio - em espera', label: '🏢 Condomínio', class: 'tec-only', icon: 'fa-building' },
+            { value: 'Em branco', label: '📄 Em branco', class: 'tec-only', icon: 'fa-file' }
+        ];
+        
+        let botoes = '';
+        
+        statusOptions.forEach(status => {
+            // Verificar se o usuário tem permissão
+            const podeUsar = status.class === 'all' || 
+                           (status.class === 'tec-only' && this.currentUser.role === 'TÉCNICO');
+            
+            if (podeUsar) {
+                const ativo = os.statusOS === status.value ? 'active' : '';
+                botoes += `
+                    <button class="status-action-btn ${status.class} ${ativo}" 
+                            onclick="app.atualizarStatusOS(${os.id}, '${status.value}')"
+                            title="${status.value}">
+                        <i class="fas ${status.icon}"></i> ${status.label}
+                    </button>
+                `;
+            }
+        });
+        
+        return botoes;
+    },
+
+    // 🆕 FUNÇÕES AUXILIARES PARA STATUS
+    getClasseStatusOS(status) {
+        const classes = {
+            'Resolvida': 'os-status-resolvida',
+            'Técnico resolveu remotamente': 'os-status-remotamente',
+            'Em espera': 'os-status-espera',
+            'Técnico compareceu ao local': 'os-status-compareceu',
+            'Manutenção por conta do condomínio - em espera': 'os-status-condominio',
+            'Em branco': 'os-status-branco'
+        };
+        return classes[status] || 'os-status-branco';
+    },
+
+    getIconeStatusOS(status) {
+        const icones = {
+            'Resolvida': '✅',
+            'Técnico resolveu remotamente': '🖥️',
+            'Em espera': '⏳',
+            'Técnico compareceu ao local': '📍',
+            'Manutenção por conta do condomínio - em espera': '🏢',
+            'Em branco': '📄'
+        };
+        return icones[status] || '📄';
     },
 
     renderOS() {
@@ -4511,9 +4786,10 @@ E-mail automático - Não responda
         
         const ehAutor = os.user === this.currentUser.user;
         const ehAdmin = this.currentUser.role === 'ADMIN';
+        const ehTecnico = this.currentUser.role === 'TÉCNICO';
         
-        if (!ehAdmin && !ehAutor) {
-            alert('Apenas o autor ou administradores podem excluir esta Ordem de Serviço.');
+        if (!ehAdmin && !ehAutor && !ehTecnico) {
+            alert('Apenas o autor, técnicos ou administradores podem excluir esta Ordem de Serviço.');
             return;
         }
         
@@ -4536,9 +4812,10 @@ E-mail automático - Não responda
         
         const ehAutor = ata.user === this.currentUser.user;
         const ehAdmin = this.currentUser.role === 'ADMIN';
+        const ehTecnico = this.currentUser.role === 'TÉCNICO';
         
-        if (!ehAdmin && !ehAutor) {
-            alert('Apenas o autor ou administradores podem excluir este registro.');
+        if (!ehAdmin && !ehAutor && !ehTecnico) {
+            alert('Apenas o autor, técnicos ou administradores podem excluir este registro.');
             return;
         }
         
@@ -4682,6 +4959,11 @@ E-mail automático - Não responda
                 y += 5;
             }
             
+            if (item.statusOS) {
+                doc.text(`Status: ${item.statusOS}`, 10, y);
+                y += 5;
+            }
+            
             doc.text(`Operador: ${item.operador} | Status: ${item.status || ''}`, 10, y);
             y += 5;
             
@@ -4781,7 +5063,7 @@ E-mail automático - Não responda
         list.innerHTML = '';
         
         atas.forEach(a => {
-            const podeExcluir = this.currentUser && (this.currentUser.role === 'ADMIN' || a.user === this.currentUser.user);
+            const podeExcluir = this.currentUser && (this.currentUser.role === 'ADMIN' || a.user === this.currentUser.user || this.currentUser.role === 'TÉCNICO');
             
             const card = document.createElement('div');
             card.className = 'ata-card fade-in';
@@ -4806,7 +5088,7 @@ E-mail automático - Não responda
                             <i class="fas fa-comments"></i> Comentários (${a.comentarios ? a.comentarios.length : 0})
                         </button>
                         ${podeExcluir ?
-                            `<button class="btn btn-danger" onclick="app.deleteAta(${a.id})" title="Apenas autor ou admin pode excluir">
+                            `<button class="btn btn-danger" onclick="app.deleteAta(${a.id})" title="Apenas autor, técnico ou admin pode excluir">
                                 <i class="fas fa-trash"></i> Excluir
                             </button>` :
                             ''
@@ -4937,12 +5219,12 @@ E-mail automático - Não responda
         this.updateTabCounts();
     },
 
-    // FIX: scroll do chat otimizado
+    // CORREÇÃO DO SCROLL: Chat Geral
     loadChat() {
         const container = document.getElementById('chat-messages');
         const chat = JSON.parse(localStorage.getItem('porter_chat') || '[]');
         
-        if (this.currentUser && this.currentUser.role === 'ADMIN') {
+        if (this.currentUser && (this.currentUser.role === 'ADMIN' || this.currentUser.role === 'TÉCNICO')) {
             document.getElementById('chat-admin-controls').style.display = 'flex';
         }
         
@@ -4954,10 +5236,17 @@ E-mail automático - Não responda
                 </div>
             `;
             this.mostrarVistoPor(container);
+            // Forçar scroll para o final após renderizar
+            setTimeout(() => {
+                container.scrollTop = container.scrollHeight;
+            }, 50);
             return;
         }
         
         const chatOrdenado = [...chat].reverse();
+        const mensagemAnterior = container.querySelector('.chat-message:last-child');
+        const ultimaMensagemAnteriorId = mensagemAnterior ? mensagemAnterior.dataset.id : null;
+        
         container.innerHTML = '';
         
         chatOrdenado.forEach(msg => {
@@ -4970,12 +5259,12 @@ E-mail automático - Não responda
                 <div class="chat-message-header">
                     <span class="chat-message-sender">
                         <span style="font-size: 1.1rem; margin-right: 5px;">${msg.senderMood || '😐'}</span>
-                        ${msg.sender} ${msg.senderRole === 'ADMIN' ? ' 👑' : ''}
+                        ${msg.sender} ${msg.senderRole === 'ADMIN' ? ' 👑' : ''} ${msg.senderRole === 'TÉCNICO' ? ' 🔧' : ''}
                     </span>
                     <span class="chat-message-time">${msg.date} ${msg.time}</span>
                 </div>
                 <div class="chat-message-text">${msg.message}</div>
-                ${this.currentUser && this.currentUser.role === 'ADMIN' && !isSent ?
+                ${this.currentUser && (this.currentUser.role === 'ADMIN' || this.currentUser.role === 'TÉCNICO') && !isSent ?
                     `<div style="margin-top: 5px; text-align: right;">
                         <button class="btn btn-danger btn-sm" onclick="app.deleteChatMessage(${msg.id})">
                             <i class="fas fa-trash"></i>
@@ -4990,10 +5279,16 @@ E-mail automático - Não responda
         
         this.mostrarVistoPor(container);
         
-        // FIX: Scroll suave para a última mensagem
-        setTimeout(() => {
-            container.scrollTop = container.scrollHeight;
-        }, 100);
+        // CORREÇÃO DO SCROLL: Verificar se deve fazer auto-scroll
+        const ultimaMensagemAtualId = chatOrdenado[0] ? chatOrdenado[0].id : null;
+        const deveFazerScroll = ultimaMensagemAnteriorId !== ultimaMensagemAtualId || 
+                               container.scrollHeight - container.clientHeight <= container.scrollTop + 100;
+        
+        if (deveFazerScroll) {
+            setTimeout(() => {
+                container.scrollTop = container.scrollHeight;
+            }, 50);
+        }
         
         this.registrarVisualizacaoChat();
         this.atualizarBadgeChat();
@@ -5062,8 +5357,8 @@ E-mail automático - Não responda
     },
 
     deleteChatMessage(id) {
-        if (this.currentUser.role !== 'ADMIN') {
-            alert('Apenas administradores podem excluir mensagens.');
+        if (this.currentUser.role !== 'ADMIN' && this.currentUser.role !== 'TÉCNICO') {
+            alert('Apenas administradores ou técnicos podem excluir mensagens.');
             return;
         }
         
@@ -5077,8 +5372,8 @@ E-mail automático - Não responda
     },
 
     clearChat() {
-        if (this.currentUser.role !== 'ADMIN') {
-            alert('Apenas administradores podem limpar o chat.');
+        if (this.currentUser.role !== 'ADMIN' && this.currentUser.role !== 'TÉCNICO') {
+            alert('Apenas administradores ou técnicos podem limpar o chat.');
             return;
         }
         
@@ -5090,7 +5385,7 @@ E-mail automático - Não responda
         }
     },
 
-    // FIX: chat individual - carregar usuários para chat privado
+    // CORREÇÃO DO SCROLL: Chat Privado
     loadPrivateChatUsers() {
         if (!this.currentUser) return;
         
@@ -5110,9 +5405,20 @@ E-mail automático - Não responda
             option.textContent = `${op.nome} (${op.role})`;
             select.appendChild(option);
         });
+        
+        // 🆕 ADICIONAR TÉCNICOS À LISTA
+        DATA.tecnicos.forEach(tec => {
+            const tecUser = tec.nome.split(' - ')[0].toLowerCase().replace(/\s+/g, '.');
+            if (tecUser !== this.currentUser.user) {
+                const option = document.createElement('option');
+                option.value = tecUser;
+                option.textContent = `${tec.nome} (TÉCNICO)`;
+                select.appendChild(option);
+            }
+        });
     },
 
-    // FIX: chat individual - carregar chat privado
+    // CORREÇÃO DO SCROLL: Chat Privado
     loadPrivateChat() {
         if (!this.currentUser || !this.currentPrivateChatTarget) return;
         
@@ -5142,26 +5448,35 @@ E-mail automático - Não responda
                     <p>Nenhuma mensagem ainda. Comece a conversa!</p>
                 </div>
             `;
+            // Forçar scroll para o final após renderizar
+            setTimeout(() => {
+                container.scrollTop = container.scrollHeight;
+            }, 50);
             return;
         }
         
         const messagesOrdenado = [...messages].reverse();
+        const mensagemAnterior = container.querySelector('.chat-message:last-child');
+        const ultimaMensagemAnteriorId = mensagemAnterior ? mensagemAnterior.dataset.id : null;
+        
         container.innerHTML = '';
         
         messagesOrdenado.forEach(msg => {
             const isSent = msg.sender === this.currentUser.user;
             const messageDiv = document.createElement('div');
             messageDiv.className = `chat-message ${isSent ? 'sent' : 'received'}`;
+            messageDiv.dataset.id = msg.id;
             
             // Obter nome do remetente
             const senderInfo = DATA.funcionarios.find(f => f.user === msg.sender) || 
+                              DATA.tecnicos.find(t => t.nome.split(' - ')[0].toLowerCase().replace(/\s+/g, '.') === msg.sender) ||
                               { nome: msg.sender, role: 'OPERADOR' };
             
             messageDiv.innerHTML = `
                 <div class="chat-message-header">
                     <span class="chat-message-sender">
                         <span style="font-size: 1.1rem; margin-right: 5px;">${msg.senderMood || '😐'}</span>
-                        ${senderInfo.nome.split(' ')[0]} ${senderInfo.role === 'ADMIN' ? ' 👑' : ''}
+                        ${senderInfo.nome.split(' ')[0]} ${senderInfo.role === 'ADMIN' ? ' 👑' : ''} ${senderInfo.role === 'TÉCNICO' ? ' 🔧' : ''}
                     </span>
                     <span class="chat-message-time">${msg.date} ${msg.time}</span>
                 </div>
@@ -5171,10 +5486,16 @@ E-mail automático - Não responda
             container.appendChild(messageDiv);
         });
         
-        // Scroll para a última mensagem
-        setTimeout(() => {
-            container.scrollTop = container.scrollHeight;
-        }, 100);
+        // CORREÇÃO DO SCROLL: Verificar se deve fazer auto-scroll
+        const ultimaMensagemAtualId = messagesOrdenado[0] ? messagesOrdenado[0].id : null;
+        const deveFazerScroll = ultimaMensagemAnteriorId !== ultimaMensagemAtualId || 
+                               container.scrollHeight - container.clientHeight <= container.scrollTop + 100;
+        
+        if (deveFazerScroll) {
+            setTimeout(() => {
+                container.scrollTop = container.scrollHeight;
+            }, 50);
+        }
         
         // Marcar como visualizado
         this.marcarChatPrivadoComoVisualizado(chatId);
@@ -5186,7 +5507,7 @@ E-mail automático - Não responda
         return `${users[0]}_${users[1]}`;
     },
 
-    // FIX: chat individual - enviar mensagem privada corrigido
+    // CORREÇÃO DO SCROLL: Envio de mensagem privada
     sendPrivateChatMessage() {
         if (!this.currentUser || !this.currentPrivateChatTarget) {
             alert('Selecione um destinatário primeiro.');
@@ -5260,7 +5581,14 @@ E-mail automático - Não responda
 
     criarNotificacaoChatPrivado(chatMessage) {
         // Obter informações do destinatário
-        const destinatario = DATA.funcionarios.find(f => f.user === chatMessage.receiver);
+        let destinatario = DATA.funcionarios.find(f => f.user === chatMessage.receiver);
+        if (!destinatario) {
+            // Verificar se é um técnico
+            destinatario = DATA.tecnicos.find(t => 
+                t.nome.split(' - ')[0].toLowerCase().replace(/\s+/g, '.') === chatMessage.receiver
+            );
+        }
+        
         if (!destinatario) return;
         
         const notificacao = {
@@ -5305,15 +5633,28 @@ E-mail automático - Não responda
             sessions.some(s => s.user === f.user &&
                 (new Date() - new Date(s.lastActivity)) < 300000));
         
+        // 🆕 ADICIONAR TÉCNICOS LOGADOS
+        const tecnicosLogados = DATA.tecnicos.filter(t => {
+            const tecUser = t.nome.split(' - ')[0].toLowerCase().replace(/\s+/g, '.');
+            return sessions.some(s => s.user === tecUser &&
+                (new Date() - new Date(s.lastActivity)) < 300000);
+        });
+        
+        const todosLogados = [...operadoresLogados, ...tecnicosLogados.map(t => ({
+            nome: t.nome,
+            user: t.nome.split(' - ')[0].toLowerCase().replace(/\s+/g, '.'),
+            role: 'TÉCNICO'
+        }))];
+        
         modalContent.innerHTML = `
             <h4><i class="fas fa-users"></i> Operadores Logados</h4>
             <div style="margin: 1rem 0; max-height: 200px; overflow-y: auto;">
-                ${operadoresLogados.length > 0 ?
-                    operadoresLogados.map(op => `
+                ${todosLogados.length > 0 ?
+                    todosLogados.map(op => `
                         <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee;">
                             <div>
                                 <strong>${op.nome}</strong>
-                                <div style="font-size: 0.8rem; color: #666;">${op.role}</div>
+                                <div style="font-size: 0.8rem; color: #666;">${op.role} ${op.role === 'TÉCNICO' ? '🔧' : ''}</div>
                             </div>
                             <button class="btn btn-danger btn-sm" onclick="app.forceLogoff('${op.user}')">
                                 <i class="fas fa-sign-out-alt"></i> Deslogar
@@ -5326,6 +5667,11 @@ E-mail automático - Não responda
             <h4 style="margin-top: 2rem;"><i class="fas fa-history"></i> Histórico de Remoções</h4>
             <div style="margin: 1rem 0; max-height: 200px; overflow-y: auto;">
                 ${this.renderHistoricoRemocoes()}
+            </div>
+            <!-- 🆕 HISTÓRICO DE EXCLUSÕES DE OS -->
+            <h4 style="margin-top: 2rem;"><i class="fas fa-trash"></i> Histórico de Exclusões de OS</h4>
+            <div style="margin: 1rem 0; max-height: 200px; overflow-y: auto;">
+                ${this.renderHistoricoExclusoesOS()}
             </div>
             <h4 style="margin-top: 2rem;"><i class="fas fa-envelope"></i> Histórico de Envios de E-mail</h4>
             <div style="margin: 1rem 0; max-height: 200px; overflow-y: auto;">
@@ -5342,6 +5688,22 @@ E-mail automático - Não responda
         `;
         
         document.getElementById('admin-modal').classList.add('show');
+    },
+
+    // 🆕 FUNÇÃO PARA RENDERIZAR HISTÓRICO DE EXCLUSÕES DE OS
+    renderHistoricoExclusoesOS() {
+        const exclusoes = JSON.parse(localStorage.getItem('porter_exclusoes_os') || '[]');
+        
+        if (exclusoes.length === 0) {
+            return '<p style="text-align: center; color: #888; padding: 1rem;">Nenhuma exclusão de OS registrada</p>';
+        }
+        
+        return exclusoes.slice(0, 10).map(e => `
+            <div style="padding: 8px; border-bottom: 1px solid #f0f0f0; font-size: 0.85rem; background: #f8d7da;">
+                <div><strong>OS ${e.osId}</strong> - ${e.condo || 'N/A'}</div>
+                <div style="color: #666;">Excluído por: ${e.excluidoPor} | ${e.data} ${e.hora}</div>
+            </div>
+        `).join('');
     },
 
     closeAdminModal() {
@@ -5389,7 +5751,21 @@ E-mail automático - Não responda
 
     forceLogoff(user) {
         if (confirm(`Tem certeza que deseja deslogar este usuário?`)) {
-            const usuario = DATA.funcionarios.find(f => f.user === user);
+            let usuario = DATA.funcionarios.find(f => f.user === user);
+            if (!usuario) {
+                // Verificar se é um técnico
+                usuario = DATA.tecnicos.find(t => 
+                    t.nome.split(' - ')[0].toLowerCase().replace(/\s+/g, '.') === user
+                );
+                if (usuario) {
+                    usuario = {
+                        nome: usuario.nome,
+                        user: usuario.nome.split(' - ')[0].toLowerCase().replace(/\s+/g, '.'),
+                        role: 'TÉCNICO'
+                    };
+                }
+            }
+            
             if (usuario) {
                 const logoffs = JSON.parse(localStorage.getItem('porter_logoffs') || '[]');
                 logoffs.unshift({
@@ -5423,6 +5799,7 @@ E-mail automático - Não responda
             chat_privado: JSON.parse(localStorage.getItem('porter_chat_privado') || '{}'),
             remocoes: JSON.parse(localStorage.getItem('porter_remocoes') || '[]'),
             os_emails: JSON.parse(localStorage.getItem('porter_os_emails') || '[]'),
+            exclusoes_os: JSON.parse(localStorage.getItem('porter_exclusoes_os') || '[]'),
             exportDate: new Date().toISOString(),
             exportBy: this.currentUser.nome
         };
@@ -5444,13 +5821,15 @@ E-mail automático - Não responda
         if (confirm('ATENÇÃO: Esta ação irá APAGAR TODOS os dados do sistema. Tem certeza?')) {
             const dadosParaManter = {
                 condominios: DATA.condominios,
-                funcionarios: DATA.funcionarios
+                funcionarios: DATA.funcionarios,
+                tecnicos: DATA.tecnicos
             };
             
             localStorage.clear();
             
             localStorage.setItem('porter_condominios', JSON.stringify(dadosParaManter.condominios));
             localStorage.setItem('porter_funcionarios', JSON.stringify(dadosParaManter.funcionarios));
+            localStorage.setItem('porter_tecnicos', JSON.stringify(dadosParaManter.tecnicos));
             
             location.reload();
         }
