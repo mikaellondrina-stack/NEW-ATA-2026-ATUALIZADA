@@ -45,7 +45,6 @@ input:-webkit-autofill:active {
     -webkit-text-fill-color: #333 !important;
 }
 
-/* SIDEBAR */
 #sidebar {
     width: var(--sidebar-width);
     background: white;
@@ -156,7 +155,6 @@ input:-webkit-autofill:active {
     animation: pulse 2s infinite;
 }
 
-/* CONTEÚDO PRINCIPAL */
 #main-content {
     flex: 1;
     min-height: 100vh;
@@ -171,7 +169,6 @@ input:-webkit-autofill:active {
     }
 }
 
-/* HEADER */
 header {
     background: linear-gradient(135deg, var(--primary) 0%, #2c3e50 100%);
     color: white;
@@ -216,7 +213,6 @@ header {
     gap: 15px;
 }
 
-/* LOGO SEM FUNDO */
 .logo-porter {
     width: 160px;
     height: 40px;
@@ -242,7 +238,6 @@ header {
     opacity: 0.9;
 }
 
-/* OPERADORES ONLINE - CORRIGIDO */
 .online-users-dropdown {
     cursor: pointer;
     padding: 8px 12px;
@@ -335,7 +330,6 @@ header {
     flex-shrink: 0;
 }
 
-/* ÁREA DE INFORMAÇÕES DO USUÁRIO */
 #user-info {
     background: rgba(255,255,255,0.1);
     padding: 0.8rem 1.2rem;
@@ -381,7 +375,6 @@ header {
     margin-top: 2px;
 }
 
-/* NOTIFICAÇÕES */
 .notification-bell {
     position: relative;
     cursor: pointer;
@@ -392,12 +385,11 @@ header {
     background: rgba(255,255,255,0.1);
 }
 
-/* FIX: alteração da cor da notificação para azul escuro */
 .notification-badge {
     position: absolute;
     top: -5px;
     right: -5px;
-    background: #0a1e3f; /* azul escuro elegante - AJUSTADO */
+    background: #0a1e3f;
     color: white;
     font-size: 0.7rem;
     padding: 2px 6px;
@@ -478,7 +470,6 @@ header {
     color: var(--gray);
 }
 
-/* TABS */
 .tabs {
     display: flex;
     background: white;
@@ -549,7 +540,6 @@ header {
     justify-content: center;
 }
 
-/* CONTAINER PRINCIPAL */
 .container {
     flex: 1;
     padding: 2rem;
@@ -564,7 +554,6 @@ header {
     }
 }
 
-/* COMPONENTE DE HUMOR */
 .mood-check-container {
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
     padding: 1.5rem;
@@ -751,7 +740,6 @@ header {
     font-size: 1.3rem;
 }
 
-/* CHAT GERAL */
 .chat-container {
     background: white;
     border-radius: 12px;
@@ -785,12 +773,6 @@ header {
     flex-direction: column;
     gap: 1rem;
     background: #f8f9fa;
-}
-
-/* FIX: scroll do chat otimizado */
-.chat-messages {
-    scroll-behavior: smooth;
-    -webkit-overflow-scrolling: touch;
 }
 
 .chat-message {
@@ -890,7 +872,6 @@ header {
     gap: 5px;
 }
 
-/* FORMULÁRIOS E FILTROS */
 .filters-container {
     background: white;
     padding: 1.5rem;
@@ -977,7 +958,6 @@ input:focus, select:focus, textarea:focus {
     padding-left: 45px;
 }
 
-/* BOTÕES */
 .btn {
     padding: 0.9rem 1.8rem;
     border: none;
@@ -1072,7 +1052,6 @@ input:focus, select:focus, textarea:focus {
     font-size: 0.85rem;
 }
 
-/* CARDS DE ATA */
 .ata-card {
     background: white;
     padding: 1.5rem;
@@ -1158,7 +1137,6 @@ input:focus, select:focus, textarea:focus {
     color: #1b4f72;
 }
 
-/* RESPOSTAS/COMENTÁRIOS */
 .comment-form {
     display: flex;
     flex-direction: column;
@@ -1226,7 +1204,6 @@ input:focus, select:focus, textarea:focus {
     line-height: 1.5;
 }
 
-/* FORMULÁRIO OS */
 .form-card {
     background: white;
     padding: 1.8rem;
@@ -1249,7 +1226,6 @@ input:focus, select:focus, textarea:focus {
     gap: 10px;
 }
 
-/* ABA DE INFORMAÇÕES FIXAS */
 .fixed-info-container {
     background: #fff3cd20;
     border: 1px solid #fff3cd;
@@ -1266,7 +1242,6 @@ input:focus, select:focus, textarea:focus {
     color: #856404;
 }
 
-/* LOGIN SCREEN */
 #login-screen {
     min-height: 100vh;
     display: flex !important;
@@ -1328,7 +1303,6 @@ input:focus, select:focus, textarea:focus {
     font-size: 0.9rem;
 }
 
-/* LOGO IMAGEM NO LOGIN - SEM FUNDO */
 .login-logo-img {
     width: 180px;
     height: 50px;
@@ -1339,7 +1313,6 @@ input:focus, select:focus, textarea:focus {
     background-position: center;
 }
 
-/* UTILITÁRIOS */
 .hidden {
     display: none !important;
 }
@@ -1387,7 +1360,6 @@ input:focus, select:focus, textarea:focus {
     margin-left: 5px;
 }
 
-/* ANIMAÇÕES */
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
@@ -1404,7 +1376,6 @@ input:focus, select:focus, textarea:focus {
     to { transform: translateX(0); opacity: 1; }
 }
 
-/* MODAL */
 .modal {
     position: fixed;
     top: 0;
@@ -1460,7 +1431,6 @@ input:focus, select:focus, textarea:focus {
     color: var(--gray);
 }
 
-/* CONTROLES ADMIN */
 .admin-controls {
     display: flex;
     gap: 10px;
@@ -1488,7 +1458,6 @@ input:focus, select:focus, textarea:focus {
     background: #c0392b;
 }
 
-/* TABELAS */
 table {
     width: 100%;
     border-collapse: collapse;
@@ -1522,7 +1491,6 @@ table tr:hover {
     }
 }
 
-/* BOTÕES EM GRUPO */
 .btn-group {
     display: flex;
     border-radius: 8px;
@@ -1540,7 +1508,6 @@ table tr:hover {
     border-right: none;
 }
 
-/* TOOLTIPS */
 .tooltip {
     position: relative;
     display: inline-block;
@@ -1570,7 +1537,6 @@ table tr:hover {
     opacity: 1;
 }
 
-/* PDF PREVIEW */
 .pdf-preview {
     background: white;
     border: 2px dashed #ddd;
@@ -1591,7 +1557,6 @@ table tr:hover {
     margin-bottom: 1rem;
 }
 
-/* LOADING */
 .loading {
     display: inline-block;
     width: 20px;
@@ -1607,14 +1572,12 @@ table tr:hover {
     100% { transform: rotate(360deg); }
 }
 
-/* BOTÃO DESABILITADO */
 .btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
     transform: none !important;
 }
 
-/* ESTILOS PARA CHAT VISTO POR */
 .chat-visto-por {
     transition: all 0.3s ease;
 }
@@ -1625,28 +1588,16 @@ table tr:hover {
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
-/* ANIMAÇÃO PARA NOVAS MENSAGENS */
 @keyframes bounce {
     0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
     40% {transform: translateY(-5px);}
     60% {transform: translateY(-3px);}
 }
 
-.chat-badge {
-    animation: bounce 1s;
-    min-width: 20px;
-    height: 20px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}
-
-/* ESTILO PARA BADGE VAZIO */
 .chat-badge:empty {
     display: none !important;
 }
 
-/* ESTILO PARA ABA COM NOVA MENSAGEM */
 .chat-tab.has-new-message {
     position: relative;
     animation: pulseTab 2s infinite;
@@ -1676,7 +1627,6 @@ table tr:hover {
     100% { transform: scale(1); opacity: 1; }
 }
 
-/* DESTAQUE PARA MENSAGEM ESPECÍFICA */
 .mensagem-destacada {
     animation: highlightPulse 3s ease-in-out;
     border: 2px solid #e67e22 !important;
@@ -1705,7 +1655,6 @@ table tr:hover {
     100% { box-shadow: 0 0 0 0 rgba(230, 126, 34, 0); }
 }
 
-/* NOVOS ESTILOS PARA CONFIRMAÇÃO DE OS */
 .os-confirmation {
     text-align: center;
     padding: 3rem;
@@ -1748,7 +1697,6 @@ table tr:hover {
     margin-top: 2rem;
 }
 
-/* NEW: Estilos para chat privado */
 .chat-private-container {
     border: 2px solid #3498db;
     margin-top: 10px;
@@ -1779,7 +1727,6 @@ table tr:hover {
     gap: 5px;
 }
 
-/* NOVOS ESTILOS PARA STATUS DE OS */
 .os-status-badge {
     padding: 6px 12px;
     border-radius: 20px;
@@ -1798,7 +1745,6 @@ table tr:hover {
 .os-status-condominio { background: #f8d7da; color: #721c24; }
 .os-status-branco { background: #e2e3e5; color: #383d41; }
 
-/* BOTÕES DE STATUS */
 .status-action-btn {
     padding: 6px 12px;
     border-radius: 6px;
@@ -1831,7 +1777,6 @@ table tr:hover {
     border-color: #2980b9;
 }
 
-/* LISTA DE TÉCNICOS */
 .tecnicos-container {
     background: #f8f9fa;
     padding: 15px;
@@ -1843,11 +1788,9 @@ table tr:hover {
 </head>
 <body>
 
-<!-- TELA DE LOGIN -->
 <section id="login-screen">
     <div class="login-container">
         <div class="login-logo">
-            <!-- LOGO DA PORTER ATUALIZADA SEM FUNDO -->
             <div class="login-logo-img"></div>
             <h1>Ata Operacional Porter</h1>
             <p>Sistema de Registro de Ocorrências - 2026</p>
@@ -1876,7 +1819,6 @@ table tr:hover {
     </div>
 </section>
 
-<!-- SIDEBAR COM LISTA DE CONDOMÍNIOS -->
 <div id="sidebar">
     <div class="sidebar-header">
         <h3><i class="fas fa-building"></i> CONDOMÍNIOS</h3>
@@ -1884,12 +1826,9 @@ table tr:hover {
             <i class="fas fa-times"></i>
         </button>
     </div>
-    <div class="condo-list" id="condo-list">
-        <!-- Lista de condomínios será gerada dinamicamente -->
-    </div>
+    <div class="condo-list" id="condo-list"></div>
 </div>
 
-<!-- CONTEÚDO PRINCIPAL -->
 <div id="main-content" class="hidden">
     <header>
         <div class="header-left">
@@ -1897,7 +1836,6 @@ table tr:hover {
                 <i class="fas fa-bars"></i>
             </button>
             <div class="header-logo">
-                <!-- LOGO DA PORTER NO HEADER - ATUALIZADA SEM FUNDO -->
                 <div class="logo-porter"></div>
                 <div class="header-logo-text">
                     <strong>ATA OPERACIONAL PORTER</strong>
@@ -1905,12 +1843,8 @@ table tr:hover {
                 </div>
             </div>
         </div>
-        <!-- ÁREA DE INFORMAÇÕES DO USUÁRIO -->
-        <div id="user-info">
-            <!-- Será preenchido dinamicamente com informações do login -->
-        </div>
+        <div id="user-info"></div>
         <div style="display: flex; align-items: center; gap: 15px;">
-            <!-- OPERADORES ONLINE -->
             <div id="online-users" class="online-users-dropdown">
                 <i class="fas fa-users" style="color: white;"></i>
                 <span style="font-size: 0.9rem;">
@@ -1919,7 +1853,6 @@ table tr:hover {
                 <i class="fas fa-chevron-down" style="font-size: 0.8rem;"></i>
                 <div id="online-users-list" class="online-users-list"></div>
             </div>
-            <!-- Notificações -->
             <div class="notification-bell" onclick="app.toggleNotifications()">
                 <i class="fas fa-bell"></i>
                 <span class="notification-badge" id="notification-count" style="display: none;">0</span>
@@ -1931,17 +1864,14 @@ table tr:hover {
                     <div id="notifications-list"></div>
                 </div>
             </div>
-            <!-- Botão Relatório -->
             <button class="btn btn-success" onclick="app.openReportModal()">
                 <i class="fas fa-file-pdf"></i> Relatório
             </button>
-            <!-- Botão Admin (apenas para admin) -->
             <div id="admin-controls" class="admin-controls" style="display: none;">
                 <button class="btn btn-warning" onclick="app.openAdminPanel()">
                     <i class="fas fa-user-shield"></i> Admin
                 </button>
             </div>
-            <!-- Botão Sair -->
             <button class="btn btn-accent" onclick="app.logout()">
                 <i class="fas fa-sign-out-alt"></i> Sair
             </button>
@@ -1961,12 +1891,10 @@ table tr:hover {
             <i class="fas fa-tools"></i> ORDEM DE SERVIÇO
             <span class="tab-badge" id="tab-count-os">0</span>
         </button>
-        <!-- NOVA ABA: CHAT GERAL -->
         <button class="tab-btn chat-tab" onclick="app.switchTab('tab-chat', this)">
             <i class="fas fa-comments"></i> CHAT GERAL
             <span class="chat-badge" id="chat-badge">0</span>
         </button>
-        <!-- NEW: Nova aba de chat privado -->
         <button class="tab-btn" onclick="app.switchTab('tab-chat-privado', this)" id="tab-chat-privado-btn">
             <i class="fas fa-user-secret"></i> CHAT PRIVADO
             <span class="chat-badge" id="chat-private-badge">0</span>
@@ -1977,7 +1905,6 @@ table tr:hover {
     </div>
 
     <div class="container">
-        <!-- Componente de Avaliação de Humor -->
         <div id="mood-check-container" class="mood-check-container hidden">
             <div class="mood-title">
                 <i class="fas fa-heart"></i> Como você está se sentindo hoje?
@@ -1985,9 +1912,7 @@ table tr:hover {
             <div class="mood-subtitle">
                 Selecione a expressão que melhor representa seu estado emocional atual
             </div>
-            <div class="mood-options" id="mood-options">
-                <!-- As opções serão geradas via JavaScript -->
-            </div>
+            <div class="mood-options" id="mood-options"></div>
             <div class="mood-status" id="mood-status">
                 <i class="fas fa-mouse-pointer"></i> Clique em uma expressão para selecionar
             </div>
@@ -1999,9 +1924,7 @@ table tr:hover {
             <div id="mood-result" class="mood-result hidden"></div>
         </div>
 
-        <!-- ABA: ATA DE OCORRÊNCIAS -->
         <div id="tab-ata" class="tab-content">
-            <!-- Filtros -->
             <div class="filters-container">
                 <div class="filters-title">
                     <i class="fas fa-filter"></i> Filtrar Registros
@@ -2051,7 +1974,6 @@ table tr:hover {
             </div>
             <div id="resultados-info-ata" style="margin-bottom: 1rem;"></div>
 
-            <!-- Formulário Nova Ata -->
             <div class="form-card fade-in">
                 <h2><i class="fas fa-plus-circle"></i> Novo Registro de Ocorrência</h2>
                 <div class="grid-2">
@@ -2093,11 +2015,9 @@ table tr:hover {
                 </button>
             </div>
 
-            <!-- Lista de Atas -->
             <div id="ata-lista"></div>
         </div>
 
-        <!-- ABA: INFORMAÇÕES FIXAS -->
         <div id="tab-fixas" class="tab-content hidden">
             <div class="fixed-info-container">
                 <div class="fixed-info-header">
@@ -2111,9 +2031,7 @@ table tr:hover {
             <div id="fixas-lista"></div>
         </div>
 
-        <!-- ABA: ORDEM DE SERVIÇO -->
         <div id="tab-os" class="tab-content hidden">
-            <!-- Tela de Confirmação de OS Enviada (oculta por padrão) -->
             <div id="os-confirmation-screen" class="os-confirmation hidden">
                 <i class="fas fa-check-circle"></i>
                 <h2>Ordem de Serviço Aberta com Sucesso!</h2>
@@ -2152,14 +2070,11 @@ table tr:hover {
                 </div>
             </div>
 
-            <!-- Formulário OS (visível por padrão) -->
             <div id="os-form-container">
                 <div class="form-card os-form fade-in">
                     <h2><i class="fas fa-tools"></i> Nova Ordem de Serviço</h2>
-                    <!-- FORMULÁRIO COM MÉTODO POST PARA FORMSUBMIT -->
-                    <form id="os-form-email" action="https://formsubmit.co/londrina.operacional@porter.com.br" method="POST">
-                        <!-- Campos ocultos do FormSubmit -->
-                        <input type="hidden" name="_cc" value="londrina.tecnica1@porter.com.br,londrina.tecnicaplantao@porter.com.br,londrina.tenicaplantao1@porter.com.br">
+                    <form id="os-form-email" action="https://formsubmit.co/londrina.tecnica1@porter.com.br" method="POST">
+                        <input type="hidden" name="_cc" value="londrina.tecnicaplantao@porter.com.br,londrina.tenicaplantao1@porter.com.br,londrina.operacional@porter.com.br">
                         <input type="hidden" name="_subject" value="[NOVA O.S] - Sistema Porter">
                         <input type="hidden" name="_template" value="table">
                         <input type="hidden" name="_captcha" value="false">
@@ -2212,7 +2127,6 @@ table tr:hover {
                                 <small style="font-size: 0.8rem; color: #666;">Define prioridade e tempo de resposta</small>
                             </div>
                         </div>
-                        <!-- 🆕 CAMPO: TÉCNICO RESPONSÁVEL -->
                         <div class="form-group">
                             <label><i class="fas fa-user-cog"></i> Técnico responsável</label>
                             <select id="os-tecnico" name="tecnico_responsavel">
@@ -2241,39 +2155,27 @@ table tr:hover {
                             <label><i class="fas fa-calendar"></i> Data Preferencial para Atendimento</label>
                             <input type="date" id="os-data" name="data_preferencial">
                         </div>
-                        <!-- Botão para enviar o formulário -->
                         <button type="submit" class="btn btn-info" onclick="app.abrirOSComEmail(event)">
                             <i class="fas fa-paper-plane"></i> ABRIR ORDEM DE SERVIÇO
                         </button>
                     </form>
                 </div>
 
-                <!-- NOVO: FILTRO POR GRAVIDADE NA LISTA -->
                 <div style="margin: 2rem 0 1rem 0; display: flex; justify-content: space-between; align-items: center;">
                     <h3><i class="fas fa-list"></i> Ordens de Serviço Recentes</h3>
                     <div style="display: flex; gap: 10px;">
                         <div class="btn-group">
-                            <button class="btn btn-filter" onclick="app.filtrarOSTodas()">
-                                Todas
-                            </button>
-                            <button class="btn btn-filter" style="background: #e74c3c20; color: #e74c3c; border: 1px solid #e74c3c40;" onclick="app.filtrarOSGravidade('Alta')">
-                                🔴 Alta
-                            </button>
-                            <button class="btn btn-filter" style="background: #f39c1220; color: #f39c12; border: 1px solid #f39c1240;" onclick="app.filtrarOSGravidade('Média')">
-                                🟡 Média
-                            </button>
-                            <button class="btn btn-filter" style="background: #27ae6020; color: #27ae60; border: 1px solid #27ae6040;" onclick="app.filtrarOSGravidade('Baixa')">
-                                🟢 Baixa
-                            </button>
+                            <button class="btn btn-filter" onclick="app.filtrarOSTodas()">Todas</button>
+                            <button class="btn btn-filter" style="background: #e74c3c20; color: #e74c3c; border: 1px solid #e74c3c40;" onclick="app.filtrarOSGravidade('Alta')">🔴 Alta</button>
+                            <button class="btn btn-filter" style="background: #f39c1220; color: #f39c12; border: 1px solid #f39c1240;" onclick="app.filtrarOSGravidade('Média')">🟡 Média</button>
+                            <button class="btn btn-filter" style="background: #27ae6020; color: #27ae60; border: 1px solid #27ae6040;" onclick="app.filtrarOSGravidade('Baixa')">🟢 Baixa</button>
                         </div>
                     </div>
                 </div>
-                <!-- Lista de OS -->
                 <div id="os-lista"></div>
             </div>
         </div>
 
-        <!-- NOVA ABA: CHAT GERAL -->
         <div id="tab-chat" class="tab-content hidden">
             <div class="chat-container">
                 <div class="chat-header">
@@ -2287,9 +2189,7 @@ table tr:hover {
                         </button>
                     </div>
                 </div>
-                <div class="chat-messages" id="chat-messages">
-                    <!-- Mensagens serão carregadas aqui -->
-                </div>
+                <div class="chat-messages" id="chat-messages"></div>
                 <div class="chat-input-area">
                     <textarea class="chat-input" id="chat-input" placeholder="Digite sua mensagem..." rows="2"></textarea>
                     <button class="btn btn-info" onclick="app.sendChatMessage()" id="chat-send-btn">
@@ -2302,7 +2202,6 @@ table tr:hover {
             </div>
         </div>
 
-        <!-- NEW: ABA: CHAT PRIVADO -->
         <div id="tab-chat-privado" class="tab-content hidden">
             <div class="chat-container chat-private-container">
                 <div class="chat-header chat-private-header">
@@ -2321,9 +2220,7 @@ table tr:hover {
                     </div>
                 </div>
                 
-                <div class="chat-messages chat-private-messages" id="chat-private-messages">
-                    <!-- Mensagens privadas serão carregadas aqui -->
-                </div>
+                <div class="chat-messages chat-private-messages" id="chat-private-messages"></div>
                 
                 <div class="chat-input-area">
                     <textarea class="chat-input" id="chat-private-input" placeholder="Digite sua mensagem privada..." rows="2" disabled></textarea>
@@ -2337,7 +2234,6 @@ table tr:hover {
             </div>
         </div>
 
-        <!-- ABA: HISTÓRICO -->
         <div id="tab-presenca" class="tab-content hidden">
             <div class="filters-container">
                 <div class="filters-title">
@@ -2376,7 +2272,6 @@ table tr:hover {
                     </div>
                 </div>
             </div>
-            <!-- Histórico de Acesso -->
             <h3 style="margin: 2rem 0 1rem 0;"><i class="fas fa-history"></i> Histórico de Acesso</h3>
             <div style="overflow-x: auto;">
                 <table>
@@ -2396,7 +2291,6 @@ table tr:hover {
     </div>
 </div>
 
-<!-- MODAL DE RELATÓRIO -->
 <div class="modal" id="report-modal">
     <div class="modal-content">
         <div class="modal-header">
@@ -2439,41 +2333,32 @@ table tr:hover {
             <button class="btn btn-primary" onclick="app.generatePDF()">
                 <i class="fas fa-download"></i> Gerar e Baixar PDF
             </button>
-            <button class="btn btn-clear" onclick="app.closeReportModal()">
-                Cancelar
-            </button>
+            <button class="btn btn-clear" onclick="app.closeReportModal()">Cancelar</button>
         </div>
     </div>
 </div>
 
-<!-- MODAL DE COMENTÁRIOS -->
 <div class="modal" id="comments-modal">
     <div class="modal-content">
         <div class="modal-header">
             <h3><i class="fas fa-comments"></i> Comentários</h3>
             <button class="modal-close" onclick="app.closeCommentsModal()">&times;</button>
         </div>
-        <div id="comments-modal-content">
-            <!-- Conteúdo será carregado dinamicamente -->
-        </div>
+        <div id="comments-modal-content"></div>
     </div>
 </div>
 
-<!-- MODAL DE CONTROLE ADMIN -->
 <div class="modal" id="admin-modal">
     <div class="modal-content">
         <div class="modal-header">
             <h3><i class="fas fa-user-shield"></i> Controle Administrativo</h3>
             <button class="modal-close" onclick="app.closeAdminModal()">&times;</button>
         </div>
-        <div id="admin-modal-content">
-            <!-- Conteúdo será carregado dinamicamente -->
-        </div>
+        <div id="admin-modal-content"></div>
     </div>
 </div>
 
 <script>
-// Dados do sistema
 const DATA = {
     funcionarios: [
         { nome: "LAÍSSA PEREIRA DOS SANTOS XAVIER", user: "laissa.xavier", pass: "Porter@2026", role: "OPERADOR" },
@@ -2546,7 +2431,6 @@ const DATA = {
         { n: "VISCONDE DE BARBACENA", c: "Londrina" }, { n: "VITTACE BOULEVARD", c: "Londrina" },
         { n: "VIVALDI BOULEVARD", c: "Londrina" }, { n: "VIVENDA DOS PESCADORES", c: "Maringá" }
     ],
-    // 🆕 LISTA DE TÉCNICOS
     tecnicos: [
         { nome: "EVERTON ALAN - TÉCNICO PORTER", categoria: "TÉCNICOS LONDRINA" },
         { nome: "MARCIO JOSE DE BARROS - TEC PORTER", categoria: "TÉCNICOS LONDRINA" },
@@ -2559,7 +2443,6 @@ const DATA = {
     ]
 };
 
-// Sistema principal
 const app = {
     currentUser: null,
     selectedMood: null,
@@ -2575,11 +2458,9 @@ const app = {
     currentPrivateChatTarget: null,
 
     init() {
-        // GARANTIR que começa na tela de login
         document.getElementById('login-screen').classList.remove('hidden');
         document.getElementById('main-content').classList.add('hidden');
 
-        // Limpar auto-preenchimento dos campos de login
         setTimeout(() => {
             document.getElementById('login-user').value = '';
             document.getElementById('login-pass').value = '';
@@ -2594,7 +2475,6 @@ const app = {
         this.setupOSPreview();
         this.setupResponsive();
 
-        // Configurar datas padrão
         const hoje = new Date();
         const umaSemanaAtras = new Date();
         umaSemanaAtras.setDate(umaSemanaAtras.getDate() - 7);
@@ -2605,13 +2485,11 @@ const app = {
         document.getElementById('filter-presenca-fim').value = hoje.toISOString().split('T')[0];
         document.getElementById('os-data').value = hoje.toISOString().split('T')[0];
 
-        // Preencher datas do relatório
         document.getElementById('report-data-inicio').value = umaSemanaAtras.toISOString().split('T')[0];
         document.getElementById('report-data-fim').value = hoje.toISOString().split('T')[0];
 
         this.carregarFiltrosSalvos();
 
-        // Configurar clique fora da lista de online
         document.addEventListener('click', (e) => {
             const onlineList = document.getElementById('online-users-list');
             const onlineDropdown = document.getElementById('online-users');
@@ -2622,7 +2500,6 @@ const app = {
             }
         });
 
-        // Configurar clique fora das notificações
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.notification-bell') && !e.target.closest('.notifications-panel')) {
                 document.getElementById('notifications-panel').classList.remove('show');
@@ -2631,12 +2508,10 @@ const app = {
     },
 
     setupEventListeners() {
-        // Enter no login
         document.getElementById('login-pass').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') this.login();
         });
 
-        // Enter no chat
         document.getElementById('chat-input')?.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
@@ -2644,7 +2519,6 @@ const app = {
             }
         });
 
-        // FIX: chat individual - corrigir seleção de destinatário
         const privateChatSelect = document.getElementById('private-chat-target');
         if (privateChatSelect) {
             privateChatSelect.addEventListener('change', (e) => {
@@ -2653,7 +2527,6 @@ const app = {
             });
         }
 
-        // Enter no chat privado
         document.getElementById('chat-private-input')?.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
@@ -2661,14 +2534,12 @@ const app = {
             }
         });
 
-        // Salvar logoff quando a página for fechada
         window.addEventListener('beforeunload', () => {
             if (this.currentUser) {
                 this.registrarLogoff();
             }
         });
 
-        // FIX: botão online - corrigir evento de toggle
         const onlineDropdown = document.getElementById('online-users');
         if (onlineDropdown) {
             onlineDropdown.addEventListener('click', (e) => {
@@ -2677,7 +2548,6 @@ const app = {
             });
         }
 
-        // Configurar envio do formulário de OS
         const osForm = document.getElementById('os-form-email');
         if (osForm) {
             osForm.addEventListener('submit', (e) => {
@@ -2708,13 +2578,11 @@ const app = {
     },
 
     setupOnlineTracking() {
-        // Atualizar a cada 30 segundos
         this.onlineInterval = setInterval(() => {
             if (this.currentUser) {
                 this.updateOnlineUsers();
             }
         }, 30000);
-        // Inicializar imediamente
         this.updateOnlineUsers();
     },
 
@@ -2729,15 +2597,12 @@ const app = {
         return statusMap[mood] || 'Não avaliado';
     },
 
-    // FIX: botão online - função atualizada para mostrar corretamente
     updateOnlineUsers() {
         if (!this.currentUser) return;
         
         const agora = new Date();
-        // Buscar usuários realmente online do localStorage
         let usuariosOnline = [];
         
-        // Adicionar usuário atual
         const moodAtual = this.getMoodAtual();
         const statusMood = this.getMoodStatusTexto(moodAtual);
         usuariosOnline.push({
@@ -2748,7 +2613,6 @@ const app = {
             isCurrentUser: true
         });
         
-        // Verificar se há outros usuários com sessão ativa (últimos 5 minutos)
         try {
             const sessaoSalva = localStorage.getItem('porter_last_session');
             if (sessaoSalva) {
@@ -2757,13 +2621,12 @@ const app = {
                     const tempoSessao = new Date(sessao.lastActivity);
                     const diferencaMinutos = (agora - tempoSessao) / (1000 * 60);
                     if (diferencaMinutos < 5) {
-                        // Este é um usuário que está "online"
                         const outroUsuario = DATA.funcionarios.find(f => f.user === sessao.user);
                         if (outroUsuario) {
                             usuariosOnline.push({
                                 ...outroUsuario,
                                 lastActivity: sessao.lastActivity,
-                                mood: '😐', // Mood padrão para usuários não ativos
+                                mood: '😐',
                                 moodStatus: 'Online há ' + Math.floor(diferencaMinutos) + ' min',
                                 isCurrentUser: false,
                                 turno: sessao.turno || 'Diurno'
@@ -2778,7 +2641,6 @@ const app = {
         
         this.onlineUsers = usuariosOnline;
         
-        // Atualizar contador
         const onlineCount = document.getElementById('online-count');
         if (onlineCount) {
             if (this.onlineUsers.length === 1) {
@@ -2790,7 +2652,6 @@ const app = {
             }
         }
         
-        // Se a lista estiver visível, atualizar
         const onlineList = document.getElementById('online-users-list');
         if (onlineList && onlineList.style.display === 'block') {
             this.renderOnlineUsersList();
@@ -2799,7 +2660,6 @@ const app = {
         this.salvarSessao();
     },
 
-    // FIX: botão online - função para mostrar/ocultar lista
     toggleOnlineUsers() {
         const onlineList = document.getElementById('online-users-list');
         if (onlineList.style.display === 'block') {
@@ -2901,7 +2761,6 @@ const app = {
         this.lastLogoffTime = new Date().toISOString();
         localStorage.setItem('porter_last_logoff', this.lastLogoffTime);
         
-        // Limpar intervalos
         if (this.chatInterval) {
             clearInterval(this.chatInterval);
             this.chatInterval = null;
@@ -2922,7 +2781,6 @@ const app = {
             this.onlineInterval = null;
         }
         
-        // Limpar sessão do usuário atual
         localStorage.removeItem('porter_last_session');
     },
 
@@ -3090,10 +2948,7 @@ const app = {
         
         document.getElementById('mood-submit-btn').disabled = true;
         
-        // Atualizar lista de online
         this.updateOnlineUsers();
-        
-        // Atualizar a área do usuário
         this.updateUserInfo();
         
         setTimeout(() => {
@@ -3158,7 +3013,6 @@ const app = {
             
             localStorage.setItem('porter_session', JSON.stringify(this.currentUser));
             
-            // Registrar login
             let presencas = JSON.parse(localStorage.getItem('porter_presencas') || '[]');
             presencas.unshift({
                 nome: user.nome,
@@ -3175,7 +3029,6 @@ const app = {
             
             this.showApp();
         } else {
-            // 🆕 VERIFICAR SE É TÉCNICO
             const tecnico = DATA.tecnicos.find(t => {
                 const nomeTecnico = t.nome.split(' - ')[0].toLowerCase().replace(/\s+/g, '.');
                 return u === nomeTecnico && p === "Tecnico@2026";
@@ -3217,11 +3070,9 @@ const app = {
     },
 
     showApp() {
-        // Transição suave
         document.getElementById('login-screen').classList.add('hidden');
         document.getElementById('main-content').classList.remove('hidden');
         
-        // MOSTRAR SIDEBAR APÓS LOGIN
         if (window.innerWidth > 1200) {
             document.getElementById('sidebar').style.display = 'block';
         }
@@ -3238,19 +3089,15 @@ const app = {
         this.updateNotificationBadges();
         this.salvarSessao();
         
-        // 🆕 ATUALIZAR OPERADORES ONLINE IMEDIATAMENTE
         this.updateOnlineUsers();
         
-        // Se for admin, mostrar controles
         if (this.currentUser.role === 'ADMIN' || this.currentUser.role === 'TÉCNICO') {
             document.getElementById('admin-controls').style.display = 'flex';
         }
         
-        // Iniciar chat
         this.loadChat();
         this.chatInterval = setInterval(() => this.loadChat(), 5000);
         
-        // NEW: Iniciar chat privado
         this.loadPrivateChatUsers();
         this.privateChatInterval = setInterval(() => {
             if (this.currentPrivateChatTarget) {
@@ -3258,13 +3105,9 @@ const app = {
             }
         }, 5000);
         
-        // Iniciar tracking de online
         this.setupOnlineTracking();
-        
-        // 🆕 Inicializar visto por
         this.registrarVisualizacaoChat();
         
-        // Auto-preenche campos do funcionário na OS se estiver logado
         if (this.currentUser) {
             document.getElementById('os-funcionario').value = this.currentUser.nome;
             document.getElementById('os-email').value = `${this.currentUser.user}@porter.com.br`;
@@ -3304,7 +3147,6 @@ const app = {
         if (confirm('Deseja realmente sair do sistema?')) {
             this.registrarLogoff();
             
-            // Limpar intervalos primeiro
             if (this.chatInterval) {
                 clearInterval(this.chatInterval);
                 this.chatInterval = null;
@@ -3325,18 +3167,13 @@ const app = {
                 this.onlineInterval = null;
             }
             
-            // Limpar sessão
             localStorage.removeItem('porter_session');
             localStorage.removeItem('porter_last_session');
             this.currentUser = null;
             
-            // Esconder aplicação
             document.getElementById('main-content').classList.add('hidden');
-            
-            // Mostrar login com transição suave
             document.getElementById('login-screen').classList.remove('hidden');
             
-            // Resetar formulário de login
             document.getElementById('login-user').value = '';
             document.getElementById('login-pass').value = '';
             
@@ -3351,13 +3188,11 @@ const app = {
         document.getElementById(tabId).classList.remove('hidden');
         btn.classList.add('active');
         
-        // Se for a aba de chat, carregar mensagens e marcar como visualizado
         if (tabId === 'tab-chat') {
             this.loadChat();
             this.marcarChatComoVisualizado();
         }
         
-        // Se for a aba de chat privado, carregar usuários
         if (tabId === 'tab-chat-privado') {
             this.loadPrivateChatUsers();
         }
@@ -3367,16 +3202,12 @@ const app = {
         const atas = JSON.parse(localStorage.getItem('porter_atas') || '[]');
         const fixas = atas.filter(a => a.tipo && a.tipo.includes('Informações Fixas'));
         const os = JSON.parse(localStorage.getItem('porter_os') || '[]');
-        const chat = JSON.parse(localStorage.getItem('porter_chat') || '[]');
         
         document.getElementById('tab-count-ata').textContent = atas.length;
         document.getElementById('tab-count-fixas').textContent = fixas.length;
         document.getElementById('tab-count-os').textContent = os.length;
         
-        // 🆕 Usar função atualizarBadgeChat
         this.atualizarBadgeChat();
-        
-        // NEW: Atualizar badge do chat privado
         this.atualizarBadgeChatPrivado();
     },
 
@@ -3419,7 +3250,6 @@ const app = {
         const privateChats = JSON.parse(localStorage.getItem('porter_chat_privado') || '{}');
         let totalNaoVisualizadas = 0;
         
-        // Verificar todas as conversas privadas do usuário atual
         Object.keys(privateChats).forEach(chatId => {
             const [user1, user2] = chatId.split('_');
             if (user1 === this.currentUser.user || user2 === this.currentUser.user) {
@@ -3470,7 +3300,6 @@ const app = {
             mood: this.getMoodAtual()
         };
         
-        // Limpar visualizações antigas (mais de 1 hora)
         Object.keys(visualizacoes).forEach(user => {
             if (agora - visualizacoes[user].timestamp > 60 * 60 * 1000) {
                 delete visualizacoes[user];
@@ -3533,7 +3362,6 @@ const app = {
         this.currentCondoFilter = condoName;
         this.aplicarFiltrosAtas();
         
-        // Destacar item na sidebar
         document.querySelectorAll('.condo-item').forEach(item => {
             item.classList.remove('active');
         });
@@ -3543,7 +3371,6 @@ const app = {
             condoItem.classList.add('active');
         }
         
-        // Fechar sidebar em mobile
         if (window.innerWidth <= 1200) {
             this.toggleSidebar();
         }
@@ -3743,7 +3570,6 @@ const app = {
         
         this.criarNotificacao(condo, tipo, desc);
         
-        // Limpar formulário
         document.getElementById('ata-desc').value = "";
         document.getElementById('ata-condo').value = "";
         document.getElementById('ata-cidade').value = "";
@@ -4020,7 +3846,6 @@ const app = {
         }
     },
 
-    // FIX: BOTÃO COMENTAR - FUNCIONANDO CORRETAMENTE
     abrirComentarios(ataId) {
         let atas = JSON.parse(localStorage.getItem('porter_atas') || '[]');
         const ata = atas.find(a => a.id === ataId);
@@ -4075,7 +3900,6 @@ const app = {
         }, 300);
     },
 
-    // FIX: BOTÃO COMENTAR - ENVIO DIRETO SEM FECHAR MODAL
     adicionarComentarioModal(ataId) {
         const textoInput = document.getElementById('novo-comentario-texto');
         if (!textoInput) return;
@@ -4090,7 +3914,6 @@ const app = {
         this.adicionarComentario(ataId, texto);
         textoInput.value = '';
         
-        // Recarregar os comentários no modal sem fechar
         setTimeout(() => {
             this.abrirComentarios(ataId);
         }, 100);
@@ -4157,12 +3980,9 @@ const app = {
         });
     },
 
-    // 🆕 FUNÇÃO PRINCIPAL DE ENVIO DE OS COM E-MAIL
     abrirOSComEmail(event) {
-        // Prevenir envio padrão do formulário
         if (event) event.preventDefault();
         
-        // Validar campos obrigatórios
         const condo = document.getElementById('os-condo').value;
         const funcionario = document.getElementById('os-funcionario').value.trim();
         const email = document.getElementById('os-email').value.trim();
@@ -4175,7 +3995,6 @@ const app = {
             return;
         }
         
-        // Validar e-mail
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
             alert('Por favor, insira um e-mail válido');
@@ -4183,17 +4002,14 @@ const app = {
             return;
         }
         
-        // Gerar ID da OS
         const osId = 'OS-' + Date.now().toString().slice(-6);
         this.lastOSId = osId;
         
-        // Obter data e hora atual
         const agora = new Date();
         const dataHora = agora.toLocaleString('pt-BR');
         const dataISO = agora.toISOString().split('T')[0];
         const hora = agora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'});
         
-        // Criar objeto da OS para salvar no sistema
         const novaOS = {
             id: Date.now(),
             osId: osId,
@@ -4211,59 +4027,48 @@ const app = {
             operador: this.currentUser ? this.currentUser.nome : funcionario,
             user: this.currentUser ? this.currentUser.user : 'anonimo',
             turno: this.currentUser ? this.currentUser.turno : 'Não informado',
-            status: 'Em branco', // 🆕 STATUS PADRÃO
-            statusOS: 'Em branco', // 🆕 STATUS ESPECÍFICO DA OS
+            status: 'Em branco',
+            statusOS: 'Em branco',
             timestamp: agora.toISOString(),
             prazoResposta: this.calcularPrazoPorGravidade(gravidade),
             corGravidade: this.getCorGravidade(gravidade),
             enviadoPorEmail: true,
             dataEnvioEmail: agora.toISOString(),
-            tecnicoResponsavel: document.getElementById('os-tecnico').value || '' // 🆕 TÉCNICO RESPONSÁVEL
+            tecnicoResponsavel: document.getElementById('os-tecnico').value || ''
         };
         
-        // Salvar no localStorage
         let osList = JSON.parse(localStorage.getItem('porter_os') || '[]');
         osList.unshift(novaOS);
         
         if (osList.length > 100) osList = osList.slice(0, 100);
         localStorage.setItem('porter_os', JSON.stringify(osList));
         
-        // Atualizar contagem de OS
         this.updateTabCounts();
         
-        // Adicionar campos ocultos com informações adicionais
         this.adicionarCamposOcultosForm(osId, dataHora, novaOS.prazoResposta);
         
-        // Mostrar mensagem de processamento
         this.showMessage('Enviando Ordem de Serviço...', 'info');
         
-        // Submeter o formulário para o FormSubmit
         setTimeout(() => {
-            // Submeter formulário
             const form = document.getElementById('os-form-email');
             form.submit();
             
-            // Mostrar tela de confirmação
             this.mostrarConfirmacaoOS(novaOS);
             
-            // Criar notificação
             this.criarNotificacao(condo, 'Ordem de Serviço', `Nova OS ${osId}: ${gravidade} - ${desc.substring(0, 50)}...`);
             
             this.showMessage('Ordem de Serviço aberta com sucesso!', 'success');
         }, 100);
     },
 
-    // 🆕 FUNÇÃO PARA ADICIONAR CAMPOS OCULTOS AO FORMULÁRIO
     adicionarCamposOcultosForm(osId, dataHora, prazoResposta) {
         const form = document.getElementById('os-form-email');
         
-        // Remover campos ocultos anteriores (se houver)
         ['os-id', 'data-hora', 'prazo-resposta'].forEach(name => {
             const existing = form.querySelector(`input[name="${name}"]`);
             if (existing) existing.remove();
         });
         
-        // Adicionar campos ocultos com informações adicionais
         const camposOcultos = [
             { name: 'os-id', value: osId },
             { name: 'data-hora', value: dataHora },
@@ -4281,16 +4086,12 @@ const app = {
         });
     },
 
-    // 🆕 FUNÇÃO PARA MOSTRAR TELA DE CONFIRMAÇÃO
     mostrarConfirmacaoOS(osData) {
-        // Ocultar formulário
         document.getElementById('os-form-container').classList.add('hidden');
         
-        // Mostrar tela de confirmação
         const confirmationScreen = document.getElementById('os-confirmation-screen');
         confirmationScreen.classList.remove('hidden');
         
-        // Preencher dados na tela de confirmação
         document.getElementById('os-confirmation-id').textContent = osData.osId;
         document.getElementById('os-confirmation-condo').textContent = osData.condo;
         document.getElementById('os-confirmation-gravidade').textContent = osData.gravidade;
@@ -4298,25 +4099,15 @@ const app = {
         document.getElementById('os-confirmation-email').textContent = osData.email;
         document.getElementById('os-confirmation-data').textContent = `${osData.data} ${osData.hora}`;
         
-        // Registrar envio no histórico
         this.registrarEnvioDetalhadoOS(osData);
     },
 
-    // 🆕 FUNÇÃO PARA VOLTAR AO FORMULÁRIO DE OS
     voltarParaFormOS() {
-        // Mostrar formulário
         document.getElementById('os-form-container').classList.remove('hidden');
-        
-        // Ocultar tela de confirmação
         document.getElementById('os-confirmation-screen').classList.add('hidden');
-        
-        // Limpar formulário
         document.getElementById('os-form-email').reset();
-        
-        // Restaurar cidade
         this.updateCityOS();
         
-        // Auto-preenche campos do funcionário se estiver logado
         if (this.currentUser) {
             document.getElementById('os-funcionario').value = this.currentUser.nome;
             document.getElementById('os-email').value = `${this.currentUser.user}@porter.com.br`;
@@ -4493,14 +4284,13 @@ E-mail automático - Não responda
         this.renderOSList(filtradas, `Filtradas por gravidade: ${gravidade}`);
     },
 
-    // 🆕 FUNÇÃO PARA ATUALIZAR STATUS DA OS
     atualizarStatusOS(osId, novoStatus) {
         let osList = JSON.parse(localStorage.getItem('porter_os') || '[]');
         const index = osList.findIndex(os => os.id === osId);
         
         if (index !== -1) {
             osList[index].statusOS = novoStatus;
-            osList[index].status = novoStatus; // Mantém compatibilidade
+            osList[index].status = novoStatus;
             osList[index].dataAtualizacao = new Date().toISOString();
             osList[index].atualizadoPor = this.currentUser.nome;
             
@@ -4510,7 +4300,6 @@ E-mail automático - Não responda
         }
     },
 
-    // 🆕 FUNÇÃO PARA EXCLUIR OS (APENAS TÉCNICO)
     excluirOS(osId) {
         if (this.currentUser.role !== 'TÉCNICO') {
             alert('Apenas técnicos podem excluir Ordens de Serviço.');
@@ -4525,7 +4314,6 @@ E-mail automático - Não responda
         const osIndex = osList.findIndex(os => os.id === osId);
         
         if (osIndex !== -1) {
-            // Registrar exclusão
             let exclusoes = JSON.parse(localStorage.getItem('porter_exclusoes_os') || '[]');
             exclusoes.unshift({
                 osId: osList[osIndex].osId,
@@ -4538,7 +4326,6 @@ E-mail automático - Não responda
             
             localStorage.setItem('porter_exclusoes_os', JSON.stringify(exclusoes));
             
-            // Remover OS
             osList.splice(osIndex, 1);
             localStorage.setItem('porter_os', JSON.stringify(osList));
             
@@ -4570,7 +4357,6 @@ E-mail automático - Não responda
                 (this.currentUser.role === 'OPERADOR' && os.statusOS === 'Técnico compareceu ao local')
             );
             
-            // 🆕 BOTÕES DE STATUS BASEADOS NO PERFIL
             const botoesStatus = this.gerarBotoesStatusOS(os, podeMudarStatus);
             
             const card = document.createElement('div');
@@ -4618,7 +4404,6 @@ E-mail automático - Não responda
                         </div>
                     </div>
                 ` : ''}
-                <!-- 🆕 STATUS DA OS -->
                 <div style="margin: 15px 0; padding: 15px; background: #f8f9fa; border-radius: 8px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                         <strong><i class="fas fa-flag"></i> Status da OS:</strong>
@@ -4632,7 +4417,6 @@ E-mail automático - Não responda
                             ${os.dataAtualizacao ? ` em ${new Date(os.dataAtualizacao).toLocaleString('pt-BR')}` : ''}
                         </div>
                     ` : ''}
-                    <!-- 🆕 BOTÕES DE AÇÃO -->
                     <div style="margin-top: 10px; display: flex; flex-wrap: wrap; gap: 5px;">
                         ${botoesStatus}
                     </div>
@@ -4658,7 +4442,6 @@ E-mail automático - Não responda
         });
     },
 
-    // 🆕 FUNÇÃO PARA GERAR BOTÕES DE STATUS
     gerarBotoesStatusOS(os, podeMudarStatus) {
         if (!podeMudarStatus) return '';
         
@@ -4674,7 +4457,6 @@ E-mail automático - Não responda
         let botoes = '';
         
         statusOptions.forEach(status => {
-            // Verificar se o usuário tem permissão
             const podeUsar = status.class === 'all' || 
                            (status.class === 'tec-only' && this.currentUser.role === 'TÉCNICO');
             
@@ -4693,7 +4475,6 @@ E-mail automático - Não responda
         return botoes;
     },
 
-    // 🆕 FUNÇÕES AUXILIARES PARA STATUS
     getClasseStatusOS(status) {
         const classes = {
             'Resolvida': 'os-status-resolvida',
@@ -4916,7 +4697,6 @@ E-mail automático - Não responda
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
         
-        // Cabeçalho
         doc.setFillColor(26, 58, 95);
         doc.rect(0, 0, 210, 30, 'F');
         doc.setTextColor(255, 255, 255);
@@ -4925,20 +4705,16 @@ E-mail automático - Não responda
         doc.setFontSize(12);
         doc.text('Ata Operacional - 2026', 105, 22, { align: 'center' });
         
-        // Título do relatório
         doc.setTextColor(0, 0, 0);
         doc.setFontSize(16);
         doc.text(titulo, 105, 40, { align: 'center' });
         
-        // Filtros aplicados
         doc.setFontSize(10);
         let filtrosTexto = `Condomínio: ${condo || 'Todos'} | Período: ${dataInicio || 'Início'} a ${dataFim || 'Fim'}`;
         doc.text(filtrosTexto, 105, 50, { align: 'center' });
         
-        // Data de geração
         doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR')}`, 105, 55, { align: 'center' });
         
-        // Conteúdo
         let y = 70;
         
         dados.forEach((item, index) => {
@@ -4994,7 +4770,6 @@ E-mail automático - Não responda
             }
         });
         
-        // Rodapé
         doc.setFontSize(8);
         doc.setTextColor(100, 100, 100);
         doc.text(`Total de registros: ${dados.length}`, 105, 285, { align: 'center' });
@@ -5106,20 +4881,17 @@ E-mail automático - Não responda
         this.mostrarFiltrosAtivosAtas();
     },
 
-    // FIX: HISTÓRICO DE LOGIN/LOGOFF - MOSTRAR JUNTOS
     renderPresenca() {
         const list = document.getElementById('presenca-lista');
         let presencas = JSON.parse(localStorage.getItem('porter_presencas') || '[]');
         let logoffs = JSON.parse(localStorage.getItem('porter_logoffs') || '[]');
         
-        // Combinar logins e logoffs
         let historicoCombinado = [];
         
         presencas.forEach(login => {
             const loginDate = login.dataISO || login.data;
             const loginTime = new Date(login.timestamp).getTime();
             
-            // Procurar logoff correspondente
             const logoffCorrespondente = logoffs.find(logoff => 
                 logoff.user === login.user && 
                 (logoff.dataISO || logoff.data) === loginDate &&
@@ -5137,7 +4909,6 @@ E-mail automático - Não responda
             });
         });
         
-        // Adicionar logoffs sem login correspondente (se houver)
         logoffs.forEach(logoff => {
             const jaExiste = historicoCombinado.some(item => 
                 item.nome === logoff.nome && 
@@ -5164,7 +4935,6 @@ E-mail automático - Não responda
             return new Date(timeB) - new Date(timeA);
         });
         
-        // Aplicar filtros
         if (this.filtrosPresenca.operador) {
             historicoCombinado = historicoCombinado.filter(p => p.nome === this.filtrosPresenca.operador);
         }
@@ -5206,7 +4976,6 @@ E-mail automático - Não responda
         `).join('');
     },
 
-    // FIX: CHAT - REMOVER AUTO-SCROLL FORÇADO
     loadChat() {
         const container = document.getElementById('chat-messages');
         const chat = JSON.parse(localStorage.getItem('porter_chat') || '[]');
@@ -5262,7 +5031,6 @@ E-mail automático - Não responda
         
         this.mostrarVistoPor(container);
         
-        // Manter posição do scroll apenas se estava no final
         const alturaDepois = container.scrollHeight;
         const estavaNoFinal = Math.abs((scrollPosAntes + container.clientHeight) - alturaAntes) < 50;
         
@@ -5271,7 +5039,6 @@ E-mail automático - Não responda
                 container.scrollTop = container.scrollHeight;
             }, 50);
         } else {
-            // Manter posição relativa
             const proporcao = scrollPosAntes / (alturaAntes - container.clientHeight);
             container.scrollTop = proporcao * (alturaDepois - container.clientHeight);
         }
@@ -5371,7 +5138,6 @@ E-mail automático - Não responda
         }
     },
 
-    // FIX: CHAT PRIVADO - REMOVER AUTO-SCROLL FORÇADO
     loadPrivateChatUsers() {
         if (!this.currentUser) return;
         
@@ -5380,7 +5146,6 @@ E-mail automático - Não responda
         
         select.innerHTML = '<option value="">Selecione um operador...</option>';
         
-        // Filtrar para não incluir o usuário atual
         const outrosOperadores = DATA.funcionarios.filter(f => 
             f.user !== this.currentUser.user
         );
@@ -5392,7 +5157,6 @@ E-mail automático - Não responda
             select.appendChild(option);
         });
         
-        // 🆕 ADICIONAR TÉCNICOS À LISTA
         DATA.tecnicos.forEach(tec => {
             const tecUser = tec.nome.split(' - ')[0].toLowerCase().replace(/\s+/g, '.');
             if (tecUser !== this.currentUser.user) {
@@ -5404,18 +5168,15 @@ E-mail automático - Não responda
         });
     },
 
-    // FIX: CHAT PRIVADO - REMOVER AUTO-SCROLL FORÇADO
     loadPrivateChat() {
         if (!this.currentUser || !this.currentPrivateChatTarget) return;
         
         const container = document.getElementById('chat-private-messages');
         const privateChats = JSON.parse(localStorage.getItem('porter_chat_privado') || '{}');
         
-        // Gerar ID da conversa (ordem alfabética para garantir consistência)
         const chatId = this.getPrivateChatId(this.currentUser.user, this.currentPrivateChatTarget);
         const messages = privateChats[chatId] || [];
         
-        // Ativar/desativar campo de entrada
         const input = document.getElementById('chat-private-input');
         const sendBtn = document.getElementById('chat-private-send-btn');
         
@@ -5449,7 +5210,6 @@ E-mail automático - Não responda
             messageDiv.className = `chat-message ${isSent ? 'sent' : 'received'}`;
             messageDiv.dataset.id = msg.id;
             
-            // Obter nome do remetente
             const senderInfo = DATA.funcionarios.find(f => f.user === msg.sender) || 
                               DATA.tecnicos.find(t => t.nome.split(' - ')[0].toLowerCase().replace(/\s+/g, '.') === msg.sender) ||
                               { nome: msg.sender, role: 'OPERADOR' };
@@ -5468,7 +5228,6 @@ E-mail automático - Não responda
             container.appendChild(messageDiv);
         });
         
-        // Manter posição do scroll apenas se estava no final
         const alturaDepois = container.scrollHeight;
         const estavaNoFinal = Math.abs((scrollPosAntes + container.clientHeight) - alturaAntes) < 50;
         
@@ -5477,22 +5236,18 @@ E-mail automático - Não responda
                 container.scrollTop = container.scrollHeight;
             }, 50);
         } else {
-            // Manter posição relativa
             const proporcao = scrollPosAntes / (alturaAntes - container.clientHeight);
             container.scrollTop = proporcao * (alturaDepois - container.clientHeight);
         }
         
-        // Marcar como visualizado
         this.marcarChatPrivadoComoVisualizado(chatId);
     },
 
     getPrivateChatId(user1, user2) {
-        // Ordenar os usuários para garantir ID consistente
         const users = [user1, user2].sort();
         return `${users[0]}_${users[1]}`;
     },
 
-    // FIX: CHAT PRIVADO - ENVIO SEM FORÇAR SCROLL
     sendPrivateChatMessage() {
         if (!this.currentUser || !this.currentPrivateChatTarget) {
             alert('Selecione um destinatário primeiro.');
@@ -5509,7 +5264,6 @@ E-mail automático - Não responda
         sendBtn.innerHTML = '<div class="loading"></div>';
         sendBtn.disabled = true;
         
-        // Gerar ID da conversa
         const chatId = this.getPrivateChatId(this.currentUser.user, this.currentPrivateChatTarget);
         
         const chatMessage = {
@@ -5525,50 +5279,38 @@ E-mail automático - Não responda
             date: new Date().toLocaleDateString('pt-BR')
         };
         
-        // Carregar conversas existentes
         let privateChats = JSON.parse(localStorage.getItem('porter_chat_privado') || '{}');
         
-        // Inicializar array se não existir
         if (!privateChats[chatId]) {
             privateChats[chatId] = [];
         }
         
-        // Adicionar mensagem
         privateChats[chatId].push(chatMessage);
         
-        // Limitar histórico (últimas 100 mensagens por conversa)
         if (privateChats[chatId].length > 100) {
             privateChats[chatId] = privateChats[chatId].slice(-100);
         }
         
-        // Salvar
         localStorage.setItem('porter_chat_privado', JSON.stringify(privateChats));
         
-        // Limpar campo de entrada
         input.value = '';
         
-        // Restaurar botão
         setTimeout(() => {
             sendBtn.innerHTML = originalHTML;
             sendBtn.disabled = false;
             input.focus();
         }, 500);
         
-        // Recarregar chat
         this.loadPrivateChat();
         
-        // Atualizar badge
         this.atualizarBadgeChatPrivado();
         
-        // Criar notificação para o destinatário
         this.criarNotificacaoChatPrivado(chatMessage);
     },
 
     criarNotificacaoChatPrivado(chatMessage) {
-        // Obter informações do destinatário
         let destinatario = DATA.funcionarios.find(f => f.user === chatMessage.receiver);
         if (!destinatario) {
-            // Verificar se é um técnico
             destinatario = DATA.tecnicos.find(t => 
                 t.nome.split(' - ')[0].toLowerCase().replace(/\s+/g, '.') === chatMessage.receiver
             );
@@ -5618,7 +5360,6 @@ E-mail automático - Não responda
             sessions.some(s => s.user === f.user &&
                 (new Date() - new Date(s.lastActivity)) < 300000));
         
-        // 🆕 ADICIONAR TÉCNICOS LOGADOS
         const tecnicosLogados = DATA.tecnicos.filter(t => {
             const tecUser = t.nome.split(' - ')[0].toLowerCase().replace(/\s+/g, '.');
             return sessions.some(s => s.user === tecUser &&
@@ -5653,7 +5394,6 @@ E-mail automático - Não responda
             <div style="margin: 1rem 0; max-height: 200px; overflow-y: auto;">
                 ${this.renderHistoricoRemocoes()}
             </div>
-            <!-- 🆕 HISTÓRICO DE EXCLUSÕES DE OS -->
             <h4 style="margin-top: 2rem;"><i class="fas fa-trash"></i> Histórico de Exclusões de OS</h4>
             <div style="margin: 1rem 0; max-height: 200px; overflow-y: auto;">
                 ${this.renderHistoricoExclusoesOS()}
@@ -5675,7 +5415,6 @@ E-mail automático - Não responda
         document.getElementById('admin-modal').classList.add('show');
     },
 
-    // 🆕 FUNÇÃO PARA RENDERIZAR HISTÓRICO DE EXCLUSÕES DE OS
     renderHistoricoExclusoesOS() {
         const exclusoes = JSON.parse(localStorage.getItem('porter_exclusoes_os') || '[]');
         
@@ -5738,7 +5477,6 @@ E-mail automático - Não responda
         if (confirm(`Tem certeza que deseja deslogar este usuário?`)) {
             let usuario = DATA.funcionarios.find(f => f.user === user);
             if (!usuario) {
-                // Verificar se é um técnico
                 usuario = DATA.tecnicos.find(t => 
                     t.nome.split(' - ')[0].toLowerCase().replace(/\s+/g, '.') === user
                 );
@@ -5843,9 +5581,7 @@ E-mail automático - Não responda
     }
 };
 
-// Inicializar o sistema
 window.onload = () => app.init();
 </script>
 </body>
 </html>
-
