@@ -2142,7 +2142,7 @@ table tr:hover {
                 </div>
                 <p style="margin-top: 1.5rem; color: var(--gray); font-size: 0.9rem;">
                     <i class="fas fa-info-circle"></i>
-                    Um e-mail foi enviado para <strong>.tecnica1@porter.com.br, londrina.tecnicaplantao@porter.com.br, londrina.tenicaplantão1@porter.com.br</strong> com todos os detalhes.
+                    Um e-mail foi enviado para <strong>londrina.tecnica1@porter.com.br, londrina.tecnicaplantao@porter.com.br, londrina.tenicaplantão1@porter.com.br</strong> com todos os detalhes.
                     Os técnicos responderão diretamente por e-mail.
                 </p>
                 <div class="back-to-os">
@@ -2157,13 +2157,13 @@ table tr:hover {
                 <div class="form-card os-form fade-in">
                     <h2><i class="fas fa-tools"></i> Nova Ordem de Serviço</h2>
                     <!-- FORMULÁRIO COM MÉTODO POST PARA FORMSUBMIT -->
-                  <form id="os-form-email" action="https://formsubmit.co/londrina.operacional@porter.com.br" method="POST">
+                    <form id="os-form-email" action="https://formsubmit.co/londrina.tecnica1@porter.com.br" method="POST">
                         <!-- Campos ocultos do FormSubmit -->
-                      <input type="hidden" name="_cc" value="londrina.tecnica1@porter.com.br,londrina.tecnicaplantao@porter.com.br,londrina.tenicaplantao1@porter.com.br">
-                      <input type="hidden" name="_subject" value="[NOVA O.S] - Sistema Porter">
-                      <input type="hidden" name="_template" value="table">
-                      <input type="hidden" name="_captcha" value="false">
-                      <input type="hidden" name="_next" value="#os-confirmation-screen">
+                        <input type="hidden" name="_cc" value="londrina.tecnicaplantao@porter.com.br,londrina.tenicaplantao1@porter.com.br,londrina.operacional@porter.com.br">
+                        <input type="hidden" name="_subject" value="[NOVA O.S] - Sistema Porter">
+                        <input type="hidden" name="_template" value="table">
+                        <input type="hidden" name="_captcha" value="false">
+                        <input type="hidden" name="_next" value="#os-confirmation-screen">
                         
                         <div class="grid-2">
                             <div class="form-group">
@@ -4020,6 +4020,7 @@ const app = {
         }
     },
 
+    // FIX: BOTÃO COMENTAR - FUNCIONANDO CORRETAMENTE
     abrirComentarios(ataId) {
         let atas = JSON.parse(localStorage.getItem('porter_atas') || '[]');
         const ata = atas.find(a => a.id === ataId);
@@ -4074,6 +4075,7 @@ const app = {
         }, 300);
     },
 
+    // FIX: BOTÃO COMENTAR - ENVIO DIRETO SEM FECHAR MODAL
     adicionarComentarioModal(ataId) {
         const textoInput = document.getElementById('novo-comentario-texto');
         if (!textoInput) return;
@@ -4087,11 +4089,11 @@ const app = {
         
         this.adicionarComentario(ataId, texto);
         textoInput.value = '';
-        this.closeCommentsModal();
         
+        // Recarregar os comentários no modal sem fechar
         setTimeout(() => {
             this.abrirComentarios(ataId);
-        }, 300);
+        }, 100);
     },
 
     closeCommentsModal() {
@@ -5104,50 +5106,84 @@ E-mail automático - Não responda
         this.mostrarFiltrosAtivosAtas();
     },
 
+    // FIX: HISTÓRICO DE LOGIN/LOGOFF - MOSTRAR JUNTOS
     renderPresenca() {
         const list = document.getElementById('presenca-lista');
         let presencas = JSON.parse(localStorage.getItem('porter_presencas') || '[]');
         let logoffs = JSON.parse(localStorage.getItem('porter_logoffs') || '[]');
         
-        let historico = [];
+        // Combinar logins e logoffs
+        let historicoCombinado = [];
         
-        presencas.forEach(p => {
-            historico.push({
-                ...p,
-                tipo: 'login',
-                tipoDisplay: 'Login'
+        presencas.forEach(login => {
+            const loginDate = login.dataISO || login.data;
+            const loginTime = new Date(login.timestamp).getTime();
+            
+            // Procurar logoff correspondente
+            const logoffCorrespondente = logoffs.find(logoff => 
+                logoff.user === login.user && 
+                (logoff.dataISO || logoff.data) === loginDate &&
+                new Date(logoff.timestamp).getTime() > loginTime
+            );
+            
+            historicoCombinado.push({
+                nome: login.nome,
+                turno: login.turno,
+                data: login.data,
+                horaLogin: login.hora,
+                horaLogoff: logoffCorrespondente ? logoffCorrespondente.hora : '—',
+                timestampLogin: login.timestamp,
+                timestampLogoff: logoffCorrespondente ? logoffCorrespondente.timestamp : null
             });
         });
         
-        logoffs.forEach(l => {
-            historico.push({
-                ...l,
-                tipo: 'logoff',
-                tipoDisplay: 'Logoff'
-            });
+        // Adicionar logoffs sem login correspondente (se houver)
+        logoffs.forEach(logoff => {
+            const jaExiste = historicoCombinado.some(item => 
+                item.nome === logoff.nome && 
+                item.data === logoff.data &&
+                item.horaLogoff === logoff.hora
+            );
+            
+            if (!jaExiste) {
+                historicoCombinado.push({
+                    nome: logoff.nome,
+                    turno: logoff.turno || '—',
+                    data: logoff.data,
+                    horaLogin: '—',
+                    horaLogoff: logoff.hora,
+                    timestampLogin: null,
+                    timestampLogoff: logoff.timestamp
+                });
+            }
         });
         
-        historico.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        historicoCombinado.sort((a, b) => {
+            const timeA = a.timestampLogoff || a.timestampLogin || 0;
+            const timeB = b.timestampLogoff || b.timestampLogin || 0;
+            return new Date(timeB) - new Date(timeA);
+        });
         
+        // Aplicar filtros
         if (this.filtrosPresenca.operador) {
-            historico = historico.filter(p => p.nome === this.filtrosPresenca.operador);
+            historicoCombinado = historicoCombinado.filter(p => p.nome === this.filtrosPresenca.operador);
         }
         
         if (this.filtrosPresenca.dataInicio) {
-            historico = historico.filter(p => p.dataISO >= this.filtrosPresenca.dataInicio);
+            historicoCombinado = historicoCombinado.filter(p => p.data >= this.filtrosPresenca.dataInicio);
         }
         
         if (this.filtrosPresenca.dataFim) {
-            historico = historico.filter(p => p.dataISO <= this.filtrosPresenca.dataFim);
+            historicoCombinado = historicoCombinado.filter(p => p.data <= this.filtrosPresenca.dataFim);
         }
         
         if (this.filtrosPresenca.turno) {
-            historico = historico.filter(p => p.turno === this.filtrosPresenca.turno);
+            historicoCombinado = historicoCombinado.filter(p => p.turno === this.filtrosPresenca.turno);
         }
         
-        historico = historico.slice(0, 50);
+        historicoCombinado = historicoCombinado.slice(0, 100);
         
-        if (historico.length === 0) {
+        if (historicoCombinado.length === 0) {
             list.innerHTML = `
                 <tr>
                     <td colspan="5" style="text-align: center; padding: 3rem; color: #888;">
@@ -5159,68 +5195,18 @@ E-mail automático - Não responda
             return;
         }
         
-        list.innerHTML = historico.map(p => `
+        list.innerHTML = historicoCombinado.map(p => `
             <tr>
                 <td><i class="fas fa-user-circle"></i> ${p.nome}</td>
                 <td><span style="padding: 4px 10px; background: ${p.turno === 'Diurno' ? '#fff3cd' : '#e8f4fc'}; border-radius: 4px;">${p.turno}</span></td>
                 <td>${p.data}</td>
-                <td>${p.tipo === 'login' ? `<i class="fas fa-sign-in-alt" style="color: #27ae60;"></i> ${p.hora}` : ''}</td>
-                <td>${p.tipo === 'logoff' ? `<i class="fas fa-sign-out-alt" style="color: #e74c3c;"></i> ${p.hora}` : ''}</td>
+                <td><i class="fas fa-sign-in-alt" style="color: #27ae60;"></i> ${p.horaLogin}</td>
+                <td><i class="fas fa-sign-out-alt" style="color: #e74c3c;"></i> ${p.horaLogoff}</td>
             </tr>
         `).join('');
     },
 
-    sendChatMessage() {
-        const input = document.getElementById('chat-input');
-        const message = input.value.trim();
-        
-        if (!message) return;
-        
-        if (!this.currentUser) {
-            alert('Você precisa estar logado para enviar mensagens.');
-            return;
-        }
-        
-        const sendBtn = document.getElementById('chat-send-btn');
-        const originalHTML = sendBtn.innerHTML;
-        sendBtn.innerHTML = '<div class="loading"></div>';
-        sendBtn.disabled = true;
-        
-        const chatMessage = {
-            id: Date.now(),
-            sender: this.currentUser.nome,
-            senderRole: this.currentUser.role,
-            senderMood: this.getMoodAtual(),
-            message: message,
-            time: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
-            timestamp: new Date().toISOString(),
-            date: new Date().toLocaleDateString('pt-BR'),
-            notificationId: `chat_${Date.now()}_${this.currentUser.user}`
-        };
-        
-        let chat = JSON.parse(localStorage.getItem('porter_chat') || '[]');
-        chat.unshift(chatMessage);
-        
-        if (chat.length > 100) {
-            chat = chat.slice(0, 100);
-        }
-        
-        localStorage.setItem('porter_chat', JSON.stringify(chat));
-        
-        this.criarNotificacaoChatComAcao(chatMessage);
-        
-        input.value = '';
-        
-        setTimeout(() => {
-            sendBtn.innerHTML = originalHTML;
-            sendBtn.disabled = false;
-        }, 500);
-        
-        this.loadChat();
-        this.updateTabCounts();
-    },
-
-    // CORREÇÃO DO SCROLL: Chat Geral
+    // FIX: CHAT - REMOVER AUTO-SCROLL FORÇADO
     loadChat() {
         const container = document.getElementById('chat-messages');
         const chat = JSON.parse(localStorage.getItem('porter_chat') || '[]');
@@ -5237,16 +5223,12 @@ E-mail automático - Não responda
                 </div>
             `;
             this.mostrarVistoPor(container);
-            // Forçar scroll para o final após renderizar
-            setTimeout(() => {
-                container.scrollTop = container.scrollHeight;
-            }, 50);
             return;
         }
         
         const chatOrdenado = [...chat].reverse();
-        const mensagemAnterior = container.querySelector('.chat-message:last-child');
-        const ultimaMensagemAnteriorId = mensagemAnterior ? mensagemAnterior.dataset.id : null;
+        const scrollPosAntes = container.scrollTop;
+        const alturaAntes = container.scrollHeight;
         
         container.innerHTML = '';
         
@@ -5280,15 +5262,18 @@ E-mail automático - Não responda
         
         this.mostrarVistoPor(container);
         
-        // CORREÇÃO DO SCROLL: Verificar se deve fazer auto-scroll
-        const ultimaMensagemAtualId = chatOrdenado[0] ? chatOrdenado[0].id : null;
-        const deveFazerScroll = ultimaMensagemAnteriorId !== ultimaMensagemAtualId || 
-                               container.scrollHeight - container.clientHeight <= container.scrollTop + 100;
+        // Manter posição do scroll apenas se estava no final
+        const alturaDepois = container.scrollHeight;
+        const estavaNoFinal = Math.abs((scrollPosAntes + container.clientHeight) - alturaAntes) < 50;
         
-        if (deveFazerScroll) {
+        if (estavaNoFinal) {
             setTimeout(() => {
                 container.scrollTop = container.scrollHeight;
             }, 50);
+        } else {
+            // Manter posição relativa
+            const proporcao = scrollPosAntes / (alturaAntes - container.clientHeight);
+            container.scrollTop = proporcao * (alturaDepois - container.clientHeight);
         }
         
         this.registrarVisualizacaoChat();
@@ -5386,7 +5371,7 @@ E-mail automático - Não responda
         }
     },
 
-    // CORREÇÃO DO SCROLL: Chat Privado
+    // FIX: CHAT PRIVADO - REMOVER AUTO-SCROLL FORÇADO
     loadPrivateChatUsers() {
         if (!this.currentUser) return;
         
@@ -5419,7 +5404,7 @@ E-mail automático - Não responda
         });
     },
 
-    // CORREÇÃO DO SCROLL: Chat Privado
+    // FIX: CHAT PRIVADO - REMOVER AUTO-SCROLL FORÇADO
     loadPrivateChat() {
         if (!this.currentUser || !this.currentPrivateChatTarget) return;
         
@@ -5449,16 +5434,12 @@ E-mail automático - Não responda
                     <p>Nenhuma mensagem ainda. Comece a conversa!</p>
                 </div>
             `;
-            // Forçar scroll para o final após renderizar
-            setTimeout(() => {
-                container.scrollTop = container.scrollHeight;
-            }, 50);
             return;
         }
         
         const messagesOrdenado = [...messages].reverse();
-        const mensagemAnterior = container.querySelector('.chat-message:last-child');
-        const ultimaMensagemAnteriorId = mensagemAnterior ? mensagemAnterior.dataset.id : null;
+        const scrollPosAntes = container.scrollTop;
+        const alturaAntes = container.scrollHeight;
         
         container.innerHTML = '';
         
@@ -5487,15 +5468,18 @@ E-mail automático - Não responda
             container.appendChild(messageDiv);
         });
         
-        // CORREÇÃO DO SCROLL: Verificar se deve fazer auto-scroll
-        const ultimaMensagemAtualId = messagesOrdenado[0] ? messagesOrdenado[0].id : null;
-        const deveFazerScroll = ultimaMensagemAnteriorId !== ultimaMensagemAtualId || 
-                               container.scrollHeight - container.clientHeight <= container.scrollTop + 100;
+        // Manter posição do scroll apenas se estava no final
+        const alturaDepois = container.scrollHeight;
+        const estavaNoFinal = Math.abs((scrollPosAntes + container.clientHeight) - alturaAntes) < 50;
         
-        if (deveFazerScroll) {
+        if (estavaNoFinal) {
             setTimeout(() => {
                 container.scrollTop = container.scrollHeight;
             }, 50);
+        } else {
+            // Manter posição relativa
+            const proporcao = scrollPosAntes / (alturaAntes - container.clientHeight);
+            container.scrollTop = proporcao * (alturaDepois - container.clientHeight);
         }
         
         // Marcar como visualizado
@@ -5508,7 +5492,7 @@ E-mail automático - Não responda
         return `${users[0]}_${users[1]}`;
     },
 
-    // CORREÇÃO DO SCROLL: Envio de mensagem privada
+    // FIX: CHAT PRIVADO - ENVIO SEM FORÇAR SCROLL
     sendPrivateChatMessage() {
         if (!this.currentUser || !this.currentPrivateChatTarget) {
             alert('Selecione um destinatário primeiro.');
@@ -5864,4 +5848,3 @@ window.onload = () => app.init();
 </script>
 </body>
 </html>
-
