@@ -791,24 +791,28 @@ const app = {
         }
     },
 
-    switchTab(tabId, btn) {
-        document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        
-        document.getElementById(tabId).classList.remove('hidden');
-        btn.classList.add('active');
-        
-        // Se for a aba de chat, carregar mensagens e marcar como visualizado
-        if (tabId === 'tab-chat') {
-            this.loadChat();
-            this.marcarChatComoVisualizado();
+switchTab(tabId, btn) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    
+    document.getElementById(tabId).classList.remove('hidden');
+    btn.classList.add('active');
+    
+    // Se for a aba de chat, carregar mensagens e marcar como visualizado
+    if (tabId === 'tab-chat') {
+        if (typeof chatSystem !== 'undefined') {
+            chatSystem.loadChat();
         }
-        
-        // Se for a aba de chat privado, carregar usuários
-        if (tabId === 'tab-chat-privado') {
-            this.loadPrivateChatUsers();
+        this.marcarChatComoVisualizado();
+    }
+    
+    // Se for a aba de chat privado, carregar usuários
+    if (tabId === 'tab-chat-privado') {
+        if (typeof chatSystem !== 'undefined' && chatSystem.loadPrivateChatUsers) {
+            chatSystem.loadPrivateChatUsers();
         }
-    },
+    }
+},
 
     updateTabCounts() {
         const atas = JSON.parse(localStorage.getItem('porter_atas') || '[]');
