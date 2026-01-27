@@ -52,6 +52,56 @@ const utils = {
     }
 };
 
+// 🔧 FIX 2: Função para detectar atualização de página (F5)
+function detectarAtualizacaoPagina() {
+    // Verificar performance navigation
+    if (window.performance && window.performance.navigation) {
+        const tipoNavegacao = window.performance.navigation.type;
+        
+        // TYPE_RELOAD = 1 (atualização da página)
+        if (tipoNavegacao === 1) {
+            console.log('🔄 Página foi atualizada (F5)');
+            
+            // 🔧 FIX 2: Manter sessão ativa
+            if (typeof app !== 'undefined' && app.currentUser) {
+                console.log('✅ Mantendo sessão do usuário:', app.currentUser.nome);
+                // Atualizar timestamp da sessão
+                app.salvarSessao();
+            }
+        }
+    }
+}
+
+// Executar quando a página carregar
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', detectarAtualizacaoPagina);
+} else {
+    detectarAtualizacaoPagina();
+}
+
+// 🔧 FIX 2: Monitorar o evento beforeunload para salvar sessão
+window.addEventListener('beforeunload', function() {
+    if (typeof app !== 'undefined' && app.currentUser) {
+        // Salvar sessão antes de sair
+        app.salvarSessao();
+    }
+});
+
+// 🔧 FIX 2: Monitorar quando a página volta a ficar visível
+document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'visible') {
+        if (typeof app !== 'undefined' && app.currentUser) {
+            console.log('📱 Página voltou a ficar visível');
+            // Atualizar sessão
+            app.salvarSessao();
+            // Atualizar usuários online
+            if (app.updateOnlineUsers) {
+                app.updateOnlineUsers();
+            }
+        }
+    }
+});
+
 // Tornar funções disponíveis globalmente para compatibilidade
 window.sendChatMessage = chatSystem ? chatSystem.sendChatMessage : utils.sendChatMessage;
 window.loadPrivateChat = chatSystem ? chatSystem.loadPrivateChat : utils.loadPrivateChat;
@@ -59,3 +109,5 @@ window.sendPrivateChatMessage = chatSystem ? chatSystem.sendPrivateChatMessage :
 window.generatePDF = pdfGenerator ? pdfGenerator.generatePDF : utils.generatePDF;
 window.voltarParaFormOS = appEmail ? appEmail.voltarParaFormOS : utils.voltarParaFormOS;
 window.verDetalhesEmailOS = appEmail ? appEmail.verDetalhesEmailOS : utils.verDetalhesEmailOS;
+window.destacarMensagemChat = utils.destacarMensagemChat;
+window.fecharModalEmail = utils.fecharModalEmail;
