@@ -318,3 +318,43 @@ if (document.readyState === 'loading') {
         firebaseHelper.inicializarFirebaseUniversal();
     }, 1000);
 }
+// 🔥 ADICIONE APENAS ISSO NO FINAL DO SEU firebase.js (DEPOIS DA ÚLTIMA LINHA)
+
+// Função SIMPLES para monitorar usuários online
+function configurarMonitoramentoSimples() {
+    if (!window.db) return;
+    
+    console.log('🔧 Configurando monitoramento simples de online...');
+    
+    // Listener SIMPLES para usuários online
+    window.db.collection('online_users')
+        .where('online', '==', true)
+        .onSnapshot(snapshot => {
+            const usuarios = [];
+            snapshot.forEach(doc => {
+                const user = doc.data();
+                // Verificar se não está inativo
+                const ultimaAtividade = new Date(user.lastActivity);
+                const diferencaMinutos = (new Date() - ultimaAtividade) / (1000 * 60);
+                
+                if (diferencaMinutos < 5) { // Apenas usuários ativos nos últimos 5 minutos
+                    usuarios.push(user);
+                }
+            });
+            
+            // Salvar no localStorage
+            localStorage.setItem('porter_online_simples', JSON.stringify({
+                timestamp: new Date().toISOString(),
+                users: usuarios
+            }));
+            
+            console.log('👥 Usuários online atualizados:', usuarios.length);
+        });
+}
+
+// Inicializar SIMPLES
+setTimeout(() => {
+    if (window.db) {
+        configurarMonitoramentoSimples();
+    }
+}, 3000);
