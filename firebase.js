@@ -153,14 +153,14 @@ const firebaseHelper = {
                 // Atualizar interface se estiver na aba de OS
                 if (document.getElementById('tab-os') && 
                     !document.getElementById('tab-os').classList.contains('hidden')) {
-                    if (typeof app !== 'undefined' && app.renderOS) {
-                        app.renderOS();
+                    if (typeof window.app !== 'undefined' && window.app.renderOS) {
+                        window.app.renderOS();
                     }
                 }
                 
                 // Atualizar contagem de OS
-                if (typeof app !== 'undefined' && app.updateTabCounts) {
-                    app.updateTabCounts();
+                if (typeof window.app !== 'undefined' && window.app.updateTabCounts) {
+                    window.app.updateTabCounts();
                 }
                 
                 console.log('✅ OS sincronizadas do Firebase:', osList.length);
@@ -193,20 +193,20 @@ const firebaseHelper = {
 
     // 🔧 FIX 2: CORREÇÃO DO ONLINE - Nova função para sincronizar status online com Firebase
     sincronizarStatusOnlineComFirebase() {
-        if (!window.db || !app || !app.currentUser) return;
+        if (!window.db || !window.app || !window.app.currentUser) return;
         
         const statusOnline = {
-            user: app.currentUser.user,
-            nome: app.currentUser.nome,
-            role: app.currentUser.role,
-            mood: app.getMoodAtual ? app.getMoodAtual() : 'Normal',
+            user: window.app.currentUser.user,
+            nome: window.app.currentUser.nome,
+            role: window.app.currentUser.role,
+            mood: window.app.getMoodAtual ? window.app.getMoodAtual() : 'Normal',
             lastActivity: new Date().toISOString(),
             online: true,
-            turno: app.currentUser.turno || 'Diurno'
+            turno: window.app.currentUser.turno || 'Diurno'
         };
         
         // Salvar no Firebase
-        window.db.collection('online_users').doc(app.currentUser.user).set(statusOnline)
+        window.db.collection('online_users').doc(window.app.currentUser.user).set(statusOnline)
             .then(() => {
                 console.log('✅ Status online sincronizado com Firebase');
             })
@@ -245,7 +245,7 @@ const firebaseHelper = {
                 });
                 
                 // Atualizar lista local
-                if (typeof app !== 'undefined') {
+                if (typeof window.app !== 'undefined') {
                     // Salvar no localStorage para o app.js usar
                     localStorage.setItem('porter_online_firebase', JSON.stringify({
                         timestamp: new Date().toISOString(),
@@ -253,8 +253,8 @@ const firebaseHelper = {
                     }));
                     
                     // Forçar atualização da lista de online
-                    if (app.currentUser && app.updateOnlineUsers) {
-                        app.updateOnlineUsers();
+                    if (window.app.currentUser && window.app.updateOnlineUsers) {
+                        window.app.updateOnlineUsers();
                     }
                 }
                 
@@ -283,14 +283,14 @@ const firebaseHelper = {
                 // Atualizar interface se estiver na aba de chat
                 if (document.getElementById('tab-chat') && 
                     !document.getElementById('tab-chat').classList.contains('hidden')) {
-                    if (typeof chatSystem !== 'undefined' && chatSystem.loadChat) {
-                        chatSystem.loadChat();
+                    if (typeof window.chatSystem !== 'undefined' && window.chatSystem.loadChat) {
+                        window.chatSystem.loadChat();
                     }
                 }
                 
                 // Atualizar badge
-                if (typeof app !== 'undefined' && app.atualizarBadgeChat) {
-                    app.atualizarBadgeChat();
+                if (typeof window.app !== 'undefined' && window.app.atualizarBadgeChat) {
+                    window.app.atualizarBadgeChat();
                 }
             }, error => {
                 console.error('Erro no listener do chat:', error);
@@ -313,10 +313,14 @@ const firebaseHelper = {
                 // Atualizar localStorage
                 localStorage.setItem('porter_notificacoes', JSON.stringify(notificacoes));
                 
-                // Atualizar interface
-                if (typeof app !== 'undefined') {
-                    app.loadNotifications();
-                    app.updateNotificationBadges();
+                // Atualizar interface apenas se app estiver definido e tiver a função
+                if (typeof window.app !== 'undefined') {
+                    if (window.app.loadNotifications && typeof window.app.loadNotifications === 'function') {
+                        window.app.loadNotifications();
+                    }
+                    if (window.app.updateNotificationBadges && typeof window.app.updateNotificationBadges === 'function') {
+                        window.app.updateNotificationBadges();
+                    }
                 }
             }, error => {
                 console.error('Erro no listener de notificações:', error);
@@ -325,13 +329,13 @@ const firebaseHelper = {
 
     // 🔧 FIX 2: Marcar usuário como offline
     marcarUsuarioOffline() {
-        if (!window.db || !app || !app.currentUser) return;
+        if (!window.db || !window.app || !window.app.currentUser) return;
         
-        window.db.collection('online_users').doc(app.currentUser.user).update({
+        window.db.collection('online_users').doc(window.app.currentUser.user).update({
             online: false,
             lastActivity: new Date().toISOString()
         }).then(() => {
-            console.log('✅ Usuário marcado como offline:', app.currentUser.user);
+            console.log('✅ Usuário marcado como offline:', window.app.currentUser.user);
         }).catch(error => {
             console.error('❌ Erro ao marcar usuário como offline:', error);
         });
@@ -358,7 +362,7 @@ const firebaseHelper = {
         
         // 🔧 FIX 2: Sincronizar status online periodicamente
         setInterval(() => {
-            if (app && app.currentUser) {
+            if (window.app && window.app.currentUser) {
                 this.sincronizarStatusOnlineComFirebase();
             }
         }, 10000); // A cada 10 segundos
@@ -373,20 +377,33 @@ const firebaseHelper = {
             this.marcarUsuarioOffline();
         });
         
-        // Inicializar status online do usuário atual
-        if (app && app.currentUser) {
-            setTimeout(() => {
+        // Inicializar status online do usuário atual (com delay para app carregar)
+        setTimeout(() => {
+            if (window.app && window.app.currentUser) {
                 this.sincronizarStatusOnlineComFirebase();
-            }, 2000);
-        }
+            }
+        }, 3000);
     }
 };
+
+// CORREÇÃO: Aguardar app carregar antes de inicializar
+function inicializarFirebaseAposApp() {
+    // Verificar se app está definido
+    if (typeof window.app !== 'undefined') {
+        firebaseHelper.inicializarFirebase();
+    } else {
+        // Se app não está definido ainda, tentar novamente em 1 segundo
+        console.log('⚠️ App não está definido, aguardando...');
+        setTimeout(inicializarFirebaseAposApp, 1000);
+    }
+}
 
 // Inicializar quando a página carregar
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
-        firebaseHelper.inicializarFirebase();
+        // Aguardar um pouco para app.js carregar primeiro
+        setTimeout(inicializarFirebaseAposApp, 500);
     });
 } else {
-    firebaseHelper.inicializarFirebase();
+    setTimeout(inicializarFirebaseAposApp, 500);
 }
