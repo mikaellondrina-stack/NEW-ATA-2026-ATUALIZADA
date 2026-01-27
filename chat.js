@@ -223,96 +223,13 @@ const chatSystem = {
         }
     },
 
-    // 🔧 FIX 1: CHAT PRIVADO - FUNÇÃO CORRIGIDA
+    // 🔧 CORREÇÃO: CHAT PRIVADO - FUNÇÃO CORRIGIDA
     loadPrivateChatUsers() {
-        if (!app.currentUser) return;
-        
-        const select = document.getElementById('private-chat-target');
-        if (!select) return;
-        
-        // Limpar opções existentes
-        select.innerHTML = '<option value="">Selecione um operador...</option>';
-        
-        // 🔧 FIX 1: Buscar usuários online do Firebase em vez de apenas dados locais
-        const onlineData = localStorage.getItem('porter_online_firebase');
-        let usuariosDisponiveis = [];
-        
-        if (onlineData) {
-            try {
-                const data = JSON.parse(onlineData);
-                const dataTime = new Date(data.timestamp);
-                const agora = new Date();
-                const diferencaSegundos = (agora - dataTime) / 1000;
-                
-                if (diferencaSegundos < 10) { // Dados recentes do Firebase
-                    usuariosDisponiveis = data.users || [];
-                }
-            } catch (e) {
-                console.error('Erro ao parsear dados online:', e);
-            }
+        // Esta função agora é gerenciada pelo app.js
+        // O app.js atualiza a lista com os usuários online corretos
+        if (app && app.loadPrivateChatUsers) {
+            app.loadPrivateChatUsers();
         }
-        
-        // 🔧 FIX 1: Se não tiver dados do Firebase, usar dados locais como fallback
-        if (usuariosDisponiveis.length === 0) {
-            // Adicionar funcionários (exceto o usuário atual)
-            DATA.funcionarios.forEach(f => {
-                if (f.user !== app.currentUser.user) {
-                    usuariosDisponiveis.push({
-                        nome: f.nome,
-                        user: f.user,
-                        role: f.role,
-                        online: true
-                    });
-                }
-            });
-            
-            // Adicionar técnicos (exceto o usuário atual)
-            DATA.tecnicos.forEach(t => {
-                const tecUser = t.nome.split(' - ')[0].toLowerCase().replace(/\s+/g, '.');
-                if (tecUser !== app.currentUser.user) {
-                    usuariosDisponiveis.push({
-                        nome: t.nome,
-                        user: tecUser,
-                        role: 'TÉCNICO',
-                        online: true
-                    });
-                }
-            });
-        } else {
-            // 🔧 FIX 1: Filtrar apenas usuários que existem no sistema (não o usuário atual)
-            usuariosDisponiveis = usuariosDisponiveis.filter(user => 
-                user.user !== app.currentUser.user
-            );
-        }
-        
-        // Ordenar por nome
-        usuariosDisponiveis.sort((a, b) => a.nome.localeCompare(b.nome));
-        
-        // Adicionar opções ao select
-        usuariosDisponiveis.forEach(usuario => {
-            const option = document.createElement('option');
-            option.value = usuario.user;
-            
-            // Formatar texto da opção
-            let texto = usuario.nome;
-            if (usuario.role === 'ADMIN') {
-                texto += ' 👑';
-            } else if (usuario.role === 'TÉCNICO') {
-                texto += ' 🔧';
-            }
-            
-            // 🔧 FIX 1: Indicar status online
-            if (usuario.online) {
-                texto += ' 🟢';
-            } else {
-                texto += ' ⚫';
-            }
-            
-            option.textContent = texto;
-            select.appendChild(option);
-        });
-        
-        console.log('✅ Chat privado: ' + usuariosDisponiveis.length + ' usuários carregados');
     },
 
     loadPrivateChat() {
