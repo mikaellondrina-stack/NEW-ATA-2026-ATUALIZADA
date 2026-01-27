@@ -203,24 +203,27 @@ const app = {
     },
 
     setupOnlineTracking() {
-        // 🔧 CORREÇÃO: Atualizar status online a cada 20 segundos
-        if (this.onlineInterval) {
-            clearInterval(this.onlineInterval);
-        }
-        
-        this.onlineInterval = setInterval(() => {
-            if (this.currentUser) {
-                this.updateOnlineUsers();
-            }
-        }, 20000);
-        
-        // Inicializar imediatamente
-        setTimeout(() => {
+    console.log('🔧 Configurando tracking otimizado (60s)...');
+    
+    // Parar intervalo anterior
+    if (this.onlineInterval) {
+        clearInterval(this.onlineInterval);
+    }
+    
+    // 🔥 REDUZIR FREQUÊNCIA para 60 segundos (em vez de 20)
+    this.onlineInterval = setInterval(() => {
+        if (this.currentUser) {
             this.updateOnlineUsers();
-        }, 1000);
-        
-        console.log('✅ Online tracking configurado');
-    },
+        }
+    }, 60000); // 60 SEGUNDOS!
+    
+    // Primeira execução
+    setTimeout(() => {
+        if (this.currentUser) {
+            this.updateOnlineUsers();
+        }
+    }, 3000);
+},
 
     getMoodStatusTexto(mood) {
         const statusMap = {
