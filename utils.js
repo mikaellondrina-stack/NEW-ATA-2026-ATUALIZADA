@@ -93,14 +93,18 @@ document.addEventListener('visibilitychange', function() {
         if (typeof app !== 'undefined' && app.currentUser) {
             console.log('📱 Página voltou a ficar visível');
             // Atualizar sessão
-            app.salvarSessao();
-            // Atualizar usuários online
-            if (app.updateOnlineUsers) {
-                app.updateOnlineUsers();
-            }
-        }
+        if (app && typeof app.salvarSessao === 'function') {
+    app.salvarSessao();
+} else {
+    console.log('⚠️ app.salvarSessao não está disponível, usando fallback');
+    // Fallback: salvar sessão manualmente
+    if (app && app.currentUser) {
+        localStorage.setItem('porter_sessao', JSON.stringify({
+            user: app.currentUser,
+            timestamp: new Date().toISOString()
+        }));
     }
-});
+}
 
 // Tornar funções disponíveis globalmente para compatibilidade
 window.sendChatMessage = chatSystem ? chatSystem.sendChatMessage : utils.sendChatMessage;
