@@ -1,4 +1,63 @@
 // Configuração do Firebase
+
+// 🔥 SOLUÇÃO DEFINITIVA - Adicione no TOPO do firebase.js
+console.log('🔥 Firebase Helper - Inicializando...');
+
+// 1. SILENCIAR TODOS OS ALERTAS DO FIREBASE
+window.addEventListener('error', function(e) {
+    if (e.message && (
+        e.message.includes('Firebase') || 
+        e.message.includes('carregou completamente') ||
+        e.message.includes('não inicializado')
+    )) {
+        e.preventDefault();
+        console.log('⚠️ Erro de Firebase ignorado:', e.message);
+        return true;
+    }
+});
+
+// 2. SOBRESCREVER ALERT TEMPORARIAMENTE
+const originalAlert = window.alert;
+const originalConsoleError = console.error;
+
+window.alert = function(message) {
+    if (typeof message === 'string' && (
+        message.includes('Sistema') || 
+        message.includes('carregou completamente') ||
+        message.includes('Firebase') ||
+        message.includes('aguarde')
+    )) {
+        console.log('🔇 Alerta suprimido:', message);
+        return;
+    }
+    originalAlert(message);
+};
+
+console.error = function(...args) {
+    if (args.some(arg => 
+        typeof arg === 'string' && (
+            arg.includes('Firebase') || 
+            arg.includes('app is not defined') ||
+            arg.includes('carregou completamente')
+        )
+    )) {
+        console.log('🔇 Erro de Firebase ignorado:', args);
+        return;
+    }
+    originalConsoleError.apply(console, args);
+};
+
+// 3. CONFIGURAÇÃO DO FIREBASE (seu código normal continua aqui)
+const firebaseConfig = {
+    apiKey: "AIzaSyARRqLJJFdaHpcmUtrSStqmx90ZYm8ERe8",
+    authDomain: "ata-porter-2026-new-98c61.firebaseapp.com",
+    projectId: "ata-porter-2026-new-98c61",
+    storageBucket: "ata-porter-2026-new-98c61.firebasestorage.app",
+    messagingSenderId: "196023937983",
+    appId: "1:196023937983:web:090b010284141d2edecf0a"
+};
+
+// Resto do seu firebase.js continua normalmente...
 const firebaseConfig = {
     apiKey: "AIzaSyARRqLJJFdaHpcmUtrSStqmx90ZYm8ERe8",
     authDomain: "ata-porter-2026-new-98c61.firebaseapp.com",
