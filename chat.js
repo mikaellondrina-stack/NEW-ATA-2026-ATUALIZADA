@@ -489,3 +489,225 @@ document.addEventListener('DOMContentLoaded', () => {
         observerPrivate.observe(chatPrivateTab, { attributes: true });
     }
 });
+// 🔧 FIX: Integração com Firebase para chat universal
+chatSystem.enviarChatComFirebase = function() {
+    if (!app.currentUser) {
+        alert('Você precisa estar logado para enviar mensagens.');
+        return;
+    }
+    
+    const input = document.getElementById('chat-input');
+    const message = input.value.trim();
+    
+    if (!message) return;
+    
+    const sendBtn = document.getElementById('chat-send-btn');
+    const originalHTML = sendBtn.innerHTML;
+    sendBtn.innerHTML = '<div class="loading"></div>';
+    sendBtn.disabled = true;
+    
+    const chatMessage = {
+        id: Date.now(),
+        sender: app.currentUser.nome,
+        senderRole: app.currentUser.role,
+        senderMood: app.getMoodAtual(),
+        message: message,
+        time: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
+        timestamp: new Date().toISOString(),
+        date: new Date().toLocaleDateString('pt-BR')
+    };
+    
+    // 1. Tentar enviar via Firebase primeiro
+    if (typeof chatFirebase !== 'undefined' && chatFirebase.enviarMensagemGeral) {
+        chatFirebase.enviarMensagemGeral(chatMessage)
+            .then(sucessoFirebase => {
+                if (sucessoFirebase) {
+                    console.log('✅ Mensagem enviada via Firebase');
+                } else {
+                    // Fallback: salvar localmente
+                    this.salvarMensagemLocal(chatMessage);
+                }
+                
+                // Limpar campo e restaurar botão
+                input.value = '';
+                sendBtn.innerHTML = originalHTML;
+                sendBtn.disabled = false;
+                input.focus();
+                
+                // Recarregar chat
+                this.loadChat();
+                
+                // Scroll para baixo
+                setTimeout(() => {
+                    this.scrollToBottom();
+                }, 100);
+            });
+    } else {
+        // Firebase não disponível, usar localStorage
+        this.salvarMensagemLocal(chatMessage);
+        
+        // Limpar campo e restaurar botão
+        input.value = '';
+        sendBtn.innerHTML = originalHTML;
+        sendBtn.disabled = false;
+        input.focus();
+        
+        // Recarregar chat
+        this.loadChat();
+        
+        // Scroll para baixo
+        setTimeout(() => {
+            this.scrollToBottom();
+        }, 100);
+    }
+};
+
+// 🔧 Função para salvar mensagem localmente (fallback)
+chatSystem.salvarMensagemLocal = function(chatMessage) {
+    let chat = JSON.parse(localStorage.getItem('porter_chat') || '[]');
+    chat.push(chatMessage);
+    
+    if (chat.length > 200) chat = chat.slice(-200);
+    localStorage.setItem('porter_chat', JSON.stringify(chat));
+    
+    // Criar notificação
+    app.criarNotificacaoChatComAcao(chatMessage);
+};
+
+// 🔧 FIX: Atualizar função sendChatMessage para usar Firebase
+chatSystem.sendChatMessage = function() {
+    if (typeof chatFirebase !== 'undefined' && chatFirebase.enviarChatComFirebase) {
+        this.enviarChatComFirebase();
+    } else {
+        // Fallback para função original
+        this.sendChatMessageOriginal();
+    }
+};
+
+// 🔧 Salvar função original como backup
+chatSystem.sendChatMessageOriginal = chatSystem.sendChatMessage;
+
+// 🔧 FIX: Chat privado com Firebase
+chatSystem.enviarChatPrivadoComFirebase = function() {
+    if (!app.currentUser || !app.currentPrivateChatTarget) {
+        alert('Selecione um destinatário primeiro.');
+        return;
+    }
+    
+    const input = document.getElementById('chat-private-input');
+    const message = input.value.trim();
+    
+    if (!message) return;
+    
+    const sendBtn = document.getElementById('chat-private-send-btn');
+    const originalHTML = sendBtn.innerHTML;
+    sendBtn.innerHTML = '<div class="loading"></div>';
+    sendBtn.disabled = true;
+    
+    // Gerar ID da conversa
+    const chatId = this.getPrivateChatId(app.currentUser.user, app.currentPrivateChatTarget);
+    
+    const chatMessage = {
+        id: Date.now(),
+        sender: app.currentUser.user,
+        senderName: app.currentUser.nome,
+        senderRole: app.currentUser.role,
+        senderMood: app.getMoodAtual(),
+        receiver: app.currentPrivateChatTarget,
+        message: message,
+        time: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
+        timestamp: new Date().toISOString(),
+        date: new Date().toLocaleDateString('pt-BR')
+    };
+    
+    // 1. Tentar enviar via Firebase primeiro
+    if (typeof chatFirebase !== 'undefined' && chatFirebase.enviarMensagemPrivada) {
+        chatFirebase.enviarMensagemPrivada(chatMessage)
+            .then(sucessoFirebase => {
+                if (sucessoFirebase) {
+                    console.log('✅ Mensagem privada enviada via Firebase');
+                }
+                
+                // Sempre salvar localmente também
+                this.salvarMensagemPrivadaLocal(chatId, chatMessage);
+                
+                // Limpar campo e restaurar botão
+                input.value = '';
+                sendBtn.innerHTML = originalHTML;
+                sendBtn.disabled = false;
+                input.focus();
+                
+                // Recarregar chat
+                this.loadPrivateChat();
+                
+                // Scroll para baixo
+                setTimeout(() => {
+                    const privateContainer = document.getElementById('chat-private-messages');
+                    if (privateContainer) {
+                        privateContainer.scrollTop = privateContainer.scrollHeight;
+                    }
+                }, 100);
+            });
+    } else {
+        // Firebase não disponível, usar localStorage
+        this.salvarMensagemPrivadaLocal(chatId, chatMessage);
+        
+        // Limpar campo e restaurar botão
+        input.value = '';
+        sendBtn.innerHTML = originalHTML;
+        sendBtn.disabled = false;
+        input.focus();
+        
+        // Recarregar chat
+        this.loadPrivateChat();
+        
+        // Scroll para baixo
+        setTimeout(() => {
+            const privateContainer = document.getElementById('chat-private-messages');
+            if (privateContainer) {
+                privateContainer.scrollTop = privateContainer.scrollHeight;
+            }
+        }, 100);
+    }
+};
+
+// 🔧 Função para salvar mensagem privada localmente
+chatSystem.salvarMensagemPrivadaLocal = function(chatId, chatMessage) {
+    // Carregar conversas existentes
+    let privateChats = JSON.parse(localStorage.getItem('porter_chat_privado') || '{}');
+    
+    // Inicializar array se não existir
+    if (!privateChats[chatId]) {
+        privateChats[chatId] = [];
+    }
+    
+    // Adicionar mensagem
+    privateChats[chatId].push(chatMessage);
+    
+    // Limitar histórico (últimas 100 mensagens por conversa)
+    if (privateChats[chatId].length > 100) {
+        privateChats[chatId] = privateChats[chatId].slice(-100);
+    }
+    
+    // Salvar
+    localStorage.setItem('porter_chat_privado', JSON.stringify(privateChats));
+    
+    // Atualizar badge
+    app.atualizarBadgeChatPrivado();
+    
+    // Criar notificação para o destinatário
+    this.criarNotificacaoChatPrivado(chatMessage);
+};
+
+// 🔧 FIX: Atualizar função sendPrivateChatMessage para usar Firebase
+chatSystem.sendPrivateChatMessage = function() {
+    if (typeof chatFirebase !== 'undefined' && chatFirebase.enviarChatPrivadoComFirebase) {
+        this.enviarChatPrivadoComFirebase();
+    } else {
+        // Fallback para função original
+        this.sendPrivateChatMessageOriginal();
+    }
+};
+
+// 🔧 Salvar função original como backup
+chatSystem.sendPrivateChatMessageOriginal = chatSystem.sendPrivateChatMessage;
