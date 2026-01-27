@@ -1,11 +1,11 @@
-// Configuração do Firebase
+// Configuração do Firebase (atualizada com seu projeto)
 const firebaseConfig = {
-    apiKey: "AIzaSyARRqLJJFdaHpcmUtrSStqmx90ZYm8ERe8",
-    authDomain: "ata-porter-2026-new-98c61.firebaseapp.com",
-    projectId: "ata-porter-2026-new-98c61",
-    storageBucket: "ata-porter-2026-new-98c61.firebasestorage.app",
-    messagingSenderId: "196023937983",
-    appId: "1:196023937983:web:090b010284141d2edecf0a"
+    apiKey: "AIzaSyDma392hveHDF6NShluBGbmGc3FYxc7ogA",
+    authDomain: "porter-ata-2026-v2.firebaseapp.com",
+    projectId: "porter-ata-2026-v2",
+    storageBucket: "porter-ata-2026-v2.firebasestorage.app",
+    messagingSenderId: "474353492973",
+    appId: "1:474353492973:web:a0409eeabf13cb201ffde4"
 };
 
 // Inicializar Firebase apenas se ainda não foi inicializado
@@ -290,7 +290,7 @@ const firebaseHelper = {
             return;
         }
         
-        console.log('✅ Firebase inicializado com sucesso');
+        console.log('✅ Firebase inicializado com sucesso - Projeto: porter-ata-2026-v2');
         
         // 🔧 FIX 1: Configurar listener para OS
         this.configurarOSFirebase();
