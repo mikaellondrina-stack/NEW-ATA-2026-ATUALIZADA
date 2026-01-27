@@ -188,26 +188,33 @@ const firebaseHelper = {
     },
 
     // 🔧 FIX 3: Nova função para monitorar usuários online no Firebase
-    configurarMonitoramentoOnlineFirebase() {
-        if (!window.db) return;
-        
-        window.db.collection('online_users')
-            .where('online', '==', true)
-            .onSnapshot(snapshot => {
-                const usuariosOnlineFirebase = [];
-                snapshot.forEach(doc => {
-                    const usuario = doc.data();
-                    // Verificar se não está "morto" (última atividade há mais de 3 minutos)
-                    const ultimaAtividade = new Date(usuario.lastActivity);
-                    const agora = new Date();
-                    const diferencaMinutos = (agora - ultimaAtividade) / (1000 * 60);
-                    
-                    if (diferencaMinutos < 3) { // Considerar online se ativo nos últimos 3 minutos
-                        usuariosOnlineFirebase.push(usuario);
-                    }
-                });
+  // Encontre a função configurarMonitoramentoOnlineFirebase no firebase.js e substitua por:
+
+configurarMonitoramentoOnlineFirebase() {
+    if (!window.db) return;
+    
+    window.db.collection('online_users')
+        .where('online', '==', true)
+        .onSnapshot(snapshot => {
+            const usuariosOnlineFirebase = [];
+            snapshot.forEach(doc => {
+                const usuario = doc.data();
+                // Verificar se não está "morto" (última atividade há mais de 3 minutos)
+                const ultimaAtividade = new Date(usuario.lastActivity);
+                const agora = new Date();
+                const diferencaMinutos = (agora - ultimaAtividade) / (1000 * 60);
                 
-                // Atualizar lista local
+                if (diferencaMinutos < 3) { // Considerar online se ativo nos últimos 3 minutos
+                    usuariosOnlineFirebase.push(usuario);
+                } else {
+                    // Marcar como offline no Firebase
+                    window.db.collection('online_users').doc(doc.id).update({
+                        online: false
+                    }).catch(() => {});
+                }
+            });
+                
+ // Atualizar lista local
                 if (typeof app !== 'undefined') {
                     // Salvar no localStorage para o app.js usar
                     localStorage.setItem('porter_online_firebase', JSON.stringify({
