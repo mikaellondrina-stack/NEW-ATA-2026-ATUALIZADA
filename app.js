@@ -621,6 +621,9 @@ const app = {
             localStorage.setItem('porter_presencas', JSON.stringify(presencas));
             
             this.showApp();
+            
+            // Carregar usuários do chat privado
+            chatSystem.loadPrivateChatUsers();
         } else {
             // 🆕 VERIFICAR SE É TÉCNICO
             const tecnico = DATA.tecnicos.find(t => {
@@ -657,6 +660,9 @@ const app = {
                 localStorage.setItem('porter_presencas', JSON.stringify(presencas));
                 
                 this.showApp();
+                
+                // Carregar usuários do chat privado
+                chatSystem.loadPrivateChatUsers();
             } else {
                 alert('Credenciais inválidas! Verifique usuário e senha.');
             }
