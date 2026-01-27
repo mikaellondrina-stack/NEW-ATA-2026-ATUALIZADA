@@ -239,37 +239,86 @@ const app = {
     // 🔧 CORREÇÃO: Função completamente reformulada para sincronização universal
    // NO app.js - FUNÇÃO OTIMIZADA PARA QUOTA
 updateOnlineUsers() {
-    if (!this.currentUser) {
-        console.log('❌ Usuário não logado');
-        return;
-    }
+    if (!this.currentUser) return;
     
-    console.log('🔄 Atualizando lista (otimizado)...');
+    console.log('🔄 Atualizando lista universal...');
     
-    // 1. SINCRONIZAR status (com controle de quota)
-    if (typeof FirebaseOptimized !== 'undefined' && FirebaseOptimized.sincronizarStatusOnline) {
-        FirebaseOptimized.sincronizarStatusOnline();
-    }
-    
-    // 2. BUSCAR outros usuários (com cache e backup)
-    const buscarUsuarios = () => {
-        if (typeof FirebaseOptimized !== 'undefined' && FirebaseOptimized.buscarUsuariosOnline) {
-            FirebaseOptimized.buscarUsuariosOnline()
-                .then(outrosUsuarios => {
-                    this.processarUsuariosOnline(outrosUsuarios);
-                })
-                .catch(() => {
-                    // Se falhar, usar backup local
-                    const backup = JSON.parse(localStorage.getItem('porter_online_backup') || '{"users":[]}');
-                    this.processarUsuariosOnline(backup.users || []);
-                });
-        } else {
-            // Fallback para método antigo
-            this.processarUsuariosOnline([]);
+    // 1. Usar sistema universal se disponível
+    if (typeof PorterUniversal !== 'undefined' && PorterUniversal.atualizarStatus) {
+        PorterUniversal.atualizarStatus();
+    } else {
+        // Fallback para método antigo
+        if (window.db) {
+            window.db.collection('online_users')
+                .doc(this.currentUser.user)
+                .set({
+                    user: this.currentUser.user,
+                    nome: this.currentUser.nome,
+                    lastActivity: new Date().toISOString(),
+                    online: true,
+                    turno: this.currentUser.turno
+                }, { merge: true })
+                .catch(e => console.log('Firebase:', e.message));
         }
-    };
+    }
     
-    // Executar busca
+    // 2. Usar dados do localStorage (atualizados pelo listener)
+    try {
+        const dados = JSON.parse(localStorage.getItem('porter_universal') || '{"users":[]}');
+        const agora = new Date();
+        const dataTime = new Date(dados.timestamp);
+        const segundos = (agora - dataTime) / 1000;
+        
+        if (segundos < 30) { // Dados recentes
+            this.processarUsuariosSincronizados(dados.users);
+        } else {
+            console.log('⚠️ Dados muito antigos:', segundos.toFixed(0) + 's');
+        }
+    } catch (e) {
+        console.error('❌ Erro ao processar dados:', e);
+    }
+},
+
+// ADICIONE ESTA FUNÇÃO NO app.js
+processarUsuariosSincronizados: function(usuariosSincronizados) {
+    // Filtrar usuário atual
+    const outros = usuariosSincronizados
+        .filter(u => u.user !== this.currentUser.user)
+        .map(u => ({
+            ...u,
+            isCurrentUser: false,
+            moodStatus: this.getMoodStatusTexto(u.mood || '😐')
+        }));
+    
+    // Adicionar usuário atual
+    const todos = [
+        {
+            ...this.currentUser,
+            lastActivity: new Date().toISOString(),
+            mood: this.getMoodAtual(),
+            moodStatus: this.getMoodStatusTexto(this.getMoodAtual()),
+            isCurrentUser: true,
+            online: true
+        },
+        ...outros
+    ];
+    
+    this.onlineUsers = todos;
+    
+    // Atualizar interface
+    const onlineCount = document.getElementById('online-count');
+    if (onlineCount) {
+        onlineCount.textContent = todos.length;
+        onlineCount.style.color = todos.length > 1 ? '#2ecc71' : '#f39c12';
+    }
+    
+    const onlineList = document.getElementById('online-users-list');
+    if (onlineList && onlineList.style.display === 'block') {
+        this.renderOnlineUsersList();
+    }
+    
+    console.log(`✅ ${todos.length} usuários online`);
+},
     buscarUsuarios();
 },
 
