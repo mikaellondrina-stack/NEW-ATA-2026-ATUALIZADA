@@ -278,11 +278,10 @@ updateOnlineUsers() {
         console.error('❌ Erro ao processar dados:', e);
     }
 },
-
-// ADICIONE ESTA FUNÇÃO NO app.js
-processarUsuariosSincronizados: function(usuariosSincronizados) {
+    
+processarUsuariosOuvidos: function(usuarios) {
     // Filtrar usuário atual
-    const outros = usuariosSincronizados
+    const outros = usuarios
         .filter(u => u.user !== this.currentUser.user)
         .map(u => ({
             ...u,
@@ -306,18 +305,27 @@ processarUsuariosSincronizados: function(usuariosSincronizados) {
     this.onlineUsers = todos;
     
     // Atualizar interface
-    const onlineCount = document.getElementById('online-count');
-    if (onlineCount) {
-        onlineCount.textContent = todos.length;
-        onlineCount.style.color = todos.length > 1 ? '#2ecc71' : '#f39c12';
+    this.atualizarInterfaceOnline();
+    
+    console.log(`🌐 ${todos.length} usuários conectados`);
+},
+
+// E ATUALIZE updateOnlineUsers para:
+updateOnlineUsers() {
+    if (!this.currentUser) return;
+    
+    // 1. Atualizar meu status
+    if (typeof FirebaseUniversal !== 'undefined' && FirebaseUniversal.atualizarMeuStatus) {
+        FirebaseUniversal.atualizarMeuStatus();
     }
     
-    const onlineList = document.getElementById('online-users-list');
-    if (onlineList && onlineList.style.display === 'block') {
-        this.renderOnlineUsersList();
-    }
-    
-    console.log(`✅ ${todos.length} usuários online`);
+    // 2. Usar dados ouvidos (se existirem)
+    try {
+        const dados = JSON.parse(localStorage.getItem('porter_online_ouvido') || '{}');
+        if (dados.users && dados.users.length > 0) {
+            this.processarUsuariosOuvidos(dados.users);
+        }
+    } catch (e) {}
 },
     buscarUsuarios();
 },
