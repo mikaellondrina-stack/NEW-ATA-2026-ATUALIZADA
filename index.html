@@ -654,11 +654,10 @@
 
 <!-- Nossos scripts (em ordem alfabética) -->
 <script src="data.js"></script>
-<script src="firebase.js"></script>
-<script src="chat-firebase.js"></script> <!-- NOVO: Chat universal via Firebase -->
+<script src="firebase.js"></script> <!-- Firebase PRIMEIRO -->
 <script src="app.js"></script>
 <script src="app-email.js"></script>
-<script src="chat.js"></script>
+<script src="chat.js"></script> <!-- Chat DEPOIS do app.js -->
 <script src="pdf.js"></script>
 <script src="utils.js"></script>
 <!-- 🔧 CORREÇÃO: Inicialização segura do sistema -->
@@ -747,6 +746,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 </body>
 </html>
+
 
 
 
