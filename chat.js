@@ -209,37 +209,65 @@ const chatSystem = {
         app.criarNotificacaoChatComAcao(chatMessage);
     },
 
-    // CHAT PRIVADO
+    // 🔧 FIX 1: CHAT PRIVADO - FUNÇÃO CORRIGIDA
     loadPrivateChatUsers() {
         if (!app.currentUser) return;
         
         const select = document.getElementById('private-chat-target');
         if (!select) return;
         
+        // Limpar opções existentes
         select.innerHTML = '<option value="">Selecione um operador...</option>';
         
-        // Filtrar para não incluir o usuário atual
-        const outrosOperadores = DATA.funcionarios.filter(f => 
-            f.user !== app.currentUser.user
-        );
+        // Obter todos os usuários disponíveis
+        const todosUsuarios = [];
         
-        outrosOperadores.forEach(op => {
+        // Adicionar funcionários (exceto o usuário atual)
+        DATA.funcionarios.forEach(f => {
+            if (f.user !== app.currentUser.user) {
+                todosUsuarios.push({
+                    nome: f.nome,
+                    user: f.user,
+                    role: f.role,
+                    tipo: 'funcionario'
+                });
+            }
+        });
+        
+        // Adicionar técnicos (exceto o usuário atual)
+        DATA.tecnicos.forEach(t => {
+            const tecUser = t.nome.split(' - ')[0].toLowerCase().replace(/\s+/g, '.');
+            if (tecUser !== app.currentUser.user) {
+                todosUsuarios.push({
+                    nome: t.nome,
+                    user: tecUser,
+                    role: 'TÉCNICO',
+                    tipo: 'tecnico'
+                });
+            }
+        });
+        
+        // Ordenar por nome
+        todosUsuarios.sort((a, b) => a.nome.localeCompare(b.nome));
+        
+        // Adicionar opções ao select
+        todosUsuarios.forEach(usuario => {
             const option = document.createElement('option');
-            option.value = op.user;
-            option.textContent = `${op.nome} (${op.role})`;
+            option.value = usuario.user;
+            
+            // Formatar texto da opção
+            let texto = usuario.nome;
+            if (usuario.role === 'ADMIN') {
+                texto += ' 👑';
+            } else if (usuario.role === 'TÉCNICO') {
+                texto += ' 🔧';
+            }
+            
+            option.textContent = texto;
             select.appendChild(option);
         });
         
-        // ADICIONAR TÉCNICOS À LISTA
-        DATA.tecnicos.forEach(tec => {
-            const tecUser = tec.nome.split(' - ')[0].toLowerCase().replace(/\s+/g, '.');
-            if (tecUser !== app.currentUser.user) {
-                const option = document.createElement('option');
-                option.value = tecUser;
-                option.textContent = `${tec.nome} (TÉCNICO)`;
-                select.appendChild(option);
-            }
-        });
+        console.log('✅ Chat privado: ' + todosUsuarios.length + ' usuários carregados');
     },
 
     loadPrivateChat() {
