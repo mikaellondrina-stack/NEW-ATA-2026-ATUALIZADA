@@ -499,30 +499,36 @@ const app = {
     },
 
     // 🔧 FIX 2: Função de salvar sessão melhorada
-    salvarSessao() {
-        if (!this.currentUser) return;
-        
-        const sessionData = {
-            ...this.currentUser,
-            lastActivity: new Date().toISOString(),
-            mood: this.getMoodAtual()
-        };
-        
-        // Salvar sessão principal
-        localStorage.setItem('porter_session', JSON.stringify(sessionData));
-        
-        // 🔧 FIX 3: Salvar também em uma chave específica para outros verem
-        localStorage.setItem(`porter_session_${this.currentUser.user}`, JSON.stringify({
-            user: this.currentUser.user,
-            nome: this.currentUser.nome,
-            role: this.currentUser.role,
-            turno: this.currentUser.turno,
-            lastActivity: new Date().toISOString(),
-            mood: this.getMoodAtual()
-        }));
-        
-        console.log('Sessão salva para:', this.currentUser.nome);
-    },
+   // 🔧 FIX 2: Função de salvar sessão melhorada
+salvarSessao() {
+    if (!this.currentUser) return;
+    
+    const sessionData = {
+        ...this.currentUser,
+        lastActivity: new Date().toISOString(),
+        mood: this.getMoodAtual()
+    };
+    
+    // Salvar sessão principal
+    localStorage.setItem('porter_session', JSON.stringify(sessionData));
+    
+    // 🔧 FIX 3: Salvar também em uma chave específica para outros verem
+    localStorage.setItem(`porter_session_${this.currentUser.user}`, JSON.stringify({
+        user: this.currentUser.user,
+        nome: this.currentUser.nome,
+        role: this.currentUser.role,
+        turno: this.currentUser.turno,
+        lastActivity: new Date().toISOString(),
+        mood: this.getMoodAtual()
+    }));
+    
+    // 🔥 NOVO: Sincronizar com Firebase
+    if (window.firebaseHelper && window.firebaseHelper.sincronizarStatusOnlineComFirebase) {
+        window.firebaseHelper.sincronizarStatusOnlineComFirebase();
+    }
+    
+    console.log('Sessão salva para:', this.currentUser.nome);
+},
 
     loadCondos() {
         const sidebarList = document.getElementById('condo-list');
