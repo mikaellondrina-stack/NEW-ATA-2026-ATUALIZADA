@@ -19,68 +19,6 @@ window.auth = firebase.auth();
 
 // Funções auxiliares do Firebase
 const firebaseHelper = {
-    // Salvar uma ata no Firebase
-    salvarAtaNoFirebase(ata) {
-        if (!window.db) {
-            console.log('Firebase não está disponível');
-            return Promise.resolve(false);
-        }
-        
-        return window.db.collection('atas').doc(ata.id.toString()).set(ata)
-            .then(() => {
-                console.log('Ata salva no Firebase:', ata.id);
-                return true;
-            })
-            .catch(error => {
-                console.error('Erro ao salvar ata no Firebase:', error);
-                return false;
-            });
-    },
-
-    // Buscar atas do Firebase
-    buscarAtasDoFirebase(filtros = {}) {
-        if (!window.db) {
-            console.log('Firebase não está disponível');
-            return Promise.resolve([]);
-        }
-        
-        let query = window.db.collection('atas').orderBy('timestamp', 'desc');
-        
-        // Aplicar filtros
-        if (filtros.condo) {
-            query = query.where('condo', '==', filtros.condo);
-        }
-        
-        if (filtros.dataInicio) {
-            query = query.where('dataISO', '>=', filtros.dataInicio);
-        }
-        
-        if (filtros.dataFim) {
-            query = query.where('dataISO', '<=', filtros.dataFim);
-        }
-        
-        if (filtros.tipo) {
-            query = query.where('tipo', '==', filtros.tipo);
-        }
-        
-        if (filtros.status) {
-            query = query.where('status', '==', filtros.status);
-        }
-        
-        return query.get()
-            .then(snapshot => {
-                const atas = [];
-                snapshot.forEach(doc => {
-                    atas.push(doc.data());
-                });
-                return atas;
-            })
-            .catch(error => {
-                console.error('Erro ao buscar atas do Firebase:', error);
-                return [];
-            });
-    },
-
     // Salvar uma OS no Firebase
     salvarOSNoFirebase(os) {
         if (!window.db) {
@@ -137,6 +75,8 @@ const firebaseHelper = {
             return;
         }
         
+        console.log('🔧 Configurando listener em tempo real para OS...');
+        
         // Listener para ordens de serviço
         window.db.collection('ordens_servico')
             .orderBy('timestamp', 'desc')
@@ -144,11 +84,25 @@ const firebaseHelper = {
             .onSnapshot(snapshot => {
                 const osList = [];
                 snapshot.forEach(doc => {
-                    osList.push(doc.data());
+                    const osData = doc.data();
+                    osData.firebaseId = doc.id;
+                    osList.push(osData);
                 });
                 
+                console.log('✅ OS recebidas do Firebase:', osList.length);
+                
                 // Atualizar localStorage com dados do Firebase
-                localStorage.setItem('porter_os', JSON.stringify(osList));
+                localStorage.setItem('porter_os_firebase', JSON.stringify({
+                    timestamp: new Date().toISOString(),
+                    data: osList
+                }));
+                
+                // Se tiver OS locais, mesclar
+                const osLocais = JSON.parse(localStorage.getItem('porter_os') || '[]');
+                const todasOS = this.mesclarOS(osLocais, osList);
+                
+                // Salvar no localStorage principal
+                localStorage.setItem('porter_os', JSON.stringify(todasOS));
                 
                 // Atualizar interface se estiver na aba de OS
                 if (document.getElementById('tab-os') && 
@@ -163,32 +117,45 @@ const firebaseHelper = {
                     app.updateTabCounts();
                 }
                 
-                console.log('✅ OS sincronizadas do Firebase:', osList.length);
             }, error => {
-                console.error('Erro no listener de OS do Firebase:', error);
+                console.error('❌ Erro no listener de OS do Firebase:', error);
             });
     },
 
-    // Sincronizar dados locais com Firebase
-    sincronizarDados() {
-        if (!window.db) {
-            console.log('Firebase não está disponível, usando localStorage apenas');
-            return;
-        }
+    // 🔧 FIX 1: Mesclar OS locais com as do Firebase
+    mesclarOS(locais, firebase) {
+        const mapaUnico = new Map();
         
-        // Sincronizar atas
-        const atasLocais = JSON.parse(localStorage.getItem('porter_atas') || '[]');
-        atasLocais.forEach(ata => {
-            this.salvarAtaNoFirebase(ata);
+        // Adicionar todas do Firebase
+        firebase.forEach(os => {
+            mapaUnico.set(os.id, os);
         });
         
-        // Sincronizar OS
-        const osLocais = JSON.parse(localStorage.getItem('porter_os') || '[]');
-        osLocais.forEach(os => {
-            this.salvarOSNoFirebase(os);
+        // Adicionar locais que não estão no Firebase
+        locais.forEach(os => {
+            if (!mapaUnico.has(os.id)) {
+                // Verificar se não é muito antiga (últimos 30 dias)
+                const dataOS = new Date(os.timestamp || os.dataEnvioEmail || Date.now());
+                const trintaDiasAtras = new Date();
+                trintaDiasAtras.setDate(trintaDiasAtras.getDate() - 30);
+                
+                if (dataOS > trintaDiasAtras) {
+                    mapaUnico.set(os.id, os);
+                    // Sincronizar esta OS local com o Firebase
+                    this.salvarOSNoFirebase(os);
+                }
+            }
         });
         
-        console.log('✅ Dados sincronizados com Firebase');
+        // Converter de volta para array e ordenar
+        const resultado = Array.from(mapaUnico.values());
+        resultado.sort((a, b) => {
+            const timeA = new Date(a.timestamp || a.dataEnvioEmail || 0).getTime();
+            const timeB = new Date(b.timestamp || b.dataEnvioEmail || 0).getTime();
+            return timeB - timeA;
+        });
+        
+        return resultado;
     },
 
     // 🔧 FIX 2: Nova função para sincronizar status online com Firebase
@@ -202,7 +169,8 @@ const firebaseHelper = {
             mood: app.getMoodAtual(),
             lastActivity: new Date().toISOString(),
             online: true,
-            turno: app.currentUser.turno || 'Diurno'
+            turno: app.currentUser.turno || 'Diurno',
+            cidade: app.currentUser.cidade || 'Londrina'
         };
         
         // Salvar no Firebase
@@ -219,6 +187,8 @@ const firebaseHelper = {
     configurarMonitoramentoOnlineFirebase() {
         if (!window.db) return;
         
+        console.log('🔧 Configurando monitoramento de usuários online...');
+        
         window.db.collection('online_users')
             .where('online', '==', true)
             .onSnapshot(snapshot => {
@@ -227,11 +197,11 @@ const firebaseHelper = {
                 
                 snapshot.forEach(doc => {
                     const usuario = doc.data();
-                    // Verificar se não está "morto" (última atividade há mais de 3 minutos)
+                    // Verificar se não está "morto" (última atividade há mais de 2 minutos)
                     const ultimaAtividade = new Date(usuario.lastActivity);
                     const diferencaMinutos = (agora - ultimaAtividade) / (1000 * 60);
                     
-                    if (diferencaMinutos < 3) { // Considerar online se ativo nos últimos 3 minutos
+                    if (diferencaMinutos < 2) { // Considerar online se ativo nos últimos 2 minutos
                         usuariosOnlineFirebase.push(usuario);
                     } else {
                         // Marcar como offline no Firebase
@@ -294,30 +264,23 @@ const firebaseHelper = {
             });
     },
 
-    // Configurar listener em tempo real para notificações
-    configurarNotificacoesTempoReal() {
+    // Sincronizar OS locais com Firebase
+    sincronizarOSLocais() {
         if (!window.db) return;
         
-        window.db.collection('notificacoes')
-            .orderBy('timestamp', 'desc')
-            .limit(50)
-            .onSnapshot(snapshot => {
-                const notificacoes = [];
-                snapshot.forEach(doc => {
-                    notificacoes.push(doc.data());
-                });
-                
-                // Atualizar localStorage
-                localStorage.setItem('porter_notificacoes', JSON.stringify(notificacoes));
-                
-                // Atualizar interface
-                if (typeof app !== 'undefined') {
-                    app.loadNotifications();
-                    app.updateNotificationBadges();
-                }
-            }, error => {
-                console.error('Erro no listener de notificações:', error);
-            });
+        const osLocais = JSON.parse(localStorage.getItem('porter_os') || '[]');
+        
+        // Para cada OS local, verificar se existe no Firebase
+        osLocais.forEach(os => {
+            if (!os.firebaseId) { // Se não tem ID do Firebase, precisa sincronizar
+                this.salvarOSNoFirebase(os)
+                    .then(sucesso => {
+                        if (sucesso) {
+                            console.log('✅ OS local sincronizada:', os.id);
+                        }
+                    });
+            }
+        });
     },
 
     // Inicializar todos os listeners
@@ -337,7 +300,6 @@ const firebaseHelper = {
         
         // Configurar listeners em tempo real
         this.configurarChatTempoReal();
-        this.configurarNotificacoesTempoReal();
         
         // 🔧 FIX 2: Sincronizar status online periodicamente
         setInterval(() => {
@@ -346,10 +308,15 @@ const firebaseHelper = {
             }
         }, 10000); // A cada 10 segundos
         
-        // Sincronizar periodicamente
+        // Sincronizar OS locais periodicamente
         setInterval(() => {
-            this.sincronizarDados();
-        }, 30000); // Sincronizar a cada 30 segundos
+            this.sincronizarOSLocais();
+        }, 15000); // A cada 15 segundos
+        
+        // Forçar sincronização inicial
+        setTimeout(() => {
+            this.sincronizarOSLocais();
+        }, 2000);
     }
 };
 
