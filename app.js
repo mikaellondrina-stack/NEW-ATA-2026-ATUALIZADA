@@ -203,14 +203,23 @@ const app = {
     },
 
     setupOnlineTracking() {
-        // 🔧 FIX 3: Atualizar status online a cada 10 segundos (mais frequente)
+        // 🔧 CORREÇÃO: Atualizar status online a cada 20 segundos
+        if (this.onlineInterval) {
+            clearInterval(this.onlineInterval);
+        }
+        
         this.onlineInterval = setInterval(() => {
             if (this.currentUser) {
                 this.updateOnlineUsers();
             }
-        }, 10000);
+        }, 20000);
+        
         // Inicializar imediatamente
-        this.updateOnlineUsers();
+        setTimeout(() => {
+            this.updateOnlineUsers();
+        }, 1000);
+        
+        console.log('✅ Online tracking configurado');
     },
 
     getMoodStatusTexto(mood) {
@@ -224,60 +233,76 @@ const app = {
         return statusMap[mood] || 'Não avaliado';
     },
 
-    // 🔧 FIX 3: botão online - função completamente reformulada
+    // 🔧 CORREÇÃO: Função completamente reformulada para sincronização universal
     updateOnlineUsers() {
-        if (!this.currentUser) return;
+        if (!this.currentUser) {
+            console.log('❌ Usuário não logado para atualização online');
+            return;
+        }
         
         const agora = new Date();
         
-        // 1. Atualizar a própria sessão primeiro
-        this.salvarSessao();
+        // 1. Atualizar a própria sessão no Firebase
+        if (typeof firebaseHelper !== 'undefined' && firebaseHelper.sincronizarStatusOnlineComFirebase) {
+            firebaseHelper.sincronizarStatusOnlineComFirebase();
+        }
         
-        // 2. Buscar usuários online do Firebase
+        // 2. Buscar usuários online do Firebase (do localStorage que é atualizado pelo listener)
         let usuariosOnline = [];
         
-        // Adicionar usuário atual primeiro
+        try {
+            const onlineDataStr = localStorage.getItem('porter_online_firebase');
+            if (onlineDataStr) {
+                const onlineData = JSON.parse(onlineDataStr);
+                const dataTime = new Date(onlineData.timestamp);
+                const diferencaSegundos = (agora - dataTime) / 1000;
+                
+                // Usar dados se forem recentes (menos de 30 segundos)
+                if (diferencaSegundos < 30) {
+                    onlineData.users.forEach(usuario => {
+                        // Não adicionar usuário atual duas vezes
+                        if (usuario.user === this.currentUser.user) return;
+                        
+                        // Verificar se o usuário está realmente online (atividade recente)
+                        const ultimaAtividade = new Date(usuario.lastActivity);
+                        const diferencaUserSegundos = (agora - ultimaAtividade) / 1000;
+                        
+                        if (diferencaUserSegundos < 120) { // Usuário ativo nos últimos 2 minutos
+                            usuariosOnline.push({
+                                nome: usuario.nome,
+                                user: usuario.user,
+                                role: usuario.role,
+                                lastActivity: usuario.lastActivity,
+                                mood: usuario.mood || '😐',
+                                moodStatus: this.getMoodStatusTexto(usuario.mood || '😐'),
+                                isCurrentUser: false,
+                                online: true,
+                                turno: usuario.turno || 'Diurno',
+                                loginDate: usuario.loginDate,
+                                loginHour: usuario.loginHour
+                            });
+                        }
+                    });
+                } else {
+                    console.log('⚠️ Dados online muito antigos:', diferencaSegundos.toFixed(0) + 's');
+                }
+            } else {
+                console.log('⚠️ Nenhum dado online no localStorage');
+            }
+        } catch (e) {
+            console.error('❌ Erro ao processar dados online:', e);
+        }
+        
+        // 3. Adicionar o usuário atual (sempre)
         const moodAtual = this.getMoodAtual();
-        const statusMood = this.getMoodStatusTexto(moodAtual);
-        usuariosOnline.push({
+        usuariosOnline.unshift({
             ...this.currentUser,
             lastActivity: agora.toISOString(),
             mood: moodAtual,
-            moodStatus: statusMood,
+            moodStatus: this.getMoodStatusTexto(moodAtual),
             isCurrentUser: true,
             online: true
         });
-        
-        // 3. Buscar outros usuários do Firebase
-        try {
-            const onlineData = localStorage.getItem('porter_online_firebase');
-            if (onlineData) {
-                const data = JSON.parse(onlineData);
-                const dataTime = new Date(data.timestamp);
-                const diferencaSegundos = (agora - dataTime) / 1000;
-                
-                if (diferencaSegundos < 10) { // Dados recentes do Firebase
-                    data.users.forEach(usuario => {
-                        // Pular usuário atual
-                        if (usuario.user === this.currentUser.user) return;
-                        
-                        usuariosOnline.push({
-                            nome: usuario.nome,
-                            user: usuario.user,
-                            role: usuario.role,
-                            lastActivity: usuario.lastActivity,
-                            mood: usuario.mood || '😐',
-                            moodStatus: this.getMoodStatusTexto(usuario.mood || '😐'),
-                            isCurrentUser: false,
-                            online: true,
-                            turno: usuario.turno || 'Diurno'
-                        });
-                    });
-                }
-            }
-        } catch (e) {
-            console.log('Erro ao buscar usuários online do Firebase:', e);
-        }
         
         this.onlineUsers = usuariosOnline;
         
@@ -413,6 +438,12 @@ const app = {
     registrarLogoff() {
         if (!this.currentUser) return;
         
+        console.log('🚪 Registrando logoff para:', this.currentUser.nome);
+        
+        // 1. Marcar como offline no Firebase ANTES de qualquer coisa
+        this.removeFromOnlineUsers();
+        
+        // 2. Registrar logoff no localStorage
         const logoffs = JSON.parse(localStorage.getItem('porter_logoffs') || '[]');
         const logoffData = {
             user: this.currentUser.user,
@@ -430,7 +461,7 @@ const app = {
         this.lastLogoffTime = new Date().toISOString();
         localStorage.setItem('porter_last_logoff', this.lastLogoffTime);
         
-        // Limpar intervalos
+        // 3. Limpar intervalos
         if (this.chatInterval) {
             clearInterval(this.chatInterval);
             this.chatInterval = null;
@@ -451,25 +482,38 @@ const app = {
             this.onlineInterval = null;
         }
         
-        // 🔧 FIX 2: Remover sessão específica do usuário
+        // 4. Remover sessão
         localStorage.removeItem('porter_session');
         localStorage.removeItem(`porter_session_${this.currentUser.user}`);
         
-        // 🔧 FIX 3: Remover do registro de online no Firebase
-        this.removeFromOnlineUsers();
+        console.log('✅ Logoff registrado para:', this.currentUser.nome);
     },
 
-    // 🔧 FIX 3: Nova função para remover usuário da lista de online
+    // 🔧 CORREÇÃO: Função para remover usuário da lista de online
     removeFromOnlineUsers() {
+        if (!this.currentUser) return;
+        
+        console.log('⚫ Marcando como offline:', this.currentUser.user);
+        
         try {
             // Marcar como offline no Firebase
-            if (window.db && this.currentUser) {
+            if (window.db) {
                 window.db.collection('online_users').doc(this.currentUser.user).update({
                     online: false,
                     lastActivity: new Date().toISOString()
                 }).then(() => {
                     console.log('✅ Usuário marcado como offline no Firebase');
-                }).catch(() => {});
+                }).catch(error => {
+                    console.error('❌ Erro ao marcar como offline:', error);
+                });
+            }
+            
+            // Remover do localStorage também
+            const onlineDataStr = localStorage.getItem('porter_online_firebase');
+            if (onlineDataStr) {
+                const onlineData = JSON.parse(onlineDataStr);
+                onlineData.users = onlineData.users.filter(u => u.user !== this.currentUser.user);
+                localStorage.setItem('porter_online_firebase', JSON.stringify(onlineData));
             }
         } catch (e) {
             console.log('Erro ao remover usuário dos online:', e);
@@ -801,8 +845,8 @@ const app = {
         this.updateNotificationBadges();
         this.salvarSessao();
         
-        // 🔧 FIX 3: ATUALIZAR OPERADORES ONLINE IMEDIATAMENTE
-        this.updateOnlineUsers();
+        // 🔧 CORREÇÃO: Configurar tracking online ANTES de atualizar
+        this.setupOnlineTracking();
         
         // Se for admin, mostrar controles
         if (this.currentUser.role === 'ADMIN' || this.currentUser.role === 'TÉCNICO') {
@@ -813,16 +857,13 @@ const app = {
         this.loadChat();
         this.chatInterval = setInterval(() => this.loadChat(), 5000);
         
-        // 🔧 FIX 1: Iniciar chat privado com usuários carregados
+        // Iniciar chat privado com usuários carregados
         this.loadPrivateChatUsers();
         this.privateChatInterval = setInterval(() => {
             if (this.currentPrivateChatTarget) {
                 this.loadPrivateChat();
             }
         }, 5000);
-        
-        // 🔧 FIX 3: Iniciar tracking de online melhorado
-        this.setupOnlineTracking();
         
         // 🆕 Inicializar visto por
         this.registrarVisualizacaoChat();
@@ -832,6 +873,8 @@ const app = {
             document.getElementById('os-funcionario').value = this.currentUser.nome;
             document.getElementById('os-email').value = `${this.currentUser.user}@porter.com.br`;
         }
+        
+        console.log('✅ Aplicação iniciada para:', this.currentUser.nome);
     },
 
     updateUserInfo() {
@@ -2072,7 +2115,7 @@ const app = {
         
         const ehAutor = ata.user === this.currentUser.user;
         const ehAdmin = this.currentUser.role === 'ADMIN';
-    const ehTecnico = this.currentUser.role === 'TÉCNICO';
+        const ehTecnico = this.currentUser.role === 'TÉCNICO';
         if (!ehAdmin && !ehAutor && !ehTecnico) {
             alert('Apenas o autor, técnicos ou administradores podem excluir este registro.');
             return;
@@ -2442,7 +2485,7 @@ const app = {
         this.mostrarFiltrosAtivosAtas();
     },
 
-    // 🔧 FIX 1: Função para carregar usuários do chat privado (melhorada)
+    // 🔧 CORREÇÃO: Função para carregar usuários do chat privado
     loadPrivateChatUsers() {
         if (!this.currentUser) return;
         
@@ -2451,65 +2494,50 @@ const app = {
         
         select.innerHTML = '<option value="">Selecione um operador...</option>';
         
-        // 🔧 FIX 2: Buscar usuários online do Firebase
-        const onlineData = localStorage.getItem('porter_online_firebase');
-        let usuariosDisponiveis = [];
+        // Usar a lista de usuários online atual do sistema
+        const usuariosDisponiveis = [...this.onlineUsers];
         
-        if (onlineData) {
-            try {
-                const data = JSON.parse(onlineData);
-                const dataTime = new Date(data.timestamp);
-                const agora = new Date();
-                const diferencaSegundos = (agora - dataTime) / 1000;
-                
-                if (diferencaSegundos < 10) { // Dados recentes do Firebase
-                    data.users.forEach(usuario => {
-                        // Pular usuário atual
-                        if (usuario.user === app.currentUser.user) return;
-                        
-                        usuariosDisponiveis.push({
-                            nome: usuario.nome,
-                            user: usuario.user,
-                            role: usuario.role,
-                            online: true
-                        });
-                    });
-                }
-            } catch (e) {
-                console.error('Erro ao parsear dados online:', e);
-            }
-        }
-        
-        // 🔧 FIX 1: Se não tiver dados do Firebase, usar dados locais como fallback
-        if (usuariosDisponiveis.length === 0) {
-            // Adicionar funcionários (exceto o usuário atual)
-            DATA.funcionarios.forEach(f => {
-                if (f.user !== app.currentUser.user) {
+        // Adicionar também usuários do DATA.funcionarios que não estão online
+        DATA.funcionarios.forEach(f => {
+            if (f.user !== this.currentUser.user) {
+                const jaNaLista = usuariosDisponiveis.some(u => u.user === f.user);
+                if (!jaNaLista) {
                     usuariosDisponiveis.push({
                         nome: f.nome,
                         user: f.user,
                         role: f.role,
-                        online: false
+                        online: false,
+                        isCurrentUser: false
                     });
                 }
-            });
-            
-            // Adicionar técnicos (exceto o usuário atual)
-            DATA.tecnicos.forEach(t => {
-                const tecUser = t.nome.split(' - ')[0].toLowerCase().replace(/\s+/g, '.');
-                if (tecUser !== app.currentUser.user) {
+            }
+        });
+        
+        // Adicionar técnicos que não estão online
+        DATA.tecnicos.forEach(t => {
+            const tecUser = t.nome.split(' - ')[0].toLowerCase().replace(/\s+/g, '.');
+            if (tecUser !== this.currentUser.user) {
+                const jaNaLista = usuariosDisponiveis.some(u => u.user === tecUser);
+                if (!jaNaLista) {
                     usuariosDisponiveis.push({
                         nome: t.nome,
                         user: tecUser,
                         role: 'TÉCNICO',
-                        online: false
+                        online: false,
+                        isCurrentUser: false
                     });
                 }
-            });
-        }
+            }
+        });
         
-        // Ordenar por nome
-        usuariosDisponiveis.sort((a, b) => a.nome.localeCompare(b.nome));
+        // Ordenar por nome e status online
+        usuariosDisponiveis.sort((a, b) => {
+            // Online primeiro
+            if (a.online && !b.online) return -1;
+            if (!a.online && b.online) return 1;
+            // Depois por nome
+            return a.nome.localeCompare(b.nome);
+        });
         
         // Adicionar opções ao select
         usuariosDisponiveis.forEach(usuario => {
@@ -2524,11 +2552,11 @@ const app = {
                 texto += ' 🔧';
             }
             
-            // 🔧 FIX 1: Indicar status online
+            // Indicar status online
             if (usuario.online) {
-                texto += ' 🟢';
+                texto += ' 🟢 Online';
             } else {
-                texto += ' ⚫';
+                texto += ' ⚫ Offline';
             }
             
             option.textContent = texto;
