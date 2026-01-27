@@ -13,6 +13,9 @@ if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
 
+// LINHA NOVA (mais ou menos linha 20)
+window.rtdb = firebase.database();
+
 // Tornar o banco de dados disponível globalmente
 window.db = firebase.firestore();
 window.auth = firebase.auth();
@@ -101,18 +104,18 @@ const firebaseHelper = {
 
     // Buscar OS do Firebase
     buscarOSDoFirebase(filtros = {}) {
-        if (!window.db) {
+         (!window.db) {
             console.log('Firebase não está disponível');
             return Promise.resolve([]);
         }
         
         let query = window.db.collection('ordens_servico').orderBy('timestamp', 'desc');
         
-        if (filtros.condo) {
+         (filtros.condo) {
             query = query.where('condo', '==', filtros.condo);
         }
         
-        if (filtros.gravidade) {
+         (filtros.gravidade) {
             query = query.where('gravidade', '==', filtros.gravidade);
         }
         
@@ -132,7 +135,7 @@ const firebaseHelper = {
 
     // Sincronizar dados locais com Firebase
     sincronizarDados() {
-        if (!window.db) {
+         (!window.db) {
             console.log('Firebase não está disponível, usando localStorage apenas');
             return;
         }
@@ -152,7 +155,7 @@ const firebaseHelper = {
         // Sincronizar chat
         const chatLocal = JSON.parse(localStorage.getItem('porter_chat') || '[]');
         chatLocal.forEach(mensagem => {
-            if (!mensagem.firebaseId) {
+             (!mensagem.firebaseId) {
                 window.db.collection('chat').add(mensagem)
                     .then(docRef => {
                         console.log('Mensagem sincronizada com Firebase:', docRef.id);
@@ -166,7 +169,7 @@ const firebaseHelper = {
 
     // 🔧 FIX 3: Nova função para sincronizar status online com Firebase
     sincronizarStatusOnlineComFirebase() {
-        if (!window.db || !app.currentUser) return;
+         (!window.db || !app.currentUser) return;
         
         const statusOnline = {
             user: app.currentUser.user,
@@ -189,7 +192,7 @@ const firebaseHelper = {
 
     // 🔧 FIX 3: Nova função para monitorar usuários online no Firebase
     configurarMonitoramentoOnlineFirebase() {
-        if (!window.db) return;
+         (!window.db) return;
         
         window.db.collection('online_users')
             .where('online', '==', true)
@@ -197,26 +200,26 @@ const firebaseHelper = {
                 const usuariosOnlineFirebase = [];
                 snapshot.forEach(doc => {
                     const usuario = doc.data();
-                    // Verificar se não está "morto" (última atividade há mais de 3 minutos)
+                    // Vericar se não está "morto" (última atividade há mais de 3 minutos)
                     const ultimaAtividade = new Date(usuario.lastActivity);
                     const agora = new Date();
-                    const diferencaMinutos = (agora - ultimaAtividade) / (1000 * 60);
+                    const derencaMinutos = (agora - ultimaAtividade) / (1000 * 60);
                     
-                    if (diferencaMinutos < 3) { // Considerar online se ativo nos últimos 3 minutos
+                     (derencaMinutos < 3) { // Considerar online se ativo nos últimos 3 minutos
                         usuariosOnlineFirebase.push(usuario);
                     }
                 });
                 
                 // Atualizar lista local
-                if (typeof app !== 'undefined') {
+                 (typeof app !== 'undefined') {
                     // Salvar no localStorage para o app.js usar
-                    localStorage.setItem('porter_online_firebase', JSON.stringify({
+                    localStorage.setItem('porter_online_firebase', JSON.stringy({
                         timestamp: new Date().toISOString(),
                         users: usuariosOnlineFirebase
                     }));
                     
                     // Forçar atualização da lista de online
-                    if (app.currentUser) {
+                     (app.currentUser) {
                         app.updateOnlineUsers();
                     }
                 }
@@ -227,7 +230,7 @@ const firebaseHelper = {
 
     // Configurar listener em tempo real para chat
     configurarChatTempoReal() {
-        if (!window.db) return;
+         (!window.db) return;
         
         window.db.collection('chat')
             .orderBy('timestamp', 'desc')
@@ -239,18 +242,18 @@ const firebaseHelper = {
                 });
                 
                 // Atualizar localStorage
-                localStorage.setItem('porter_chat', JSON.stringify(mensagens));
+                localStorage.setItem('porter_chat', JSON.stringy(mensagens));
                 
                 // Atualizar interface se estiver na aba de chat
-                if (document.getElementById('tab-chat') && 
+                 (document.getElementById('tab-chat') && 
                     !document.getElementById('tab-chat').classList.contains('hidden')) {
-                    if (typeof chatSystem !== 'undefined') {
+                     (typeof chatSystem !== 'undefined') {
                         chatSystem.loadChat();
                     }
                 }
                 
                 // Atualizar badge
-                if (typeof app !== 'undefined') {
+                 (typeof app !== 'undefined') {
                     app.atualizarBadgeChat();
                 }
             }, error => {
@@ -258,21 +261,21 @@ const firebaseHelper = {
             });
     },
 
-    // Configurar listener em tempo real para notificações
-    configurarNotificacoesTempoReal() {
-        if (!window.db) return;
+    // Configurar listener em tempo real para noticações
+    configurarNoticacoesTempoReal() {
+         (!window.db) return;
         
-        window.db.collection('notificacoes')
+        window.db.collection('noticacoes')
             .orderBy('timestamp', 'desc')
             .limit(50)
             .onSnapshot(snapshot => {
-                const notificacoes = [];
+                const noticacoes = [];
                 snapshot.forEach(doc => {
-                    notificacoes.push(doc.data());
+                    noticacoes.push(doc.data());
                 });
                 
                 // Atualizar localStorage
-                localStorage.setItem('porter_notificacoes', JSON.stringify(notificacoes));
+                localStorage.setItem('porter_noticacoes', JSON.stringy(noticacoes));
                 
                 // Atualizar interface
                 if (typeof app !== 'undefined') {
