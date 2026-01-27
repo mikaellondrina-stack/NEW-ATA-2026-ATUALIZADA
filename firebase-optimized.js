@@ -1,239 +1,347 @@
-// firebase-optimized.js - VERSÃO OTIMIZADA PARA EVITAR QUOTA
+// ==============================================
+// FIREBASE PORTER - SISTEMA OTIMIZADO
+// ==============================================
 
+// CONFIGURAÇÃO DO SEU NOVO PROJETO
 const firebaseConfig = {
-    apiKey: "AIzaSyARRqLJJFdaHpcmUtrSStqmx90ZYm8ERe8",
-    authDomain: "ata-porter-2026-new-98c61.firebaseapp.com",
-    projectId: "ata-porter-2026-new-98c61",
-    storageBucket: "ata-porter-2026-new-98c61.firebasestorage.app",
-    messagingSenderId: "196023937983",
-    appId: "1:196023937983:web:090b010284141d2edecf0a"
+    apiKey: "AIzaSyDma392hveHDF6NShluBGbmGc3FYxc7ogA",
+    authDomain: "porter-ata-2026-v2.firebaseapp.com",
+    projectId: "porter-ata-2026-v2",
+    storageBucket: "porter-ata-2026-v2.firebasestorage.app",
+    messagingSenderId: "474353492973",
+    appId: "1:474353492973:web:a0409eeabf13cb201ffde4"
 };
 
-// Inicializar Firebase
+// INICIALIZAR FIREBASE
 if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
+    console.log('🔥 Firebase v2 inicializado!');
 }
 
+// VARIÁVEIS GLOBAIS
 window.db = firebase.firestore();
 window.auth = firebase.auth();
 
-// 🔥 SISTEMA OTIMIZADO PARA EVITAR QUOTA
-const FirebaseOptimized = {
-    // CONTADORES para limitar uso
-    counters: {
+// ==============================================
+// SISTEMA DE USUÁRIOS ONLINE OTIMIZADO
+// ==============================================
+const PorterFirebase = {
+    // CONTROLE DE QUOTA
+    quota: {
         reads: 0,
         writes: 0,
-        lastReset: Date.now()
+        lastReset: Date.now(),
+        maxReadsPerHour: 100,
+        maxWritesPerHour: 50
     },
     
-    // CONFIGURAÇÕES de limite (ajuste conforme necessidade)
-    limits: {
-        maxReadsPerMinute: 30,      // Máximo 30 leituras por minuto
-        maxWritesPerMinute: 20,      // Máximo 20 escritas por minuto
-        cacheTime: 30000,            // Cache de 30 segundos
-        updateInterval: 60000        // Atualizar a cada 60 segundos
-    },
-    
-    // CACHE para reduzir leituras
+    // CACHE
     cache: {
-        onlineUsers: null,
-        onlineUsersTimestamp: 0,
-        chat: null,
-        chatTimestamp: 0
+        onlineUsers: [],
+        lastUpdate: 0,
+        duration: 30000 // 30 segundos
     },
     
-    // 🔥 FUNÇÃO PRINCIPAL: Atualizar status online com QUOTA CONTROL
-    sincronizarStatusOnline: function() {
-        if (!window.db || !app || !app.currentUser) return;
-        
-        // Verificar se pode escrever (limite de quota)
-        if (!this.canWrite()) {
-            console.log('⚠️ Limite de escrita atingido, usando cache');
-            this.useLocalBackup();
+    // ==============================================
+    // 1. SINCRONIZAR STATUS DO USUÁRIO
+    // ==============================================
+    sincronizarUsuario: function() {
+        if (!window.db || !app || !app.currentUser) {
+            console.log('❌ Não há usuário logado');
             return;
         }
         
+        const usuario = app.currentUser;
+        const agora = new Date();
+        
+        // Dados do usuário
         const userData = {
-            user: app.currentUser.user,
-            nome: app.currentUser.nome,
-            role: app.currentUser.role,
+            user: usuario.user,
+            nome: usuario.nome,
+            role: usuario.role,
             mood: app.getMoodAtual ? app.getMoodAtual() : '😐',
-            lastActivity: new Date().toISOString(),
+            lastActivity: agora.toISOString(),
             online: true,
-            turno: app.currentUser.turno || 'Diurno',
-            timestamp: Date.now()
+            turno: usuario.turno || 'Diurno',
+            timestamp: agora.getTime(),
+            loginDate: usuario.loginDate || agora.toLocaleDateString('pt-BR'),
+            loginHour: usuario.loginHour || agora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})
         };
         
-        // CONTAR escrita
-        this.counters.writes++;
-        
-        // Usar set com merge para 1 operação em vez de 2
-        window.db.collection('online_users').doc(app.currentUser.user)
-            .set(userData, { merge: true })
+        // 🔥 USAR ID ESPECÍFICO (user.user) em vez de ID aleatório
+        window.db.collection('online_users')
+            .doc(usuario.user) // ← ID ESPECÍFICO
+            .set(userData, { merge: true }) // ← merge para atualizar
             .then(() => {
-                console.log('✅ Status online (otimizado)');
-                this.saveLocalBackup(userData);
+                console.log('✅ Status online atualizado:', usuario.nome);
+                
+                // Salvar backup local
+                this.salvarBackupLocal(userData);
             })
             .catch(error => {
-                console.error('❌ Erro (usando local):', error.message);
-                this.useLocalBackup();
+                console.error('❌ Erro ao sincronizar:', error.message);
+                // Usar sistema local se Firebase falhar
+                this.usarSistemaLocal();
             });
     },
     
-    // 🔥 FUNÇÃO: Buscar usuários online com CACHE
+    // ==============================================
+    // 2. BUSCAR USUÁRIOS ONLINE
+    // ==============================================
     buscarUsuariosOnline: function() {
         return new Promise((resolve) => {
-            // 1. Tentar CACHE primeiro (30 segundos)
             const agora = Date.now();
-            if (this.cache.onlineUsers && 
-                (agora - this.cache.onlineUsersTimestamp < this.limits.cacheTime)) {
-                console.log('📦 Usando cache de usuários online');
+            
+            // 1. Tentar CACHE primeiro
+            if (this.cache.onlineUsers.length > 0 && 
+                (agora - this.cache.lastUpdate) < this.cache.duration) {
+                console.log('📦 Usando cache de usuários');
                 resolve(this.cache.onlineUsers);
                 return;
             }
             
-            // 2. Verificar se pode LER (limite de quota)
-            if (!this.canRead()) {
-                console.log('⚠️ Limite de leitura, usando cache antigo');
-                resolve(this.cache.onlineUsers || []);
+            // 2. Verificar QUOTA
+            if (!this.verificarQuota('read')) {
+                console.log('⚠️ Limite de leitura, usando cache');
+                resolve(this.cache.onlineUsers);
                 return;
             }
             
-            // 3. Buscar do Firebase (com LIMITE)
+            // 3. Buscar do Firebase
             if (!window.db) {
                 resolve([]);
                 return;
             }
             
-            // CONTAR leitura
-            this.counters.reads++;
-            
             window.db.collection('online_users')
                 .where('online', '==', true)
-                .limit(10) // 🔥 LIMITAR a 10 usuários apenas!
+                .limit(15) // LIMITAR para economizar quota
                 .get()
                 .then(snapshot => {
                     const usuarios = [];
+                    const agora = new Date();
+                    
                     snapshot.forEach(doc => {
                         const data = doc.data();
+                        const ultimaAtividade = new Date(data.lastActivity);
+                        const minutosInativo = (agora - ultimaAtividade) / (1000 * 60);
+                        
                         // Filtrar apenas ativos (últimos 5 minutos)
-                        const lastActive = new Date(data.lastActivity);
-                        if ((agora - lastActive.getTime()) < 300000) {
-                            usuarios.push(data);
+                        if (minutosInativo < 5) {
+                            usuarios.push({
+                                ...data,
+                                id: doc.id,
+                                isCurrentUser: data.user === (app.currentUser ? app.currentUser.user : '')
+                            });
                         }
                     });
                     
-                    // Salvar no CACHE
+                    // Atualizar cache
                     this.cache.onlineUsers = usuarios;
-                    this.cache.onlineUsersTimestamp = agora;
+                    this.cache.lastUpdate = agora.getTime();
                     
-                    // Salvar backup local
-                    localStorage.setItem('porter_online_cache', JSON.stringify({
-                        users: usuarios,
-                        timestamp: agora
-                    }));
+                    // Registrar quota
+                    this.registrarQuota('read');
                     
                     resolve(usuarios);
                 })
                 .catch(error => {
-                    console.error('❌ Erro ao buscar (usando local):', error.message);
-                    // Tentar backup local
-                    try {
-                        const backup = JSON.parse(localStorage.getItem('porter_online_cache') || '{}');
-                        resolve(backup.users || []);
-                    } catch {
-                        resolve([]);
-                    }
+                    console.error('❌ Erro ao buscar usuários:', error.message);
+                    // Usar backup local
+                    const backup = this.carregarBackupLocal();
+                    resolve(backup);
                 });
         });
     },
     
-    // 🔥 VERIFICAR limites de quota
-    canRead: function() {
-        const agora = Date.now();
-        const umMinuto = 60000;
+    // ==============================================
+    // 3. SISTEMA DE CHAT
+    // ==============================================
+    enviarMensagemChat: function(mensagem, senderName, senderRole) {
+        if (!window.db) return Promise.resolve(false);
         
-        // Resetar contadores se passou 1 minuto
-        if (agora - this.counters.lastReset > umMinuto) {
-            this.counters.reads = 0;
-            this.counters.writes = 0;
-            this.counters.lastReset = agora;
-            console.log('🔄 Contadores de quota resetados');
-        }
+        const mensagemData = {
+            id: Date.now(),
+            sender: senderName,
+            senderRole: senderRole,
+            senderMood: app.getMoodAtual ? app.getMoodAtual() : '😐',
+            message: mensagem,
+            time: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
+            timestamp: new Date().toISOString(),
+            date: new Date().toLocaleDateString('pt-BR')
+        };
         
-        return this.counters.reads < this.limits.maxReadsPerMinute;
+        return window.db.collection('chat_geral')
+            .doc(mensagemData.id.toString())
+            .set(mensagemData)
+            .then(() => {
+                console.log('💬 Mensagem enviada para Firebase');
+                return true;
+            })
+            .catch(error => {
+                console.error('❌ Erro ao enviar mensagem:', error);
+                return false;
+            });
     },
     
-    canWrite: function() {
-        const agora = Date.now();
-        const umMinuto = 60000;
+    buscarMensagensChat: function(limite = 50) {
+        if (!window.db) return Promise.resolve([]);
         
-        if (agora - this.counters.lastReset > umMinuto) {
-            this.counters.reads = 0;
-            this.counters.writes = 0;
-            this.counters.lastReset = agora;
-        }
-        
-        return this.counters.writes < this.limits.maxWritesPerMinute;
+        return window.db.collection('chat_geral')
+            .orderBy('timestamp', 'desc')
+            .limit(limite)
+            .get()
+            .then(snapshot => {
+                const mensagens = [];
+                snapshot.forEach(doc => {
+                    mensagens.push(doc.data());
+                });
+                return mensagens;
+            })
+            .catch(() => []);
     },
     
-    // 🔥 BACKUP LOCAL para quando Firebase falhar
-    saveLocalBackup: function(userData) {
-        const backup = JSON.parse(localStorage.getItem('porter_online_backup') || '{"users":[]}');
+    // ==============================================
+    // 4. SISTEMA DE ORDENS DE SERVIÇO
+    // ==============================================
+    salvarOS: function(osData) {
+        if (!window.db) return Promise.resolve(false);
         
-        // Adicionar/atualizar usuário
-        const index = backup.users.findIndex(u => u.user === userData.user);
-        if (index !== -1) {
-            backup.users[index] = userData;
-        } else {
-            backup.users.push(userData);
-        }
-        
-        // Manter só últimos 20 usuários
-        if (backup.users.length > 20) {
-            backup.users = backup.users.slice(-20);
-        }
-        
-        backup.timestamp = Date.now();
-        localStorage.setItem('porter_online_backup', JSON.stringify(backup));
+        return window.db.collection('ordens_servico')
+            .doc(osData.id.toString())
+            .set(osData)
+            .then(() => {
+                console.log('🔧 OS salva no Firebase:', osData.osId);
+                return true;
+            })
+            .catch(error => {
+                console.error('❌ Erro ao salvar OS:', error);
+                return false;
+            });
     },
     
-    useLocalBackup: function() {
+    buscarOS: function() {
+        if (!window.db) return Promise.resolve([]);
+        
+        return window.db.collection('ordens_servico')
+            .orderBy('timestamp', 'desc')
+            .limit(50)
+            .get()
+            .then(snapshot => {
+                const osList = [];
+                snapshot.forEach(doc => {
+                    osList.push(doc.data());
+                });
+                return osList;
+            })
+            .catch(() => []);
+    },
+    
+    // ==============================================
+    // 5. BACKUP LOCAL (quando Firebase falha)
+    // ==============================================
+    salvarBackupLocal: function(userData) {
         try {
-            const backup = JSON.parse(localStorage.getItem('porter_online_backup') || '{"users":[]}');
-            const agora = Date.now();
+            const backup = JSON.parse(localStorage.getItem('porter_firebase_backup') || '{"users":[]}');
             
-            // Filtrar usuários ativos (últimos 5 minutos)
-            const usuariosAtivos = backup.users.filter(user => {
-                const lastActive = new Date(user.lastActivity).getTime();
-                return (agora - lastActive) < 300000; // 5 minutos
+            // Adicionar/atualizar usuário
+            const index = backup.users.findIndex(u => u.user === userData.user);
+            if (index !== -1) {
+                backup.users[index] = userData;
+            } else {
+                backup.users.push(userData);
+            }
+            
+            // Manter só últimos 30 usuários
+            if (backup.users.length > 30) {
+                backup.users = backup.users.slice(-30);
+            }
+            
+            backup.lastUpdate = new Date().toISOString();
+            localStorage.setItem('porter_firebase_backup', JSON.stringify(backup));
+            
+        } catch (e) {
+            console.log('⚠️ Erro ao salvar backup local');
+        }
+    },
+    
+    carregarBackupLocal: function() {
+        try {
+            const backup = JSON.parse(localStorage.getItem('porter_firebase_backup') || '{"users":[]}');
+            const agora = new Date();
+            
+            // Filtrar usuários ativos (últimos 10 minutos)
+            return backup.users.filter(user => {
+                if (!user.lastActivity) return false;
+                const ultimaAtividade = new Date(user.lastActivity);
+                const minutosInativo = (agora - ultimaAtividade) / (1000 * 60);
+                return minutosInativo < 10;
             });
             
-            return usuariosAtivos;
-        } catch {
+        } catch (e) {
             return [];
         }
     },
     
-    // 🔥 LIMPEZA AUTOMÁTICA no Firebase (evita dados antigos)
-    limpezaAutomatica: function() {
+    usarSistemaLocal: function() {
+        console.log('🔄 Usando sistema local (Firebase offline)');
+        const backup = this.carregarBackupLocal();
+        return backup;
+    },
+    
+    // ==============================================
+    // 6. CONTROLE DE QUOTA
+    // ==============================================
+    verificarQuota: function(tipo) {
+        const agora = Date.now();
+        const umaHora = 60 * 60 * 1000;
+        
+        // Resetar se passou 1 hora
+        if (agora - this.quota.lastReset > umaHora) {
+            this.quota.reads = 0;
+            this.quota.writes = 0;
+            this.quota.lastReset = agora;
+            console.log('🔄 Quota resetada');
+        }
+        
+        if (tipo === 'read') {
+            return this.quota.reads < this.quota.maxReadsPerHour;
+        } else {
+            return this.quota.writes < this.quota.maxWritesPerHour;
+        }
+    },
+    
+    registrarQuota: function(tipo) {
+        if (tipo === 'read') {
+            this.quota.reads++;
+        } else {
+            this.quota.writes++;
+        }
+        
+        console.log(`📊 Quota: ${this.quota.reads} reads, ${this.quota.writes} writes`);
+    },
+    
+    // ==============================================
+    // 7. LIMPEZA AUTOMÁTICA
+    // ==============================================
+    limparUsuariosInativos: function() {
         if (!window.db) return;
         
-        // Executar apenas 1 vez por hora para economizar quota
-        const ultimaLimpeza = localStorage.getItem('porter_last_cleanup') || 0;
+        // Executar apenas 1 vez por dia
+        const ultimaLimpeza = localStorage.getItem('porter_ultima_limpeza') || 0;
         const agora = Date.now();
+        const umDia = 24 * 60 * 60 * 1000;
         
-        if (agora - ultimaLimpeza < 3600000) { // 1 hora
+        if (agora - ultimaLimpeza < umDia) {
             return;
         }
         
-        // Marcar como offline usuários inativos (> 1 hora)
-        const umaHoraAtras = new Date(agora - 3600000);
+        const umaHoraAtras = new Date(agora - (60 * 60 * 1000));
         
         window.db.collection('online_users')
             .where('lastActivity', '<', umaHoraAtras.toISOString())
             .where('online', '==', true)
-            .limit(5) // 🔥 LIMITAR a 5 para economizar quota!
+            .limit(10) // Limitar para economizar quota
             .get()
             .then(snapshot => {
                 const batch = window.db.batch();
@@ -243,47 +351,72 @@ const FirebaseOptimized = {
                 return batch.commit();
             })
             .then(() => {
-                localStorage.setItem('porter_last_cleanup', agora.toString());
-                console.log('🧹 Limpeza automática realizada');
+                localStorage.setItem('porter_ultima_limpeza', agora.toString());
+                console.log('🧹 Usuários inativos marcados como offline');
             })
             .catch(() => {
                 // Ignorar erros silenciosamente
             });
     },
     
-    // 🔥 INICIALIZAR SISTEMA OTIMIZADO
-    init: function() {
-        console.log('🔥 Firebase Optimized inicializado');
+    // ==============================================
+    // 8. INICIALIZAR SISTEMA
+    // ==============================================
+    inicializar: function() {
+        console.log('🚀 Inicializando Porter Firebase...');
         
-        // Configurar atualização periódica (60 segundos)
+        // Testar conexão
+        if (window.db) {
+            window.db.collection('sistema').doc('status').set({
+                inicializado: true,
+                timestamp: new Date().toISOString(),
+                projeto: firebaseConfig.projectId
+            }).then(() => {
+                console.log('✅ Firebase conectado com sucesso!');
+            }).catch(error => {
+                console.error('⚠️ Firebase com problemas:', error.message);
+            });
+        }
+        
+        // Configurar sincronização periódica (60 segundos)
         setInterval(() => {
             if (app && app.currentUser) {
-                this.sincronizarStatusOnline();
+                this.sincronizarUsuario();
             }
-        }, this.limits.updateInterval);
+        }, 60000);
         
-        // Limpeza automática a cada hora
+        // Limpeza automática a cada 6 horas
         setInterval(() => {
-            this.limpezaAutomatica();
-        }, 3600000); // 1 hora
+            this.limparUsuariosInativos();
+        }, 6 * 60 * 60 * 1000);
         
-        // Primeira execução após 5 segundos
+        // Primeira sincronização após 3 segundos
         setTimeout(() => {
             if (app && app.currentUser) {
-                this.sincronizarStatusOnline();
+                this.sincronizarUsuario();
             }
-        }, 5000);
+        }, 3000);
+        
+        console.log('✅ Porter Firebase inicializado!');
     }
 };
 
-// Inicializar quando documento carregar
+// ==============================================
+// INICIALIZAR AUTOMATICAMENTE
+// ==============================================
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
-        setTimeout(() => FirebaseOptimized.init(), 3000);
+        setTimeout(() => {
+            PorterFirebase.inicializar();
+        }, 2000);
     });
 } else {
-    setTimeout(() => FirebaseOptimized.init(), 3000);
+    setTimeout(() => {
+        PorterFirebase.inicializar();
+    }, 2000);
 }
 
-// 🔥 EXPORTAR para uso global
-window.FirebaseOptimized = FirebaseOptimized;
+// ==============================================
+// EXPORTAR PARA USO GLOBAL
+// ==============================================
+window.PorterFirebase = PorterFirebase;
