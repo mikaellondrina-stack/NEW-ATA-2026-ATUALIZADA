@@ -284,41 +284,40 @@ const firebaseHelper = {
     },
 
     // Inicializar todos os listeners
-    inicializarFirebase() {
-        if (!window.db) {
-            console.log('Firebase não inicializado, usando localStorage');
-            return;
-        }
-        
-        console.log('✅ Firebase inicializado com sucesso - Projeto: porter-ata-2026-v2');
-        
-        // 🔧 FIX 1: Configurar listener para OS
-        this.configurarOSFirebase();
-        
-        // 🔧 FIX 2: Configurar monitoramento de status online
-        this.configurarMonitoramentoOnlineFirebase();
-        
-        // Configurar listeners em tempo real
-        this.configurarChatTempoReal();
-        
-        // 🔧 FIX 2: Sincronizar status online periodicamente
-        setInterval(() => {
-            if (app && app.currentUser) {
-                this.sincronizarStatusOnlineComFirebase();
-            }
-        }, 10000); // A cada 10 segundos
-        
-        // Sincronizar OS locais periodicamente
-        setInterval(() => {
-            this.sincronizarOSLocais();
-        }, 15000); // A cada 15 segundos
-        
-        // Forçar sincronização inicial
-        setTimeout(() => {
-            this.sincronizarOSLocais();
-        }, 2000);
+   inicializarFirebase() {
+    if (!window.db) {
+        console.log('Firebase não inicializado, usando localStorage');
+        return;
     }
-};
+    
+    console.log('✅ Firebase inicializado com sucesso - Projeto: porter-ata-2026-v2');
+    
+    // 🔧 FIX 1: Configurar listener para OS
+    this.configurarOSFirebase();
+    
+    // 🔧 FIX 2: Configurar monitoramento de status online
+    this.configurarMonitoramentoOnlineFirebase();
+    
+    // 🔧 NOVA: Configurar sincronização do chat
+    this.configurarChatFirebase();
+    
+    // 🔧 FIX 2: Sincronizar status online periodicamente
+    setInterval(() => {
+        if (app && app.currentUser) {
+            this.sincronizarStatusOnlineComFirebase();
+        }
+    }, 10000); // A cada 10 segundos
+    
+    // Sincronizar OS locais periodicamente
+    setInterval(() => {
+        this.sincronizarOSLocais();
+    }, 15000); // A cada 15 segundos
+    
+    // Forçar sincronização inicial
+    setTimeout(() => {
+        this.sincronizarOSLocais();
+    }, 2000);
+}
 
 // Inicializar quando a página carregar
 if (document.readyState === 'loading') {
