@@ -650,9 +650,11 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 <!-- 🔧 CORREÇÃO: Ordem correta dos scripts para sincronização -->
+<!-- NO index.html - MUDAR a ordem dos scripts -->
 <script src="data.js"></script>
-<script src="app.js"></script> <!-- ⚠️ APPS.JS DEVE VIR ANTES DO FIREBASE -->
-<script src="firebase.js"></script> <!-- ⚠️ FIREBASE DEPENDE DO APP -->
+<script src="app.js"></script>
+<!-- 🔥 TROQUE firebase.js por firebase-optimized.js -->
+<script src="firebase-optimized.js"></script> <!-- NOME ATUALIZADO -->
 <script src="app-email.js"></script>
 <script src="chat.js"></script>
 <script src="pdf.js"></script>
@@ -744,3 +746,4 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 </body>
 </html>
+
