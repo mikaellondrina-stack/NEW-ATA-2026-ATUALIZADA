@@ -238,16 +238,20 @@ const app = {
 
     // 🔧 CORREÇÃO: Função completamente reformulada para sincronização universal
    // NO app.js - FUNÇÃO OTIMIZADA PARA QUOTA
+    
 updateOnlineUsers() {
-    if (!this.currentUser) return;
+    if (!this.currentUser) {
+        console.log('❌ Usuário não logado');
+        return;
+    }
     
-    console.log('🔄 Atualizando lista universal...');
+    console.log('🔄 Atualizando usuários online...');
     
-    // 1. Usar sistema universal se disponível
-    if (typeof PorterUniversal !== 'undefined' && PorterUniversal.atualizarStatus) {
-        PorterUniversal.atualizarStatus();
+    // 1. Usar PorterSync se disponível
+    if (typeof PorterSync !== 'undefined' && PorterSync.atualizarMeuStatus) {
+        PorterSync.atualizarMeuStatus();
     } else {
-        // Fallback para método antigo
+        // Fallback: atualizar direto no Firebase
         if (window.db) {
             window.db.collection('online_users')
                 .doc(this.currentUser.user)
@@ -255,27 +259,20 @@ updateOnlineUsers() {
                     user: this.currentUser.user,
                     nome: this.currentUser.nome,
                     lastActivity: new Date().toISOString(),
-                    online: true,
-                    turno: this.currentUser.turno
+                    online: true
                 }, { merge: true })
-                .catch(e => console.log('Firebase:', e.message));
+                .catch(e => console.log('⚠️ Firebase:', e.message));
         }
     }
     
-    // 2. Usar dados do localStorage (atualizados pelo listener)
+    // 2. Usar dados do localStorage (atualizados pela escuta)
     try {
-        const dados = JSON.parse(localStorage.getItem('porter_universal') || '{"users":[]}');
-        const agora = new Date();
-        const dataTime = new Date(dados.timestamp);
-        const segundos = (agora - dataTime) / 1000;
-        
-        if (segundos < 30) { // Dados recentes
-            this.processarUsuariosSincronizados(dados.users);
-        } else {
-            console.log('⚠️ Dados muito antigos:', segundos.toFixed(0) + 's');
+        const dados = JSON.parse(localStorage.getItem('porter_usuarios_online') || '{}');
+        if (dados.users && Array.isArray(dados.users)) {
+            this.atualizarListaOnline(dados.users);
         }
     } catch (e) {
-        console.error('❌ Erro ao processar dados:', e);
+        console.log('📦 Nenhum dado sincronizado disponível');
     }
 },
     
