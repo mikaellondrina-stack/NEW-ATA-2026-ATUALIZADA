@@ -15,12 +15,17 @@ const chatSystem = {
                 </div>
             `;
             this.mostrarVistoPor(container);
+            
+            // 🔧 FIX 2: Scroll para baixo após carregar
+            setTimeout(() => {
+                this.scrollToBottom();
+            }, 100);
             return;
         }
         
-        const chatOrdenado = [...chat].reverse();
-        const scrollPosAntes = container.scrollTop;
-        const alturaAntes = container.scrollHeight;
+        // 🔧 FIX 2: REMOVER reverse() - manter ordem cronológica natural
+        // As mensagens mais antigas no topo, mais novas embaixo
+        const chatOrdenado = [...chat].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
         
         container.innerHTML = '';
         
@@ -54,19 +59,10 @@ const chatSystem = {
         
         this.mostrarVistoPor(container);
         
-        // Manter posição do scroll apenas se estava no final
-        const alturaDepois = container.scrollHeight;
-        const estavaNoFinal = Math.abs((scrollPosAntes + container.clientHeight) - alturaAntes) < 50;
-        
-        if (estavaNoFinal) {
-            setTimeout(() => {
-                container.scrollTop = container.scrollHeight;
-            }, 50);
-        } else {
-            // Manter posição relativa
-            const proporcao = scrollPosAntes / (alturaAntes - container.clientHeight);
-            container.scrollTop = proporcao * (alturaDepois - container.clientHeight);
-        }
+        // 🔧 FIX 2: SEMPRE scroll para baixo após carregar
+        setTimeout(() => {
+            this.scrollToBottom();
+        }, 100);
         
         app.registrarVisualizacaoChat();
         app.atualizarBadgeChat();
@@ -118,6 +114,11 @@ const chatSystem = {
         }
         
         container.appendChild(vistoPorDiv);
+        
+        // 🔧 FIX 2: Scroll para baixo após adicionar "visto por"
+        setTimeout(() => {
+            this.scrollToBottom();
+        }, 50);
     },
 
     destacarMensagemChat(mensagemId) {
@@ -206,7 +207,20 @@ const chatSystem = {
         
         this.loadChat();
         
+        // 🔧 FIX 2: Scroll para baixo após enviar
+        setTimeout(() => {
+            this.scrollToBottom();
+        }, 100);
+        
         app.criarNotificacaoChatComAcao(chatMessage);
+    },
+
+    // 🔧 FIX 2: Nova função para scroll automático
+    scrollToBottom() {
+        const container = document.getElementById('chat-messages');
+        if (container) {
+            container.scrollTop = container.scrollHeight;
+        }
     },
 
     // 🔧 FIX 1: CHAT PRIVADO - FUNÇÃO CORRIGIDA
@@ -219,39 +233,63 @@ const chatSystem = {
         // Limpar opções existentes
         select.innerHTML = '<option value="">Selecione um operador...</option>';
         
-        // Obter todos os usuários disponíveis
-        const todosUsuarios = [];
+        // 🔧 FIX 1: Buscar usuários online do Firebase em vez de apenas dados locais
+        const onlineData = localStorage.getItem('porter_online_firebase');
+        let usuariosDisponiveis = [];
         
-        // Adicionar funcionários (exceto o usuário atual)
-        DATA.funcionarios.forEach(f => {
-            if (f.user !== app.currentUser.user) {
-                todosUsuarios.push({
-                    nome: f.nome,
-                    user: f.user,
-                    role: f.role,
-                    tipo: 'funcionario'
-                });
+        if (onlineData) {
+            try {
+                const data = JSON.parse(onlineData);
+                const dataTime = new Date(data.timestamp);
+                const agora = new Date();
+                const diferencaSegundos = (agora - dataTime) / 1000;
+                
+                if (diferencaSegundos < 10) { // Dados recentes do Firebase
+                    usuariosDisponiveis = data.users || [];
+                }
+            } catch (e) {
+                console.error('Erro ao parsear dados online:', e);
             }
-        });
+        }
         
-        // Adicionar técnicos (exceto o usuário atual)
-        DATA.tecnicos.forEach(t => {
-            const tecUser = t.nome.split(' - ')[0].toLowerCase().replace(/\s+/g, '.');
-            if (tecUser !== app.currentUser.user) {
-                todosUsuarios.push({
-                    nome: t.nome,
-                    user: tecUser,
-                    role: 'TÉCNICO',
-                    tipo: 'tecnico'
-                });
-            }
-        });
+        // 🔧 FIX 1: Se não tiver dados do Firebase, usar dados locais como fallback
+        if (usuariosDisponiveis.length === 0) {
+            // Adicionar funcionários (exceto o usuário atual)
+            DATA.funcionarios.forEach(f => {
+                if (f.user !== app.currentUser.user) {
+                    usuariosDisponiveis.push({
+                        nome: f.nome,
+                        user: f.user,
+                        role: f.role,
+                        online: true
+                    });
+                }
+            });
+            
+            // Adicionar técnicos (exceto o usuário atual)
+            DATA.tecnicos.forEach(t => {
+                const tecUser = t.nome.split(' - ')[0].toLowerCase().replace(/\s+/g, '.');
+                if (tecUser !== app.currentUser.user) {
+                    usuariosDisponiveis.push({
+                        nome: t.nome,
+                        user: tecUser,
+                        role: 'TÉCNICO',
+                        online: true
+                    });
+                }
+            });
+        } else {
+            // 🔧 FIX 1: Filtrar apenas usuários que existem no sistema (não o usuário atual)
+            usuariosDisponiveis = usuariosDisponiveis.filter(user => 
+                user.user !== app.currentUser.user
+            );
+        }
         
         // Ordenar por nome
-        todosUsuarios.sort((a, b) => a.nome.localeCompare(b.nome));
+        usuariosDisponiveis.sort((a, b) => a.nome.localeCompare(b.nome));
         
         // Adicionar opções ao select
-        todosUsuarios.forEach(usuario => {
+        usuariosDisponiveis.forEach(usuario => {
             const option = document.createElement('option');
             option.value = usuario.user;
             
@@ -263,11 +301,18 @@ const chatSystem = {
                 texto += ' 🔧';
             }
             
+            // 🔧 FIX 1: Indicar status online
+            if (usuario.online) {
+                texto += ' 🟢';
+            } else {
+                texto += ' ⚫';
+            }
+            
             option.textContent = texto;
             select.appendChild(option);
         });
         
-        console.log('✅ Chat privado: ' + todosUsuarios.length + ' usuários carregados');
+        console.log('✅ Chat privado: ' + usuariosDisponiveis.length + ' usuários carregados');
     },
 
     loadPrivateChat() {
@@ -299,12 +344,19 @@ const chatSystem = {
                     <p>Nenhuma mensagem ainda. Comece a conversa!</p>
                 </div>
             `;
+            
+            // 🔧 FIX 2: Scroll para baixo
+            setTimeout(() => {
+                const privateContainer = document.getElementById('chat-private-messages');
+                if (privateContainer) {
+                    privateContainer.scrollTop = privateContainer.scrollHeight;
+                }
+            }, 100);
             return;
         }
         
-        const messagesOrdenado = [...messages].reverse();
-        const scrollPosAntes = container.scrollTop;
-        const alturaAntes = container.scrollHeight;
+        // 🔧 FIX 2: REMOVER reverse() - manter ordem cronológica
+        const messagesOrdenado = [...messages].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
         
         container.innerHTML = '';
         
@@ -333,19 +385,10 @@ const chatSystem = {
             container.appendChild(messageDiv);
         });
         
-        // Manter posição do scroll apenas se estava no final
-        const alturaDepois = container.scrollHeight;
-        const estavaNoFinal = Math.abs((scrollPosAntes + container.clientHeight) - alturaAntes) < 50;
-        
-        if (estavaNoFinal) {
-            setTimeout(() => {
-                container.scrollTop = container.scrollHeight;
-            }, 50);
-        } else {
-            // Manter posição relativa
-            const proporcao = scrollPosAntes / (alturaAntes - container.clientHeight);
-            container.scrollTop = proporcao * (alturaDepois - container.clientHeight);
-        }
+        // 🔧 FIX 2: SEMPRE scroll para baixo no chat privado
+        setTimeout(() => {
+            container.scrollTop = container.scrollHeight;
+        }, 100);
         
         // Marcar como visualizado
         this.marcarChatPrivadoComoVisualizado(chatId);
@@ -421,6 +464,14 @@ const chatSystem = {
         // Recarregar chat
         this.loadPrivateChat();
         
+        // 🔧 FIX 2: Scroll para baixo no chat privado
+        setTimeout(() => {
+            const privateContainer = document.getElementById('chat-private-messages');
+            if (privateContainer) {
+                privateContainer.scrollTop = privateContainer.scrollHeight;
+            }
+        }, 100);
+        
         // Atualizar badge
         app.atualizarBadgeChatPrivado();
         
@@ -473,3 +524,51 @@ const chatSystem = {
         app.atualizarBadgeChatPrivado();
     }
 };
+
+// 🔧 FIX 2: Configurar scroll automático quando a aba de chat for aberta
+document.addEventListener('DOMContentLoaded', () => {
+    // Observar mudanças nas abas
+    const tabChat = document.getElementById('tab-chat');
+    if (tabChat) {
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.attributeName === 'class') {
+                    // Se a aba de chat ficou visível
+                    if (!tabChat.classList.contains('hidden')) {
+                        // Aguardar renderização e fazer scroll para baixo
+                        setTimeout(() => {
+                            if (chatSystem.scrollToBottom) {
+                                chatSystem.scrollToBottom();
+                            }
+                        }, 300);
+                    }
+                }
+            });
+        });
+        
+        observer.observe(tabChat, { attributes: true });
+    }
+    
+    // Observar mudanças na aba de chat privado
+    const chatPrivateTab = document.getElementById('tab-chat-private');
+    if (chatPrivateTab) {
+        const observerPrivate = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.attributeName === 'class') {
+                    // Se a aba de chat privado ficou visível
+                    if (!chatPrivateTab.classList.contains('hidden')) {
+                        // Aguardar renderização e fazer scroll para baixo
+                        setTimeout(() => {
+                            const privateContainer = document.getElementById('chat-private-messages');
+                            if (privateContainer) {
+                                privateContainer.scrollTop = privateContainer.scrollHeight;
+                            }
+                        }, 300);
+                    }
+                }
+            });
+        });
+        
+        observerPrivate.observe(chatPrivateTab, { attributes: true });
+    }
+});
