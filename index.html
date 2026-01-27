@@ -642,32 +642,18 @@
 <!-- ============================================== -->
 <!-- FIREBASE SDKs (MANTENHA ESTES) -->
 <!-- ============================================== -->
+<!-- ORDEM ATUALIZADA -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<!-- ⚠️ REMOVA firebase-database-compat.js (não precisa) -->
 
-<!-- ============================================== -->
-<!-- BIBLIOTECAS EXTERNAS (MANTENHA) -->
-<!-- ============================================== -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
-<!-- ============================================== -->
-<!-- ORDEM CORRETA DOS SEUS SCRIPTS (ATUALIZADA) -->
-<!-- ============================================== -->
 <script src="data.js"></script>
 <script src="app.js"></script>
-
-<!-- 🔥 ARQUIVO SIMPLES DO FIREBASE (NOVO PROJETO) -->
-<script src="firebase-simple.js"></script> <!-- ⬅️ NOVO E SIMPLES -->
-
-<!-- SEUS OUTROS ARQUIVOS -->
+<script src="firebase-sincronia.js"></script> <!-- ⬅️ NOVO! -->
 <script src="app-email.js"></script>
 <script src="chat.js"></script>
 <script src="pdf.js"></script>
 <script src="utils.js"></script>
-
 <!-- 🔧 CORREÇÃO: Inicialização segura do sistema -->
 <script>
 // 🔧 CORREÇÃO: Inicialização segura do sistema
@@ -754,5 +740,6 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 </body>
 </html>
+
 
 
