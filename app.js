@@ -664,14 +664,16 @@ const app = {
     },
 
     showApp() {
-        // Transição suave
-        document.getElementById('login-screen').classList.add('hidden');
-        document.getElementById('main-content').classList.remove('hidden');
-        
-        // MOSTRAR SIDEBAR APÓS LOGIN
-        if (window.innerWidth > 1200) {
-            document.getElementById('sidebar').style.display = 'block';
-        }
+    // ... todo o código existente ...
+    
+    // ADICIONE ISSO NO FINAL:
+    console.log('✅ showApp() finalizado');
+    
+    // Inicializar chatSystem se existir
+    if (typeof chatSystem !== 'undefined') {
+        console.log('💬 chatSystem pronto para uso');
+    }
+}
         
         this.updateUserInfo();
         this.carregarMoodOptions();
