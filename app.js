@@ -81,7 +81,9 @@ const app = {
         document.getElementById('chat-input')?.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
-                this.sendChatMessage();
+               if (window.chatSystem && window.chatSystem.sendChatMessage) {
+    window.chatSystem.sendChatMessage();
+}
             }
         });
 
@@ -694,8 +696,9 @@ const app = {
         }
         
         // Iniciar chat
-        this.loadChat();
-        this.chatInterval = setInterval(() => this.loadChat(), 5000);
+        if (window.chatSystem && window.chatSystem.loadChat) {
+    window.chatSystem.loadChat();
+}
         
         // NEW: Iniciar chat privado
         this.loadPrivateChatUsers();
@@ -799,14 +802,15 @@ const app = {
         btn.classList.add('active');
         
         // Se for a aba de chat, carregar mensagens e marcar como visualizado
-        if (tabId === 'tab-chat') {
-            this.loadChat();
-            this.marcarChatComoVisualizado();
+        if (window.chatSystem && window.chatSystem.loadChat) {
+    window.chatSystem.loadChat();
+}
         }
         
         // Se for a aba de chat privado, carregar usuários
-        if (tabId === 'tab-chat-privado') {
-            this.loadPrivateChatUsers();
+        if (window.chatSystem && window.chatSystem.loadPrivateChatUsers) {
+    window.chatSystem.loadPrivateChatUsers();
+}
         }
     },
 
