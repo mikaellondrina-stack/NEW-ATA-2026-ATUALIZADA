@@ -19,6 +19,14 @@ window.auth = firebase.auth();
 
 // Funções auxiliares do Firebase
 const firebaseHelper = {
+    // CORREÇÃO: Flag para controlar se o Firebase está pronto
+    firebaseReady: false,
+    
+    // CORREÇÃO: Função para verificar se Firebase está pronto
+    isFirebaseReady() {
+        return this.firebaseReady && window.db;
+    },
+
     // Salvar uma ata no Firebase
     salvarAtaNoFirebase(ata) {
         if (!window.db) {
@@ -191,7 +199,7 @@ const firebaseHelper = {
         console.log('✅ Dados sincronizados com Firebase');
     },
 
-    // CORREÇÃO: Sincronizar status online com Firebase
+    // Sincronizar status online com Firebase
     sincronizarStatusOnlineComFirebase() {
         if (!window.db || !app || !app.currentUser) return;
         
@@ -216,7 +224,7 @@ const firebaseHelper = {
             });
     },
 
-    // CORREÇÃO: Obter humor atual do usuário
+    // Obter humor atual do usuário
     getMoodAtualDoUsuario() {
         if (!app || !app.currentUser) return 'Normal';
         
@@ -237,7 +245,7 @@ const firebaseHelper = {
         }
     },
 
-    // CORREÇÃO: Monitorar usuários online no Firebase
+    // Monitorar usuários online no Firebase
     configurarMonitoramentoOnlineFirebase() {
         if (!window.db) return;
         
@@ -289,7 +297,7 @@ const firebaseHelper = {
             });
     },
 
-    // CORREÇÃO: Atualizar interface da aba online
+    // Atualizar interface da aba online
     atualizarInterfaceOnline(usuariosOnline) {
         // Verificar se estamos na aba "online"
         const tabOnline = document.getElementById('tab-online');
@@ -479,6 +487,8 @@ const firebaseHelper = {
     inicializarFirebase() {
         if (!window.db) {
             console.log('Firebase não inicializado, usando localStorage');
+            // CORREÇÃO: Mesmo sem Firebase, marca como pronto para não mostrar alerta
+            this.firebaseReady = true;
             return;
         }
         
@@ -487,12 +497,18 @@ const firebaseHelper = {
         // Configurar listener para OS
         this.configurarOSFirebase();
         
-        // CORREÇÃO: Configurar monitoramento de status online
+        // Configurar monitoramento de status online
         this.configurarMonitoramentoOnlineFirebase();
         
         // Configurar listeners em tempo real
         this.configurarChatTempoReal();
         this.configurarNotificacoesTempoReal();
+        
+        // CORREÇÃO: Marcar Firebase como pronto após 1 segundo
+        setTimeout(() => {
+            this.firebaseReady = true;
+            console.log('✅ Firebase marcado como pronto');
+        }, 1000);
         
         // Sincronizar status online periodicamente (a cada 10 segundos)
         setInterval(() => {
@@ -528,3 +544,8 @@ if (document.readyState === 'loading') {
 } else {
     firebaseHelper.inicializarFirebase();
 }
+
+// CORREÇÃO: Adicionar função global para verificar se Firebase está pronto
+window.isFirebaseReady = function() {
+    return firebaseHelper.isFirebaseReady();
+};
