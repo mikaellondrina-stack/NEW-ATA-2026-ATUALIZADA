@@ -191,7 +191,7 @@ const firebaseHelper = {
         console.log('✅ Dados sincronizados com Firebase');
     },
 
-    // Sincronizar status online com Firebase
+    // CORREÇÃO: Sincronizar status online com Firebase
     sincronizarStatusOnlineComFirebase() {
         if (!window.db || !app || !app.currentUser) return;
         
@@ -206,7 +206,7 @@ const firebaseHelper = {
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
         };
         
-        // Salvar/atualizar no Firebase com timestamp do servidor
+        // Salvar/atualizar no Firebase
         window.db.collection('online_users').doc(app.currentUser.user).set(userData)
             .then(() => {
                 console.log('✅ Status online atualizado no Firebase:', app.currentUser.user);
@@ -216,13 +216,13 @@ const firebaseHelper = {
             });
     },
 
-    // Monitorar usuários online no Firebase
+    // CORREÇÃO: Monitorar usuários online no Firebase
     configurarMonitoramentoOnlineFirebase() {
         if (!window.db) return;
         
         console.log('🔧 Configurando monitoramento de usuários online...');
         
-        // Configurar listener para TODOS os usuários na coleção online_users
+        // Listener para TODOS os usuários online
         window.db.collection('online_users')
             .onSnapshot(snapshot => {
                 const usuariosOnline = [];
@@ -230,23 +230,20 @@ const firebaseHelper = {
                 
                 snapshot.forEach(doc => {
                     const usuario = doc.data();
-                    // Verificar se o usuário está marcado como online
                     if (usuario.online === true) {
-                        // Verificar se não está "morto" (última atividade há mais de 2 minutos)
                         if (usuario.lastActivity) {
                             const ultimaAtividade = new Date(usuario.lastActivity);
                             const diferencaSegundos = (agora - ultimaAtividade) / 1000;
                             
-                            if (diferencaSegundos < 120) { // Considerar online se ativo nos últimos 2 minutos
+                            if (diferencaSegundos < 120) { // Online nos últimos 2 minutos
                                 usuariosOnline.push(usuario);
                             } else {
-                                // Marcar como offline no Firebase (limpeza automática)
+                                // Marcar como offline automaticamente
                                 window.db.collection('online_users').doc(doc.id).update({
                                     online: false
                                 }).catch(() => {});
                             }
                         } else {
-                            // Se não tem lastActivity, incluir mesmo assim
                             usuariosOnline.push(usuario);
                         }
                     }
@@ -254,21 +251,21 @@ const firebaseHelper = {
                 
                 console.log('👥 Usuários online detectados:', usuariosOnline.map(u => u.nome));
                 
-                // Atualizar lista global de usuários online
-                if (typeof app !== 'undefined') {
-                    // Salvar no localStorage para persistência
-                    localStorage.setItem('porter_online_users', JSON.stringify(usuariosOnline));
-                    
-                    // Atualizar interface se a função existir
-                    if (app.updateOnlineUsers && typeof app.updateOnlineUsers === 'function') {
-                        app.updateOnlineUsers();
-                    }
-                    
-                    // Atualizar contador na interface
-                    const onlineCountElement = document.getElementById('online-count');
-                    if (onlineCountElement) {
-                        onlineCountElement.textContent = usuariosOnline.length;
-                    }
+                // Salvar no localStorage para o app.js usar
+                localStorage.setItem('porter_online_users', JSON.stringify({
+                    timestamp: new Date().toISOString(),
+                    users: usuariosOnline
+                }));
+                
+                // Atualizar interface se existir
+                if (typeof app !== 'undefined' && app.updateOnlineUsers) {
+                    app.updateOnlineUsers();
+                }
+                
+                // Atualizar contador
+                const onlineCountElement = document.getElementById('online-count');
+                if (onlineCountElement) {
+                    onlineCountElement.textContent = usuariosOnline.length;
                 }
                 
             }, error => {
@@ -361,7 +358,7 @@ const firebaseHelper = {
         // Configurar listener para OS
         this.configurarOSFirebase();
         
-        // Configurar monitoramento de status online
+        // CORREÇÃO: Configurar monitoramento de status online
         this.configurarMonitoramentoOnlineFirebase();
         
         // Configurar listeners em tempo real
