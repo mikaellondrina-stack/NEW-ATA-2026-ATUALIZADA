@@ -864,6 +864,15 @@ const app = {
     },
 
     logout() {
+        // 🔥 1. MARCA COMO OFFLINE NO FIREBASE (IMPORTANTE!)
+    if (window.db && this.currentUser) {
+        window.db.collection('online_users').doc(this.currentUser.user)
+            .update({ 
+                online: false,
+                lastActivity: new Date().toISOString()
+            })
+            .catch(() => {});
+    }
         if (confirm('Deseja realmente sair do sistema?')) {
             this.registrarLogoff();
             
