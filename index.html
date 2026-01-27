@@ -649,16 +649,16 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-<!-- CORREÇÃO: Nossos scripts (ORDEM CORRETA) -->
+<!-- 🔧 CORREÇÃO: Ordem correta dos scripts para sincronização -->
 <script src="data.js"></script>
-<script src="app.js"></script> <!-- ⚠️ APPS.JS DEVE VIR ANTES -->
+<script src="app.js"></script> <!-- ⚠️ APPS.JS DEVE VIR ANTES DO FIREBASE -->
 <script src="firebase.js"></script> <!-- ⚠️ FIREBASE DEPENDE DO APP -->
 <script src="app-email.js"></script>
 <script src="chat.js"></script>
 <script src="pdf.js"></script>
 <script src="utils.js"></script>
 
-<!-- Inicialização -->
+<!-- 🔧 CORREÇÃO: Inicialização segura do sistema -->
 <script>
 // 🔧 CORREÇÃO: Inicialização segura do sistema
 document.addEventListener('DOMContentLoaded', function() {
@@ -705,9 +705,42 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    
+    // 🔧 CORREÇÃO: Forçar sincronização inicial após carregamento
+    setTimeout(() => {
+        if (app && app.currentUser && typeof app.updateOnlineUsers === 'function') {
+            console.log('🔄 Forçando sincronização inicial de usuários online...');
+            app.updateOnlineUsers();
+        }
+        
+        // 🔧 CORREÇÃO: Configurar listener para recarregar dados quando voltar à aba
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden && app && app.currentUser) {
+                console.log('📱 Página visível novamente, atualizando dados...');
+                if (typeof app.updateOnlineUsers === 'function') {
+                    setTimeout(() => app.updateOnlineUsers(), 1000);
+                }
+            }
+        });
+    }, 3000);
+    
+    // 🔧 CORREÇÃO: Detectar atualização de página (F5)
+    if (window.performance && window.performance.navigation) {
+        const tipoNavegacao = window.performance.navigation.type;
+        if (tipoNavegacao === 1) { // TYPE_RELOAD = 1
+            console.log('🔄 Página recarregada (F5), mantendo sessão...');
+            if (app && app.currentUser) {
+                console.log('✅ Mantendo sessão do usuário:', app.currentUser.nome);
+                // Manter sessão ativa
+                setTimeout(() => {
+                    if (typeof app.salvarSessao === 'function') {
+                        app.salvarSessao();
+                    }
+                }, 500);
+            }
+        }
+    }
 });
 </script>
 </body>
 </html>
-
-
