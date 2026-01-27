@@ -130,7 +130,7 @@ const firebaseHelper = {
             });
     },
 
-    // Configurar listener em tempo real para OS
+    // 🔧 FIX 1: Configurar listener em tempo real para OS
     configurarOSFirebase() {
         if (!window.db) {
             console.log('Firebase não disponível para OS');
@@ -191,218 +191,73 @@ const firebaseHelper = {
         console.log('✅ Dados sincronizados com Firebase');
     },
 
-    // 🔥 SISTEMA ONLINE ESTÁVEL - Mantém usuário online
-    manterUsuarioOnline() {
-        if (!window.db || !window.app || !window.app.currentUser) return;
+    // 🔧 FIX 2: Nova função para sincronizar status online com Firebase
+    sincronizarStatusOnlineComFirebase() {
+        if (!window.db || !app || !app.currentUser) return;
         
-        const userData = {
-            user: window.app.currentUser.user,
-            nome: window.app.currentUser.nome,
-            role: window.app.currentUser.role,
-            mood: window.app.currentUser.mood || '😐',
-            turno: window.app.currentUser.turno || 'Diurno',
-            lastActivity: firebase.firestore.FieldValue.serverTimestamp(),
-            online: true
+        const statusOnline = {
+            user: app.currentUser.user,
+            nome: app.currentUser.nome,
+            role: app.currentUser.role,
+            mood: app.getMoodAtual(),
+            lastActivity: new Date().toISOString(),
+            online: true,
+            turno: app.currentUser.turno || 'Diurno'
         };
         
-        // Usar set com merge para não sobrescrever outros campos
-        window.db.collection('online_users').doc(window.app.currentUser.user)
-            .set(userData, { merge: true })
+        // Salvar no Firebase
+        window.db.collection('online_users').doc(app.currentUser.user).set(statusOnline)
             .then(() => {
-                console.log('💓 Heartbeat enviado:', window.app.currentUser.user);
+                console.log('✅ Status online sincronizado com Firebase');
             })
             .catch(error => {
-                console.log('⚠️ Falha no heartbeat:', error);
+                console.error('❌ Erro ao sincronizar status online:', error);
             });
     },
 
-    // 🔥 SISTEMA ONLINE ESTÁVEL - Monitorar TODOS os usuários
-    monitorarUsuariosOnline() {
-        if (!window.db) {
-            console.log('⚠️ Firebase não disponível para monitoramento');
-            return;
-        }
+    // 🔧 FIX 2: Nova função para monitorar usuários online no Firebase
+    configurarMonitoramentoOnlineFirebase() {
+        if (!window.db) return;
         
-        console.log('👀 Iniciando monitoramento de usuários online...');
-        
-        // Listener QUE FUNCIONA - sem filtro where inicial
-        window.db.collection('online_users').onSnapshot(
-            (snapshot) => {
-                const usuariosAtivos = [];
+        window.db.collection('online_users')
+            .where('online', '==', true)
+            .onSnapshot(snapshot => {
+                const usuariosOnlineFirebase = [];
                 const agora = new Date();
                 
-                snapshot.forEach((doc) => {
+                snapshot.forEach(doc => {
                     const usuario = doc.data();
+                    // Verificar se não está "morto" (última atividade há mais de 3 minutos)
+                    const ultimaAtividade = new Date(usuario.lastActivity);
+                    const diferencaMinutos = (agora - ultimaAtividade) / (1000 * 60);
                     
-                    // Verificar se está marcado como online
-                    if (usuario.online === true) {
-                        // Verificar se está ativo (últimos 30 segundos)
-                        if (usuario.lastActivity) {
-                            const lastActivity = usuario.lastActivity.toDate 
-                                ? usuario.lastActivity.toDate() 
-                                : new Date(usuario.lastActivity);
-                            
-                            const segundosDesdeAtividade = (agora - lastActivity) / 1000;
-                            
-                            if (segundosDesdeAtividade < 45) { // 45 segundos de tolerância
-                                usuariosAtivos.push(usuario);
-                            } else {
-                                // Limpeza automática - marcar como offline
-                                doc.ref.update({ online: false }).catch(() => {});
-                            }
-                        } else {
-                            // Se não tem lastActivity, inclui mesmo assim
-                            usuariosAtivos.push(usuario);
-                        }
+                    if (diferencaMinutos < 3) { // Considerar online se ativo nos últimos 3 minutos
+                        usuariosOnlineFirebase.push(usuario);
+                    } else {
+                        // Marcar como offline no Firebase
+                        window.db.collection('online_users').doc(doc.id).update({
+                            online: false
+                        }).catch(() => {});
                     }
                 });
                 
-                console.log('👥 Usuários online detectados:', usuariosAtivos.length);
+                // Atualizar lista local
+                if (typeof app !== 'undefined') {
+                    // Salvar no localStorage para o app.js usar
+                    localStorage.setItem('porter_online_firebase', JSON.stringify({
+                        timestamp: new Date().toISOString(),
+                        users: usuariosOnlineFirebase
+                    }));
+                    
+                    // Forçar atualização da lista de online
+                    if (app.currentUser && app.updateOnlineUsers) {
+                        app.updateOnlineUsers();
+                    }
+                }
                 
-                // SALVAR NO LOCALSTORAGE (FORMATO SIMPLES)
-                localStorage.setItem('online_users_firebase', JSON.stringify(usuariosAtivos));
-                
-                // ATUALIZAR INTERFACE IMEDIATAMENTE
-                this.atualizarInterfaceOnline(usuariosAtivos);
-            },
-            (error) => {
-                console.log('❌ Erro no monitoramento:', error);
-            }
-        );
-    },
-
-    // 🔥 SISTEMA ONLINE ESTÁVEL - Atualizar interface
-    atualizarInterfaceOnline(usuarios) {
-        // Atualizar contador PRINCIPAL
-        const onlineCountElement = document.getElementById('online-count');
-        if (onlineCountElement) {
-            onlineCountElement.textContent = usuarios.length;
-        }
-        
-        // Atualizar contador do DASHBOARD também
-        const dashboardCount = document.getElementById('dashboard-online-count');
-        if (dashboardCount) {
-            dashboardCount.textContent = usuarios.length;
-        }
-        
-        // Atualizar lista se estiver visível
-        const onlineList = document.getElementById('online-users-list');
-        if (!onlineList) return;
-        
-        // Limpar e reconstruir lista
-        onlineList.innerHTML = '';
-        
-        if (usuarios.length === 0) {
-            onlineList.innerHTML = `
-                <div class="p-4 text-center text-gray-500">
-                    <i class="fas fa-users-slash text-2xl mb-2"></i>
-                    <p>Nenhum usuário online</p>
-                </div>
-            `;
-            return;
-        }
-        
-        // Ordenar por último ativo (mais recente primeiro)
-        usuarios.sort((a, b) => {
-            const timeA = a.lastActivity ? (a.lastActivity.toDate ? a.lastActivity.toDate().getTime() : new Date(a.lastActivity).getTime()) : 0;
-            const timeB = b.lastActivity ? (b.lastActivity.toDate ? b.lastActivity.toDate().getTime() : new Date(b.lastActivity).getTime()) : 0;
-            return timeB - timeA;
-        });
-        
-        // Adicionar cada usuário
-        usuarios.forEach((user, index) => {
-            const div = document.createElement('div');
-            div.className = `p-3 ${index !== usuarios.length - 1 ? 'border-b' : ''} hover:bg-gray-50`;
-            
-            // Calcular tempo desde última atividade
-            let tempoAtivo = 'Agora';
-            if (user.lastActivity) {
-                const lastActive = user.lastActivity.toDate ? user.lastActivity.toDate() : new Date(user.lastActivity);
-                const minutos = Math.floor((new Date() - lastActive) / (1000 * 60));
-                
-                if (minutos === 0) tempoAtivo = 'Agora mesmo';
-                else if (minutos === 1) tempoAtivo = 'Há 1 minuto';
-                else if (minutos < 60) tempoAtivo = `Há ${minutos} minutos`;
-                else tempoAtivo = `Há ${Math.floor(minutos/60)}h`;
-            }
-            
-            div.innerHTML = `
-                <div class="flex items-center">
-                    <div class="relative">
-                        <div class="w-10 h-10 rounded-full flex items-center justify-center ${user.role === 'TÉCNICO' ? 'bg-orange-100' : 'bg-blue-100'}">
-                            <i class="fas fa-user ${user.role === 'TÉCNICO' ? 'text-orange-600' : 'text-blue-600'}"></i>
-                        </div>
-                        <div class="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${user.online ? 'bg-green-500' : 'bg-gray-400'}"></div>
-                    </div>
-                    <div class="ml-3 flex-1">
-                        <div class="font-medium text-gray-800">${user.nome || user.user}</div>
-                        <div class="text-sm text-gray-600">
-                            ${user.role || 'Operador'} • ${user.turno || 'Diurno'}
-                        </div>
-                        <div class="text-xs text-gray-400 mt-1">
-                            <i class="far fa-clock"></i> ${tempoAtivo}
-                        </div>
-                    </div>
-                    <div class="text-2xl">${user.mood || '😐'}</div>
-                </div>
-            `;
-            
-            onlineList.appendChild(div);
-        });
-    },
-
-    // 🔥 SISTEMA ONLINE ESTÁVEL - Inicializar
-    inicializarSistemaOnline() {
-        if (!window.db) {
-            console.log('⚠️ Firebase offline - online desativado');
-            return;
-        }
-        
-        console.log('🚀 Iniciando sistema online...');
-        
-        // A. Iniciar monitoramento de outros usuários
-        this.monitorarUsuariosOnline();
-        
-        // B. Registrar usuário atual imediatamente
-        if (window.app && window.app.currentUser) {
-            setTimeout(() => this.manterUsuarioOnline(), 1000);
-        }
-        
-        // C. Manter heartbeat a cada 10 segundos
-        const heartbeatInterval = setInterval(() => {
-            if (window.app && window.app.currentUser) {
-                this.manterUsuarioOnline();
-            } else {
-                clearInterval(heartbeatInterval);
-            }
-        }, 10000); // 10 segundos
-        
-        // D. Configurar para marcar como offline ao sair
-        window.addEventListener('beforeunload', () => {
-            if (window.db && window.app && window.app.currentUser) {
-                window.db.collection('online_users').doc(window.app.currentUser.user)
-                    .update({ online: false })
-                    .catch(() => {});
-            }
-        });
-        
-        console.log('✅ Sistema online inicializado');
-    },
-
-    // 🔥 Marcar usuário como offline (para logout)
-    marcarUsuarioOffline() {
-        if (!window.db || !window.app || !window.app.currentUser) return;
-        
-        window.db.collection('online_users').doc(window.app.currentUser.user)
-            .update({ 
-                online: false,
-                lastActivity: new Date().toISOString()
-            })
-            .then(() => {
-                console.log('✅ Usuário marcado como offline:', window.app.currentUser.user);
-            })
-            .catch(error => {
-                console.error('❌ Erro ao marcar usuário como offline:', error);
+                console.log('👥 Usuários online no Firebase:', usuariosOnlineFirebase.length);
+            }, error => {
+                console.error('❌ Erro no monitoramento online do Firebase:', error);
             });
     },
 
@@ -457,8 +312,8 @@ const firebaseHelper = {
                 
                 // Atualizar interface
                 if (typeof app !== 'undefined') {
-                    if (app.loadNotifications) app.loadNotifications();
-                    if (app.updateNotificationBadges) app.updateNotificationBadges();
+                    app.loadNotifications();
+                    app.updateNotificationBadges();
                 }
             }, error => {
                 console.error('Erro no listener de notificações:', error);
@@ -474,20 +329,27 @@ const firebaseHelper = {
         
         console.log('✅ Firebase inicializado com sucesso');
         
-        // Configurar listener para OS
+        // 🔧 FIX 1: Configurar listener para OS
         this.configurarOSFirebase();
         
-        // 🔥 INICIAR SISTEMA ONLINE (IMPORTANTE!)
-        this.inicializarSistemaOnline();
+        // 🔧 FIX 2: Configurar monitoramento de status online
+        this.configurarMonitoramentoOnlineFirebase();
         
         // Configurar listeners em tempo real
         this.configurarChatTempoReal();
         this.configurarNotificacoesTempoReal();
         
-        // Sincronizar dados periodicamente
+        // 🔧 FIX 2: Sincronizar status online periodicamente
+        setInterval(() => {
+            if (app && app.currentUser) {
+                this.sincronizarStatusOnlineComFirebase();
+            }
+        }, 10000); // A cada 10 segundos
+        
+        // Sincronizar periodicamente
         setInterval(() => {
             this.sincronizarDados();
-        }, 30000);
+        }, 30000); // Sincronizar a cada 30 segundos
     }
 };
 
@@ -499,6 +361,3 @@ if (document.readyState === 'loading') {
 } else {
     firebaseHelper.inicializarFirebase();
 }
-
-// Exportar para uso global
-window.firebaseHelper = firebaseHelper;
