@@ -226,19 +226,6 @@ const app = {
 
     // 🔧 FIX 3: botão online - função completamente reformulada
     updateOnlineUsers() {
-    // 🔥 3. FUNÇÃO SIMPLES QUE USA DADOS DO FIREBASE
-    try {
-        const onlineData = localStorage.getItem('online_users_firebase');
-        if (onlineData) {
-            const usuarios = JSON.parse(onlineData);
-            console.log('📊 Usuários online:', usuarios.length);
-            return usuarios;
-        }
-    } catch (e) {
-        console.log('⚠️ Erro ao ler online:', e);
-    }
-    return [];
-},
         if (!this.currentUser) return;
         
         const agora = new Date();
@@ -844,12 +831,6 @@ const app = {
         if (this.currentUser) {
             document.getElementById('os-funcionario').value = this.currentUser.nome;
             document.getElementById('os-email').value = `${this.currentUser.user}@porter.com.br`;
-             // 🔥 2. INICIAR SISTEMA ONLINE APÓS LOGIN
-    setTimeout(() => {
-        if (window.firebaseHelper && window.firebaseHelper.inicializarSistemaOnline) {
-            window.firebaseHelper.inicializarSistemaOnline();
-        }
-    }, 2000);
         }
     },
 
@@ -883,15 +864,6 @@ const app = {
     },
 
     logout() {
-        // 🔥 1. MARCA COMO OFFLINE NO FIREBASE (IMPORTANTE!)
-    if (window.db && this.currentUser) {
-        window.db.collection('online_users').doc(this.currentUser.user)
-            .update({ 
-                online: false,
-                lastActivity: new Date().toISOString()
-            })
-            .catch(() => {});
-    }
         if (confirm('Deseja realmente sair do sistema?')) {
             this.registrarLogoff();
             
