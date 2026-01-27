@@ -33,7 +33,8 @@
                 <option value="Noturno">Noturno</option>
             </select>
         </div>
-        <button class="btn btn-primary" onclick="app.login()">
+        <!-- 🔧 CORREÇÃO: Botão com ID para ser configurado via JavaScript -->
+        <button class="btn btn-primary" id="login-button">
             <i class="fas fa-sign-in-alt"></i> ACESSAR SISTEMA
         </button>
         <div style="margin-top: 1.5rem; text-align: center; font-size: 0.8rem; color: var(--gray);">
@@ -659,14 +660,52 @@
 
 <!-- Inicialização -->
 <script>
-// Inicializar o sistema quando a página carregar
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
+// 🔧 CORREÇÃO: Inicialização segura do sistema
+document.addEventListener('DOMContentLoaded', function() {
+    // Garantir que app existe globalmente
+    if (typeof app === 'undefined') {
+        console.error('❌ Erro: app não está definido. Verifique a ordem dos scripts.');
+        // Criar objeto app mínimo para evitar erros
+        window.app = {
+            init: function() {
+                console.log('⚠️ App carregado em modo de segurança');
+            },
+            login: function() {
+                alert('Sistema ainda não carregou completamente. Aguarde alguns segundos.');
+            }
+        };
+    }
+    
+    // Inicializar o sistema
+    if (app && typeof app.init === 'function') {
         app.init();
-    });
-} else {
-    app.init();
-}
+    }
+    
+    // 🔧 CORREÇÃO: Configurar evento do botão de login
+    const loginButton = document.getElementById('login-button');
+    if (loginButton) {
+        loginButton.addEventListener('click', function() {
+            if (app && typeof app.login === 'function') {
+                app.login();
+            } else {
+                console.error('❌ Erro: app.login não está disponível');
+                alert('Erro: Sistema não carregou corretamente. Recarregue a página.');
+            }
+        });
+    }
+    
+    // 🔧 CORREÇÃO: Configurar Enter no campo de senha
+    const loginPass = document.getElementById('login-pass');
+    if (loginPass) {
+        loginPass.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                if (app && typeof app.login === 'function') {
+                    app.login();
+                }
+            }
+        });
+    }
+});
 </script>
 </body>
 </html>
