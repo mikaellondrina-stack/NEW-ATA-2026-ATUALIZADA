@@ -234,10 +234,104 @@ const app = {
     },
 
     // 🔧 CORREÇÃO: Função completamente reformulada para sincronização universal
-    updateOnlineUsers() {
+     updateOnlineUsers() {
         if (!this.currentUser) {
-            console.log('❌ Usuário não logado para atualização online');
+            console.log('❌ Usuário não logado');
             return;
+        }
+        
+        console.log('🔄 Atualizando lista de usuários online...');
+        
+        // 1. SINCRONIZAR PRÓPRIO STATUS NO FIREBASE
+        if (typeof firebaseHelper !== 'undefined' && firebaseHelper.sincronizarStatusOnlineComFirebase) {
+            firebaseHelper.sincronizarStatusOnlineComFirebase();
+        }
+        
+        // 2. BUSCAR DADOS DO FIREBASE (DO LOCALSTORAGE QUE É ATUALIZADO PELO LISTENER)
+        let usuariosOnline = [];
+        const agora = new Date();
+        
+        try {
+            const onlineDataStr = localStorage.getItem('porter_online_firebase');
+            if (onlineDataStr) {
+                const onlineData = JSON.parse(onlineDataStr);
+                const dataTime = new Date(onlineData.timestamp);
+                const diferencaSegundos = (agora - dataTime) / 1000;
+                
+                // 🔥 USAR DADOS ATÉ 30 SEGUNDOS ANTIGOS
+                if (diferencaSegundos < 30) {
+                    console.log(`📊 Dados online recentes (${diferencaSegundos.toFixed(0)}s)`);
+                    
+                    onlineData.users.forEach(usuario => {
+                        // Pular usuário atual (vamos adicionar depois)
+                        if (usuario.user === this.currentUser.user) return;
+                        
+                        // Verificar se está realmente ativo
+                        const ultimaAtividade = new Date(usuario.lastActivity);
+                        const diferencaUserSegundos = (agora - ultimaAtividade) / 1000;
+                        
+                        if (diferencaUserSegundos < 120) { // Ativo nos últimos 2 minutos
+                            usuariosOnline.push({
+                                nome: usuario.nome,
+                                user: usuario.user,
+                                role: usuario.role,
+                                lastActivity: usuario.lastActivity,
+                                mood: usuario.mood || '😐',
+                                moodStatus: this.getMoodStatusTexto(usuario.mood || '😐'),
+                                isCurrentUser: false,
+                                online: true,
+                                turno: usuario.turno || 'Diurno',
+                                loginDate: usuario.loginDate,
+                                loginHour: usuario.loginHour
+                            });
+                        }
+                    });
+                } else {
+                    console.log(`⚠️ Dados online antigos (${diferencaSegundos.toFixed(0)}s)`);
+                }
+            } else {
+                console.log('⚠️ Nenhum dado online encontrado');
+            }
+        } catch (e) {
+            console.error('❌ Erro ao processar dados online:', e);
+        }
+        
+        // 3. ADICIONAR USUÁRIO ATUAL (SEMPRE)
+        usuariosOnline.unshift({
+            ...this.currentUser,
+            lastActivity: agora.toISOString(),
+            mood: this.getMoodAtual(),
+            moodStatus: this.getMoodStatusTexto(this.getMoodAtual()),
+            isCurrentUser: true,
+            online: true
+        });
+        
+        // 🔥 ATUALIZAR LISTA GLOBAL
+        this.onlineUsers = usuariosOnline;
+        
+        // 4. ATUALIZAR CONTADOR NO HEADER
+        const onlineCount = document.getElementById('online-count');
+        if (onlineCount) {
+            if (this.onlineUsers.length === 1) {
+                onlineCount.textContent = '1 (apenas você)';
+                onlineCount.style.color = '#f39c12';
+            } else {
+                onlineCount.textContent = this.onlineUsers.length;
+                onlineCount.style.color = '#2ecc71';
+            }
+        }
+        
+        // 5. ATUALIZAR LISTA SE ESTIVER VISÍVEL
+        const onlineList = document.getElementById('online-users-list');
+        if (onlineList && onlineList.style.display === 'block') {
+            this.renderOnlineUsersList();
+        }
+        
+        console.log(`✅ ${this.onlineUsers.length} usuários online`);
+        
+        // 🔥 ATUALIZAR SELECT DO CHAT PRIVADO
+        this.loadPrivateChatUsers();
+    },
         }
         
         const agora = new Date();
