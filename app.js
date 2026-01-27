@@ -896,20 +896,21 @@ salvarSessao() {
         return moods.some(m => m.user === this.currentUser.user && m.dataISO === hojeISO);
     },
 
-    logout() {
-        if (confirm('Deseja realmente sair do sistema?')) {
-            this.registrarLogoff();
-            
-            // Limpar intervalos primeiro
-            if (this.chatInterval) {
-                clearInterval(this.chatInterval);
-                this.chatInterval = null;
-            }
-            
-            if (this.privateChatInterval) {
-                clearInterval(this.privateChatInterval);
-                this.privateChatInterval = null;
-            }
+   logout() {
+    // 🔥 NOVO: Marcar como offline no Firebase antes de sair
+    if (window.firebaseHelper && window.firebaseHelper.marcarUsuarioOffline) {
+        window.firebaseHelper.marcarUsuarioOffline();
+    }
+    
+    // 🔧 FIX 2: Remover sessão específica do usuário
+    localStorage.removeItem('porter_session');
+    localStorage.removeItem(`porter_session_${this.currentUser.user}`);
+    
+    // 🔧 FIX 3: Remover do registro de online
+    this.removeFromOnlineUsers();
+    
+    // ... resto do seu código existente ...
+},
             
             if (this.moodInterval) {
                 clearInterval(this.moodInterval);
