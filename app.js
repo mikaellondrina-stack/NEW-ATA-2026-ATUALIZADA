@@ -234,65 +234,82 @@ const app = {
     },
 
     // 🔧 CORREÇÃO: Função completamente reformulada para sincronização universal
-    updateOnlineUsers() {
-    if (!this.currentUser) return;
-    
-    // 1. ATUALIZAR SEU PRÓPRIO STATUS
-    if (window.db) {
-        const status = {
-            user: this.currentUser.user,
-            nome: this.currentUser.nome,
-            role: this.currentUser.role,
-            lastActivity: new Date().toISOString(),
-            online: true,
-            turno: this.currentUser.turno
-        };
-        
-        window.db.collection('online_users').doc(this.currentUser.user)
-            .set(status, { merge: true })
-            .catch(e => console.log('Erro ao atualizar status:', e));
+   // NO app.js - FUNÇÃO OTIMIZADA PARA QUOTA
+updateOnlineUsers() {
+    if (!this.currentUser) {
+        console.log('❌ Usuário não logado');
+        return;
     }
     
-    // 2. BUSCAR OUTROS USUÁRIOS (MÉTODO SIMPLES)
-    let outrosUsuarios = [];
-    try {
-        const dados = JSON.parse(localStorage.getItem('porter_online_simples') || '{}');
-        if (dados.users) {
-            dados.users.forEach(user => {
-                if (user.user !== this.currentUser.user) {
-                    outrosUsuarios.push(user);
-                }
-            });
-        }
-    } catch (e) {}
+    console.log('🔄 Atualizando lista (otimizado)...');
     
-    // 3. MONTAR LISTA FINAL (você + outros)
+    // 1. SINCRONIZAR status (com controle de quota)
+    if (typeof FirebaseOptimized !== 'undefined' && FirebaseOptimized.sincronizarStatusOnline) {
+        FirebaseOptimized.sincronizarStatusOnline();
+    }
+    
+    // 2. BUSCAR outros usuários (com cache e backup)
+    const buscarUsuarios = () => {
+        if (typeof FirebaseOptimized !== 'undefined' && FirebaseOptimized.buscarUsuariosOnline) {
+            FirebaseOptimized.buscarUsuariosOnline()
+                .then(outrosUsuarios => {
+                    this.processarUsuariosOnline(outrosUsuarios);
+                })
+                .catch(() => {
+                    // Se falhar, usar backup local
+                    const backup = JSON.parse(localStorage.getItem('porter_online_backup') || '{"users":[]}');
+                    this.processarUsuariosOnline(backup.users || []);
+                });
+        } else {
+            // Fallback para método antigo
+            this.processarUsuariosOnline([]);
+        }
+    };
+    
+    // Executar busca
+    buscarUsuarios();
+},
+
+// 🔥 NOVA FUNÇÃO AUXILIAR: Processar usuários online
+processarUsuariosOnline: function(outrosUsuarios) {
+    // Filtrar apenas usuários diferentes do atual
+    const outrosFiltrados = outrosUsuarios
+        .filter(user => user.user !== this.currentUser.user)
+        .map(user => ({
+            ...user,
+            isCurrentUser: false,
+            moodStatus: this.getMoodStatusTexto(user.mood || '😐')
+        }));
+    
+    // Adicionar usuário atual
     const todosUsuarios = [
         {
             ...this.currentUser,
+            lastActivity: new Date().toISOString(),
+            mood: this.getMoodAtual(),
+            moodStatus: this.getMoodStatusTexto(this.getMoodAtual()),
             isCurrentUser: true,
             online: true
         },
-        ...outrosUsuarios.map(u => ({
-            ...u,
-            isCurrentUser: false
-        }))
+        ...outrosFiltrados
     ];
     
     this.onlineUsers = todosUsuarios;
     
-    // 4. ATUALIZAR CONTADOR
+    // Atualizar contador
     const onlineCount = document.getElementById('online-count');
     if (onlineCount) {
         onlineCount.textContent = todosUsuarios.length;
         onlineCount.style.color = todosUsuarios.length > 1 ? '#2ecc71' : '#f39c12';
     }
     
-    // 5. ATUALIZAR LISTA SE VISÍVEL
+    // Atualizar lista se visível
     const onlineList = document.getElementById('online-users-list');
     if (onlineList && onlineList.style.display === 'block') {
         this.renderOnlineUsersList();
     }
+    
+    console.log(`✅ ${todosUsuarios.length} usuários online`);
 },
     toggleOnlineUsers() {
         const onlineList = document.getElementById('online-users-list');
