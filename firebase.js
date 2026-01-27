@@ -17,189 +17,24 @@ if (!firebase.apps.length) {
 window.db = firebase.firestore();
 window.auth = firebase.auth();
 
-// Funções auxiliares do Firebase
+// 🔥 CORREÇÃO CRÍTICA: Objeto global para armazenar listeners
+window.firebaseListeners = {
+    onlineUsers: null,
+    chat: null,
+    os: null,
+    notifications: null
+};
+
 const firebaseHelper = {
-    // Salvar uma ata no Firebase
-    salvarAtaNoFirebase(ata) {
-        if (!window.db) {
-            console.log('Firebase não está disponível');
-            return Promise.resolve(false);
-        }
-        
-        return window.db.collection('atas').doc(ata.id.toString()).set(ata)
-            .then(() => {
-                console.log('Ata salva no Firebase:', ata.id);
-                return true;
-            })
-            .catch(error => {
-                console.error('Erro ao salvar ata no Firebase:', error);
-                return false;
-            });
-    },
-
-    // Buscar atas do Firebase
-    buscarAtasDoFirebase(filtros = {}) {
-        if (!window.db) {
-            console.log('Firebase não está disponível');
-            return Promise.resolve([]);
-        }
-        
-        let query = window.db.collection('atas').orderBy('timestamp', 'desc');
-        
-        // Aplicar filtros
-        if (filtros.condo) {
-            query = query.where('condo', '==', filtros.condo);
-        }
-        
-        if (filtros.dataInicio) {
-            query = query.where('dataISO', '>=', filtros.dataInicio);
-        }
-        
-        if (filtros.dataFim) {
-            query = query.where('dataISO', '<=', filtros.dataFim);
-        }
-        
-        if (filtros.tipo) {
-            query = query.where('tipo', '==', filtros.tipo);
-        }
-        
-        if (filtros.status) {
-            query = query.where('status', '==', filtros.status);
-        }
-        
-        return query.get()
-            .then(snapshot => {
-                const atas = [];
-                snapshot.forEach(doc => {
-                    atas.push(doc.data());
-                });
-                return atas;
-            })
-            .catch(error => {
-                console.error('Erro ao buscar atas do Firebase:', error);
-                return [];
-            });
-    },
-
-    // Salvar uma OS no Firebase
-    salvarOSNoFirebase(os) {
-        if (!window.db) {
-            console.log('Firebase não está disponível');
-            return Promise.resolve(false);
-        }
-        
-        return window.db.collection('ordens_servico').doc(os.id.toString()).set(os)
-            .then(() => {
-                console.log('OS salva no Firebase:', os.id);
-                return true;
-            })
-            .catch(error => {
-                console.error('Erro ao salvar OS no Firebase:', error);
-                return false;
-            });
-    },
-
-    // Buscar OS do Firebase
-    buscarOSDoFirebase(filtros = {}) {
-        if (!window.db) {
-            console.log('Firebase não está disponível');
-            return Promise.resolve([]);
-        }
-        
-        let query = window.db.collection('ordens_servico').orderBy('timestamp', 'desc');
-        
-        if (filtros.condo) {
-            query = query.where('condo', '==', filtros.condo);
-        }
-        
-        if (filtros.gravidade) {
-            query = query.where('gravidade', '==', filtros.gravidade);
-        }
-        
-        return query.get()
-            .then(snapshot => {
-                const osList = [];
-                snapshot.forEach(doc => {
-                    osList.push(doc.data());
-                });
-                return osList;
-            })
-            .catch(error => {
-                console.error('Erro ao buscar OS do Firebase:', error);
-                return [];
-            });
-    },
-
-    // 🔧 CORREÇÃO CRÍTICA: Configurar listener em tempo real para OS
-    configurarOSFirebase() {
-        if (!window.db) {
-            console.log('Firebase não disponível para OS');
-            return;
-        }
-        
-        // Listener para ordens de serviço
-        window.db.collection('ordens_servico')
-            .orderBy('timestamp', 'desc')
-            .limit(100)
-            .onSnapshot(snapshot => {
-                const osList = [];
-                snapshot.forEach(doc => {
-                    osList.push(doc.data());
-                });
-                
-                // Atualizar localStorage com dados do Firebase
-                localStorage.setItem('porter_os', JSON.stringify(osList));
-                
-                // Atualizar interface se estiver na aba de OS
-                if (document.getElementById('tab-os') && 
-                    !document.getElementById('tab-os').classList.contains('hidden')) {
-                    if (typeof app !== 'undefined' && app.renderOS) {
-                        app.renderOS();
-                    }
-                }
-                
-                // Atualizar contagem de OS
-                if (typeof app !== 'undefined' && app.updateTabCounts) {
-                    app.updateTabCounts();
-                }
-                
-                console.log('✅ OS sincronizadas do Firebase:', osList.length);
-            }, error => {
-                console.error('Erro no listener de OS do Firebase:', error);
-            });
-    },
-
-    // Sincronizar dados locais com Firebase
-    sincronizarDados() {
-        if (!window.db) {
-            console.log('Firebase não está disponível, usando localStorage apenas');
-            return;
-        }
-        
-        // Sincronizar atas
-        const atasLocais = JSON.parse(localStorage.getItem('porter_atas') || '[]');
-        atasLocais.forEach(ata => {
-            this.salvarAtaNoFirebase(ata);
-        });
-        
-        // Sincronizar OS
-        const osLocais = JSON.parse(localStorage.getItem('porter_os') || '[]');
-        osLocais.forEach(os => {
-            this.salvarOSNoFirebase(os);
-        });
-        
-        console.log('✅ Dados sincronizados com Firebase');
-    },
-
-    // 🔧 CORREÇÃO CRÍTICA: Nova função para sincronizar status online com Firebase - VERSÃO CORRIGIDA
+    // 🔥 CORREÇÃO: Função universal para sincronizar status online
     sincronizarStatusOnlineComFirebase() {
         if (!window.db || !app || !app.currentUser) {
-            console.log('❌ Firebase ou usuário não disponível para sincronização online');
+            console.log('❌ Firebase ou usuário não disponível');
             return;
         }
         
         const agora = new Date();
-        const statusOnline = {
+        const userData = {
             user: app.currentUser.user,
             nome: app.currentUser.nome,
             role: app.currentUser.role,
@@ -208,88 +43,104 @@ const firebaseHelper = {
             online: true,
             turno: app.currentUser.turno || 'Diurno',
             timestamp: agora.getTime(),
-            loginDate: app.currentUser.loginDate || agora.toLocaleDateString('pt-BR'),
-            loginHour: app.currentUser.loginHour || agora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})
+            loginDate: app.currentUser.loginDate,
+            loginHour: app.currentUser.loginHour
         };
         
-        // Salvar no Firebase - usando set com merge para não sobrescrever outros campos
+        // Usar set com merge para não sobrescrever outros campos
         window.db.collection('online_users').doc(app.currentUser.user)
-            .set(statusOnline, { merge: true })
+            .set(userData, { merge: true })
             .then(() => {
-                console.log('✅ Status online sincronizado com Firebase:', app.currentUser.user);
+                console.log('✅ Status online sincronizado:', app.currentUser.nome);
             })
             .catch(error => {
-                console.error('❌ Erro ao sincronizar status online:', error);
+                console.error('❌ Erro ao sincronizar:', error);
             });
     },
 
-    // 🔧 CORREÇÃO CRÍTICA: Nova função para monitorar usuários online no Firebase - VERSÃO CORRIGIDA
-    configurarMonitoramentoOnlineFirebase() {
+    // 🔥 CORREÇÃO: Configurar listener UNIVERSAL para usuários online
+    configurarListenerOnlineUniversal() {
         if (!window.db) {
-            console.log('❌ Firebase não disponível para monitoramento online');
+            console.error('❌ Firebase não disponível para listener online');
             return;
         }
         
-        console.log('🔧 Iniciando monitoramento online do Firebase...');
+        console.log('🔥 Iniciando listener UNIVERSAL de usuários online...');
         
-        // Listener para usuários online em tempo real
-        window.db.collection('online_users')
+        // Remover listener anterior se existir
+        if (window.firebaseListeners.onlineUsers) {
+            window.firebaseListeners.onlineUsers();
+        }
+        
+        // 🔥 LISTENER EM TEMPO REAL PARA TODOS OS USUÁRIOS ONLINE
+        window.firebaseListeners.onlineUsers = window.db.collection('online_users')
             .where('online', '==', true)
             .onSnapshot(snapshot => {
-                const usuariosOnlineFirebase = [];
+                const usuariosOnline = [];
                 const agora = new Date();
                 
                 snapshot.forEach(doc => {
                     const usuario = doc.data();
-                    // Verificar se não está "morto" (última atividade há mais de 2 minutos)
                     const ultimaAtividade = new Date(usuario.lastActivity);
                     const diferencaSegundos = (agora - ultimaAtividade) / 1000;
                     
-                    if (diferencaSegundos < 120) { // Considerar online se ativo nos últimos 2 minutos
-                        usuariosOnlineFirebase.push({
+                    // 🔥 FILTRO: Apenas usuários ativos nos últimos 2 minutos
+                    if (diferencaSegundos < 120) {
+                        usuariosOnline.push({
                             ...usuario,
-                            id: doc.id
+                            id: doc.id,
+                            isCurrentUser: usuario.user === (app.currentUser ? app.currentUser.user : '')
                         });
                     } else {
-                        // Marcar como offline no Firebase automaticamente
+                        // Marcar como offline automaticamente
                         window.db.collection('online_users').doc(doc.id).update({
-                            online: false,
-                            lastActivity: agora.toISOString()
+                            online: false
                         }).catch(() => {});
                     }
                 });
                 
-                // 🔧 CORREÇÃO CRÍTICA: Atualizar localStorage para o app.js usar
+                console.log(`👥 ${usuariosOnline.length} usuários online no Firebase`);
+                
+                // 🔥 SALVAR NO LOCALSTORAGE PARA TODAS AS MÁQUINAS
                 localStorage.setItem('porter_online_firebase', JSON.stringify({
                     timestamp: agora.toISOString(),
-                    users: usuariosOnlineFirebase
+                    users: usuariosOnline
                 }));
                 
-                console.log('👥 Usuários online no Firebase atualizados:', usuariosOnlineFirebase.length);
-                
-                // 🔧 CORREÇÃO CRÍTICA: Forçar atualização da interface imediatamente
-                if (typeof app !== 'undefined' && app.currentUser && app.updateOnlineUsers) {
+                // 🔥 FORÇAR ATUALIZAÇÃO DA INTERFACE EM TODAS AS MÁQUINAS
+                if (typeof app !== 'undefined' && app.updateOnlineUsers) {
                     app.updateOnlineUsers();
                 }
+                
+                // 🔥 ATUALIZAR LISTA DE CHAT PRIVADO
+                if (typeof app !== 'undefined' && app.loadPrivateChatUsers) {
+                    app.loadPrivateChatUsers();
+                }
+                
             }, error => {
-                console.error('❌ Erro no monitoramento online do Firebase:', error);
+                console.error('🔥 Erro no listener online:', error);
             });
     },
 
-    // Configurar listener em tempo real para chat
-    configurarChatTempoReal() {
+    // 🔥 CORREÇÃO: Configurar listener para chat geral
+    configurarListenerChatGeral() {
         if (!window.db) return;
         
-        window.db.collection('chat')
+        // Remover listener anterior
+        if (window.firebaseListeners.chat) {
+            window.firebaseListeners.chat();
+        }
+        
+        window.firebaseListeners.chat = window.db.collection('chat_geral')
             .orderBy('timestamp', 'desc')
-            .limit(50)
+            .limit(100)
             .onSnapshot(snapshot => {
                 const mensagens = [];
                 snapshot.forEach(doc => {
-                    mensagens.push({ ...doc.data(), firebaseId: doc.id });
+                    mensagens.push(doc.data());
                 });
                 
-                // Atualizar localStorage
+                // 🔥 SALVAR PARA TODAS AS MÁQUINAS
                 localStorage.setItem('porter_chat', JSON.stringify(mensagens));
                 
                 // Atualizar interface se estiver na aba de chat
@@ -304,39 +155,80 @@ const firebaseHelper = {
                 if (typeof app !== 'undefined' && app.atualizarBadgeChat) {
                     app.atualizarBadgeChat();
                 }
+                
             }, error => {
                 console.error('Erro no listener do chat:', error);
             });
     },
 
-    // Configurar listener em tempo real para notificações
-    configurarNotificacoesTempoReal() {
+    // 🔥 CORREÇÃO: Configurar listener para OS
+    configurarListenerOS() {
         if (!window.db) return;
         
-        window.db.collection('notificacoes')
+        if (window.firebaseListeners.os) {
+            window.firebaseListeners.os();
+        }
+        
+        window.firebaseListeners.os = window.db.collection('ordens_servico')
             .orderBy('timestamp', 'desc')
-            .limit(50)
+            .limit(100)
             .onSnapshot(snapshot => {
-                const notificacoes = [];
+                const osList = [];
                 snapshot.forEach(doc => {
-                    notificacoes.push(doc.data());
+                    osList.push(doc.data());
                 });
                 
-                // Atualizar localStorage
-                localStorage.setItem('porter_notificacoes', JSON.stringify(notificacoes));
+                // 🔥 SALVAR PARA TODAS AS MÁQUINAS
+                localStorage.setItem('porter_os', JSON.stringify(osList));
                 
-                // Atualizar interface
-                if (typeof app !== 'undefined') {
-                    app.loadNotifications();
-                    app.updateNotificationBadges();
+                if (document.getElementById('tab-os') && 
+                    !document.getElementById('tab-os').classList.contains('hidden')) {
+                    if (typeof app !== 'undefined' && app.renderOS) {
+                        app.renderOS();
+                    }
                 }
+                
+                if (typeof app !== 'undefined' && app.updateTabCounts) {
+                    app.updateTabCounts();
+                }
+                
             }, error => {
-                console.error('Erro no listener de notificações:', error);
+                console.error('Erro no listener de OS:', error);
             });
     },
 
-    // 🔧 CORREÇÃO: Função para limpar usuários offline antigos
-    limparUsuariosOfflineAntigos() {
+    // 🔥 NOVO: Enviar mensagem de chat para o Firebase
+    enviarMensagemChatFirebase(mensagem) {
+        if (!window.db) return;
+        
+        return window.db.collection('chat_geral').doc(mensagem.id.toString()).set(mensagem)
+            .then(() => {
+                console.log('✅ Mensagem enviada para Firebase');
+                return true;
+            })
+            .catch(error => {
+                console.error('❌ Erro ao enviar mensagem:', error);
+                return false;
+            });
+    },
+
+    // 🔥 NOVO: Enviar OS para o Firebase
+    enviarOSFirebase(osData) {
+        if (!window.db) return;
+        
+        return window.db.collection('ordens_servico').doc(osData.id.toString()).set(osData)
+            .then(() => {
+                console.log('✅ OS enviada para Firebase');
+                return true;
+            })
+            .catch(error => {
+                console.error('❌ Erro ao enviar OS:', error);
+                return false;
+            });
+    },
+
+    // 🔥 NOVO: Limpar usuários offline antigos
+    limparUsuariosOffline() {
         if (!window.db) return;
         
         const umaHoraAtras = new Date();
@@ -353,64 +245,76 @@ const firebaseHelper = {
                 return batch.commit();
             })
             .then(() => {
-                console.log('🧹 Usuários offline antigos removidos do Firebase');
+                console.log('🧹 Usuários offline antigos removidos');
             })
             .catch(error => {
-                console.error('Erro ao limpar usuários offline:', error);
+                console.error('Erro ao limpar usuários:', error);
             });
     },
 
-    // Inicializar todos os listeners
-    inicializarFirebase() {
+    // 🔥 CORREÇÃO: Inicializar TODOS os listeners
+    inicializarFirebaseUniversal() {
         if (!window.db) {
-            console.log('❌ Firebase não inicializado, usando localStorage');
+            console.log('❌ Firebase não inicializado');
             return;
         }
         
-        console.log('✅ Firebase inicializado com sucesso');
+        console.log('🔥 Inicializando Firebase Universal...');
         
-        // 🔧 CORREÇÃO CRÍTICA: Limpar usuários offline antigos ao iniciar
-        this.limparUsuariosOfflineAntigos();
+        // Limpar usuários offline antigos
+        this.limparUsuariosOffline();
         
-        // 🔧 CORREÇÃO CRÍTICA: Configurar monitoramento de status online PRIMEIRO
-        this.configurarMonitoramentoOnlineFirebase();
+        // 🔥 CONFIGURAR TODOS OS LISTENERS EM TEMPO REAL
+        this.configurarListenerOnlineUniversal();
+        this.configurarListenerChatGeral();
+        this.configurarListenerOS();
         
-        // Configurar listeners em tempo real
-        this.configurarChatTempoReal();
-        this.configurarNotificacoesTempoReal();
-        this.configurarOSFirebase();
-        
-        // 🔧 CORREÇÃO: Sincronizar status online imediatamente
+        // Sincronizar status do usuário atual
         if (app && app.currentUser) {
             setTimeout(() => {
                 this.sincronizarStatusOnlineComFirebase();
             }, 1000);
         }
         
-        // 🔧 CORREÇÃO: Sincronizar status online periodicamente (mais frequente)
+        // 🔥 SINCRONIZAÇÃO PERIÓDICA DO STATUS ONLINE
         setInterval(() => {
             if (app && app.currentUser) {
                 this.sincronizarStatusOnlineComFirebase();
             }
-        }, 15000); // A cada 15 segundos
+        }, 15000);
         
-        // 🔧 CORREÇÃO: Limpar usuários offline periodicamente
+        // 🔥 LIMPEZA PERIÓDICA
         setInterval(() => {
-            this.limparUsuariosOfflineAntigos();
-        }, 300000); // A cada 5 minutos
+            this.limparUsuariosOffline();
+        }, 300000);
         
-        // Sincronizar dados periodicamente
-        setInterval(() => {
-            this.sincronizarDados();
-        }, 30000); // Sincronizar a cada 30 segundos
+        console.log('✅ Firebase Universal inicializado!');
+    },
+
+    // 🔥 CORREÇÃO: Marcar usuário como offline
+    marcarUsuarioOffline(userId) {
+        if (!window.db) return;
+        
+        window.db.collection('online_users').doc(userId).update({
+            online: false,
+            lastActivity: new Date().toISOString()
+        }).then(() => {
+            console.log('✅ Usuário marcado como offline:', userId);
+        }).catch(error => {
+            console.error('❌ Erro ao marcar offline:', error);
+        });
     }
 };
 
-// Inicializar quando a página carregar
+// 🔥 CORREÇÃO: Inicializar imediatamente quando o script carregar
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
-        firebaseHelper.inicializarFirebase();
+        setTimeout(() => {
+            firebaseHelper.inicializarFirebaseUniversal();
+        }, 1000);
     });
 } else {
-    firebaseHelper.inicializarFirebase();
+    setTimeout(() => {
+        firebaseHelper.inicializarFirebaseUniversal();
+    }, 1000);
 }
