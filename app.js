@@ -2615,19 +2615,17 @@ processarUsuariosOnline: function(outrosUsuarios) {
         }
         // NO app.js - ADICIONE esta função (em qualquer lugar)
 
-atualizarListaOnline: function(usuariosOnline) {
-    // 1. Garantir que temos dados válidos
-    if (!usuariosOnline || !Array.isArray(usuariosOnline)) {
-        console.error('❌ Dados de usuários inválidos');
-        return;
-    }
+atualizarListaUsuarios: function(usuariosFirebase) {
+    if (!this.currentUser) return;
     
-    // 2. Separar usuário atual dos outros
-    const outrosUsuarios = usuariosOnline.filter(u => 
-        u.user !== (this.currentUser?.user || '')
+    console.log('🔄 Atualizando lista de usuários...');
+    
+    // Filtrar usuário atual
+    const outrosUsuarios = usuariosFirebase.filter(u => 
+        u.user !== this.currentUser.user
     );
     
-    // 3. Criar lista completa
+    // Criar lista completa
     const listaCompleta = [
         // Usuário atual
         {
@@ -2635,21 +2633,99 @@ atualizarListaOnline: function(usuariosOnline) {
             isCurrentUser: true,
             online: true,
             lastActivity: new Date().toISOString(),
-            mood: this.getMoodAtual()
+            mood: this.getMoodAtual ? this.getMoodAtual() : '😐'
         },
         // Outros usuários
         ...outrosUsuarios.map(u => ({
             ...u,
             isCurrentUser: false,
-            moodStatus: this.getMoodStatusTexto(u.mood || '😐')
+            moodStatus: this.getMoodStatusTexto ? this.getMoodStatusTexto(u.mood) : u.mood
         }))
     ];
     
-    // 4. Atualizar variável global
+    // Atualizar variável global
     this.onlineUsers = listaCompleta;
     
-    // 5. Atualizar interface
+    // Atualizar interface
     this.atualizarInterfaceOnline();
+    
+    console.log(`✅ ${listaCompleta.length} usuários online`);
+},
+
+// Função para salvar sessão (corrige o erro do utils.js)
+salvarSessao: function() {
+    if (!this.currentUser) return;
+    
+    const sessao = {
+        user: this.currentUser,
+        timestamp: new Date().toISOString(),
+        data: new Date().toLocaleDateString('pt-BR'),
+        hora: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})
+    };
+    
+    localStorage.setItem('porter_sessao_ativa', JSON.stringify(sessao));
+    console.log('💾 Sessão salva:', this.currentUser.nome);
+},
+
+// Função para carregar sessão (se existir)
+carregarSessao: function() {
+    try {
+        const sessaoSalva = localStorage.getItem('porter_sessao_ativa');
+        if (sessaoSalva) {
+            const sessao = JSON.parse(sessaoSalva);
+            const tempoPassado = (Date.now() - new Date(sessao.timestamp).getTime()) / (1000 * 60 * 60); // horas
+            
+            // Se sessão tem menos de 8 horas, restaurar
+            if (tempoPassado < 8) {
+                this.currentUser = sessao.user;
+                console.log('🔄 Sessão restaurada:', this.currentUser.nome);
+                return true;
+            }
+        }
+    } catch (e) {
+        console.log('⚠️ Nenhuma sessão anterior encontrada');
+    }
+    return false;
+},
+
+// Função melhorada para updateOnlineUsers
+updateOnlineUsers: function() {
+    if (!this.currentUser) {
+        console.log('❌ Nenhum usuário logado');
+        return;
+    }
+    
+    console.log('🔄 Atualizando status online...');
+    
+    // 1. Atualizar no Firebase se disponível
+    if (typeof PorterFirebase2026 !== 'undefined' && PorterFirebase2026.sincronizarUsuario) {
+        PorterFirebase2026.sincronizarUsuario(this.currentUser);
+    } else if (typeof PorterUniversal !== 'undefined' && PorterUniversal.atualizarStatus) {
+        PorterUniversal.atualizarStatus();
+    } else if (window.db) {
+        // Fallback direto
+        window.db.collection('online_users')
+            .doc(this.currentUser.user)
+            .set({
+                ...this.currentUser,
+                lastActivity: new Date().toISOString(),
+                online: true
+            }, { merge: true });
+    }
+    
+    // 2. Buscar outros usuários
+    setTimeout(() => {
+        if (typeof PorterFirebase2026 !== 'undefined' && PorterFirebase2026.buscarUsuariosOnline) {
+            PorterFirebase2026.buscarUsuariosOnline().then(usuarios => {
+                if (usuarios.length > 0) {
+                    this.atualizarListaUsuarios(usuarios);
+                }
+            });
+        }
+    }, 1000);
+    
+    // 3. Salvar sessão local
+    this.salvarSessao();
 },
 
 atualizarInterfaceOnline: function() {
