@@ -2616,6 +2616,66 @@ processarUsuariosOnline: function(outrosUsuarios) {
         if (typeof chatSystem !== 'undefined' && chatSystem.loadPrivateChat) {
             chatSystem.loadPrivateChat();
         }
+        // NO app.js - ADICIONE esta função (em qualquer lugar)
+
+atualizarListaOnline: function(usuariosOnline) {
+    // 1. Garantir que temos dados válidos
+    if (!usuariosOnline || !Array.isArray(usuariosOnline)) {
+        console.error('❌ Dados de usuários inválidos');
+        return;
+    }
+    
+    // 2. Separar usuário atual dos outros
+    const outrosUsuarios = usuariosOnline.filter(u => 
+        u.user !== (this.currentUser?.user || '')
+    );
+    
+    // 3. Criar lista completa
+    const listaCompleta = [
+        // Usuário atual
+        {
+            ...this.currentUser,
+            isCurrentUser: true,
+            online: true,
+            lastActivity: new Date().toISOString(),
+            mood: this.getMoodAtual()
+        },
+        // Outros usuários
+        ...outrosUsuarios.map(u => ({
+            ...u,
+            isCurrentUser: false,
+            moodStatus: this.getMoodStatusTexto(u.mood || '😐')
+        }))
+    ];
+    
+    // 4. Atualizar variável global
+    this.onlineUsers = listaCompleta;
+    
+    // 5. Atualizar interface
+    this.atualizarInterfaceOnline();
+},
+
+atualizarInterfaceOnline: function() {
+    // A) Atualizar contador
+    const onlineCount = document.getElementById('online-count');
+    if (onlineCount && this.onlineUsers) {
+        onlineCount.textContent = this.onlineUsers.length;
+        onlineCount.style.color = this.onlineUsers.length > 1 ? '#2ecc71' : '#f39c12';
+    }
+    
+    // B) Atualizar lista dropdown se visível
+    const onlineList = document.getElementById('online-users-list');
+    if (onlineList && onlineList.style.display === 'block') {
+        this.renderOnlineUsersList();
+    }
+    
+    // C) Atualizar chat privado
+    if (typeof this.loadPrivateChatUsers === 'function') {
+        this.loadPrivateChatUsers();
+    }
+    
+    console.log(`✅ Interface atualizada: ${this.onlineUsers?.length || 0} usuários`);
+},
     },
 
     sendPrivateChatMessage() {
