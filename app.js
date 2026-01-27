@@ -2060,8 +2060,7 @@ const app = {
         
         const ehAutor = ata.user === this.currentUser.user;
         const ehAdmin = this.currentUser.role === 'ADMIN';
-        const ehTecnico = this.currentUser.role === 'TÉCNICO');
-        
+    const ehTecnico = this.currentUser.role === 'TÉCNICO';
         if (!ehAdmin && !ehAutor && !ehTecnico) {
             alert('Apenas o autor, técnicos ou administradores podem excluir este registro.');
             return;
