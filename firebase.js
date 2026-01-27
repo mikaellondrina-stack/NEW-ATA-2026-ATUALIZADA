@@ -130,7 +130,7 @@ const firebaseHelper = {
             });
     },
 
-    // 🔧 FIX 1: Configurar listener em tempo real para OS
+    // Configurar listener em tempo real para OS
     configurarOSFirebase() {
         if (!window.db) {
             console.log('Firebase não disponível para OS');
@@ -191,34 +191,48 @@ const firebaseHelper = {
         console.log('✅ Dados sincronizados com Firebase');
     },
 
-    // 🔧 FIX 2: Nova função para sincronizar status online com Firebase
+    // 🔧 CORREÇÃO CRÍTICA: Nova função para sincronizar status online com Firebase - VERSÃO CORRIGIDA
     sincronizarStatusOnlineComFirebase() {
-        if (!window.db || !app || !app.currentUser) return;
+        if (!window.db || !app || !app.currentUser) {
+            console.log('❌ Firebase ou usuário não disponível para sincronização online');
+            return;
+        }
         
+        const agora = new Date();
         const statusOnline = {
             user: app.currentUser.user,
             nome: app.currentUser.nome,
             role: app.currentUser.role,
             mood: app.getMoodAtual(),
-            lastActivity: new Date().toISOString(),
+            lastActivity: agora.toISOString(),
             online: true,
-            turno: app.currentUser.turno || 'Diurno'
+            turno: app.currentUser.turno || 'Diurno',
+            timestamp: agora.getTime(),
+            loginDate: app.currentUser.loginDate || agora.toLocaleDateString('pt-BR'),
+            loginHour: app.currentUser.loginHour || agora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})
         };
         
-        // Salvar no Firebase
-        window.db.collection('online_users').doc(app.currentUser.user).set(statusOnline)
+        // Salvar no Firebase - usando update para não sobrescrever outros campos
+        window.db.collection('online_users').doc(app.currentUser.user)
+            .set(statusOnline, { merge: true })
             .then(() => {
-                console.log('✅ Status online sincronizado com Firebase');
+                console.log('✅ Status online sincronizado com Firebase:', app.currentUser.user);
             })
             .catch(error => {
                 console.error('❌ Erro ao sincronizar status online:', error);
             });
     },
 
-    // 🔧 FIX 2: Nova função para monitorar usuários online no Firebase
+    // 🔧 CORREÇÃO CRÍTICA: Nova função para monitorar usuários online no Firebase - VERSÃO CORRIGIDA
     configurarMonitoramentoOnlineFirebase() {
-        if (!window.db) return;
+        if (!window.db) {
+            console.log('❌ Firebase não disponível para monitoramento online');
+            return;
+        }
         
+        console.log('🔧 Iniciando monitoramento online do Firebase...');
+        
+        // Listener para usuários online em tempo real
         window.db.collection('online_users')
             .where('online', '==', true)
             .onSnapshot(snapshot => {
@@ -227,35 +241,39 @@ const firebaseHelper = {
                 
                 snapshot.forEach(doc => {
                     const usuario = doc.data();
-                    // Verificar se não está "morto" (última atividade há mais de 3 minutos)
+                    // Verificar se não está "morto" (última atividade há mais de 2 minutos)
                     const ultimaAtividade = new Date(usuario.lastActivity);
-                    const diferencaMinutos = (agora - ultimaAtividade) / (1000 * 60);
+                    const diferencaSegundos = (agora - ultimaAtividade) / 1000;
                     
-                    if (diferencaMinutos < 3) { // Considerar online se ativo nos últimos 3 minutos
-                        usuariosOnlineFirebase.push(usuario);
+                    if (diferencaSegundos < 120) { // Considerar online se ativo nos últimos 2 minutos
+                        usuariosOnlineFirebase.push({
+                            ...usuario,
+                            id: doc.id
+                        });
+                        console.log(`👤 Usuário online no Firebase: ${usuario.nome} (${diferencaSegundos.toFixed(0)}s atrás)`);
                     } else {
-                        // Marcar como offline no Firebase
+                        // Marcar como offline no Firebase automaticamente
+                        console.log(`⚫ Marcando como offline: ${usuario.nome} (inativo há ${diferencaSegundos.toFixed(0)}s)`);
                         window.db.collection('online_users').doc(doc.id).update({
-                            online: false
+                            online: false,
+                            lastActivity: agora.toISOString()
                         }).catch(() => {});
                     }
                 });
                 
-                // Atualizar lista local
-                if (typeof app !== 'undefined') {
-                    // Salvar no localStorage para o app.js usar
-                    localStorage.setItem('porter_online_firebase', JSON.stringify({
-                        timestamp: new Date().toISOString(),
-                        users: usuariosOnlineFirebase
-                    }));
-                    
-                    // Forçar atualização da lista de online
-                    if (app.currentUser && app.updateOnlineUsers) {
-                        app.updateOnlineUsers();
-                    }
-                }
+                // 🔧 CORREÇÃO CRÍTICA: Atualizar localStorage para o app.js usar
+                localStorage.setItem('porter_online_firebase', JSON.stringify({
+                    timestamp: agora.toISOString(),
+                    users: usuariosOnlineFirebase
+                }));
                 
-                console.log('👥 Usuários online no Firebase:', usuariosOnlineFirebase.length);
+                console.log('👥 Usuários online no Firebase atualizados:', usuariosOnlineFirebase.length);
+                
+                // 🔧 CORREÇÃO CRÍTICA: Forçar atualização da interface imediatamente
+                if (typeof app !== 'undefined' && app.currentUser && app.updateOnlineUsers) {
+                    console.log('🔄 Forçando atualização da interface...');
+                    app.updateOnlineUsers();
+                }
             }, error => {
                 console.error('❌ Erro no monitoramento online do Firebase:', error);
             });
@@ -320,33 +338,71 @@ const firebaseHelper = {
             });
     },
 
+    // 🔧 CORREÇÃO: Função para limpar usuários offline antigos
+    limparUsuariosOfflineAntigos() {
+        if (!window.db) return;
+        
+        const umaHoraAtras = new Date();
+        umaHoraAtras.setHours(umaHoraAtras.getHours() - 1);
+        
+        window.db.collection('online_users')
+            .where('lastActivity', '<', umaHoraAtras.toISOString())
+            .get()
+            .then(snapshot => {
+                const batch = window.db.batch();
+                snapshot.forEach(doc => {
+                    batch.delete(doc.ref);
+                });
+                return batch.commit();
+            })
+            .then(() => {
+                console.log('🧹 Usuários offline antigos removidos do Firebase');
+            })
+            .catch(error => {
+                console.error('Erro ao limpar usuários offline:', error);
+            });
+    },
+
     // Inicializar todos os listeners
     inicializarFirebase() {
         if (!window.db) {
-            console.log('Firebase não inicializado, usando localStorage');
+            console.log('❌ Firebase não inicializado, usando localStorage');
             return;
         }
         
         console.log('✅ Firebase inicializado com sucesso');
         
-        // 🔧 FIX 1: Configurar listener para OS
-        this.configurarOSFirebase();
+        // 🔧 CORREÇÃO CRÍTICA: Limpar usuários offline antigos ao iniciar
+        this.limparUsuariosOfflineAntigos();
         
-        // 🔧 FIX 2: Configurar monitoramento de status online
+        // 🔧 CORREÇÃO CRÍTICA: Configurar monitoramento de status online PRIMEIRO
         this.configurarMonitoramentoOnlineFirebase();
         
         // Configurar listeners em tempo real
         this.configurarChatTempoReal();
         this.configurarNotificacoesTempoReal();
+        this.configurarOSFirebase();
         
-        // 🔧 FIX 2: Sincronizar status online periodicamente
+        // 🔧 CORREÇÃO: Sincronizar status online imediatamente
+        if (app && app.currentUser) {
+            setTimeout(() => {
+                this.sincronizarStatusOnlineComFirebase();
+            }, 1000);
+        }
+        
+        // 🔧 CORREÇÃO: Sincronizar status online periodicamente (mais frequente)
         setInterval(() => {
             if (app && app.currentUser) {
                 this.sincronizarStatusOnlineComFirebase();
             }
-        }, 10000); // A cada 10 segundos
+        }, 15000); // A cada 15 segundos
         
-        // Sincronizar periodicamente
+        // 🔧 CORREÇÃO: Limpar usuários offline periodicamente
+        setInterval(() => {
+            this.limparUsuariosOfflineAntigos();
+        }, 300000); // A cada 5 minutos
+        
+        // Sincronizar dados periodicamente
         setInterval(() => {
             this.sincronizarDados();
         }, 30000); // Sincronizar a cada 30 segundos
