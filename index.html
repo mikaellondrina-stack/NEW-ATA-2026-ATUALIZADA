@@ -649,10 +649,10 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-<!-- Nossos scripts (em ordem alfabética) -->
+<!-- CORREÇÃO: Nossos scripts (ORDEM CORRETA) -->
 <script src="data.js"></script>
-<script src="firebase.js"></script>
-<script src="app.js"></script>
+<script src="app.js"></script> <!-- ⚠️ APPS.JS DEVE VIR ANTES -->
+<script src="firebase.js"></script> <!-- ⚠️ FIREBASE DEPENDE DO APP -->
 <script src="app-email.js"></script>
 <script src="chat.js"></script>
 <script src="pdf.js"></script>
@@ -709,3 +709,4 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 </body>
 </html>
+
