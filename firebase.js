@@ -130,7 +130,7 @@ const firebaseHelper = {
             });
     },
 
-    // Configurar listener em tempo real para OS
+    // 🔧 CORREÇÃO CRÍTICA: Configurar listener em tempo real para OS
     configurarOSFirebase() {
         if (!window.db) {
             console.log('Firebase não disponível para OS');
@@ -212,7 +212,7 @@ const firebaseHelper = {
             loginHour: app.currentUser.loginHour || agora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})
         };
         
-        // Salvar no Firebase - usando update para não sobrescrever outros campos
+        // Salvar no Firebase - usando set com merge para não sobrescrever outros campos
         window.db.collection('online_users').doc(app.currentUser.user)
             .set(statusOnline, { merge: true })
             .then(() => {
@@ -250,10 +250,8 @@ const firebaseHelper = {
                             ...usuario,
                             id: doc.id
                         });
-                        console.log(`👤 Usuário online no Firebase: ${usuario.nome} (${diferencaSegundos.toFixed(0)}s atrás)`);
                     } else {
                         // Marcar como offline no Firebase automaticamente
-                        console.log(`⚫ Marcando como offline: ${usuario.nome} (inativo há ${diferencaSegundos.toFixed(0)}s)`);
                         window.db.collection('online_users').doc(doc.id).update({
                             online: false,
                             lastActivity: agora.toISOString()
@@ -271,7 +269,6 @@ const firebaseHelper = {
                 
                 // 🔧 CORREÇÃO CRÍTICA: Forçar atualização da interface imediatamente
                 if (typeof app !== 'undefined' && app.currentUser && app.updateOnlineUsers) {
-                    console.log('🔄 Forçando atualização da interface...');
                     app.updateOnlineUsers();
                 }
             }, error => {
