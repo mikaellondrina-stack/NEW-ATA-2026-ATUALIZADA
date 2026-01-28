@@ -15,10 +15,14 @@ const chatSystem = {
         console.log('🔧 Configurando listener Firebase para chat...');
 
         // Ouvir mensagens do chat geral
-        window.db.collection('chat_geral')
-            .orderBy('timestamp', 'desc')
-            .limit(50)
-            .onSnapshot((snapshot) => {
+        window.db
+  .collection('chat_messages')
+  .doc('global')
+  .collection('messages')
+  .orderBy('timestamp', 'desc')
+  .limit(50)
+  .onSnapshot(snapshot => {
+
                 const mensagens = [];
                 snapshot.forEach((doc) => {
                     mensagens.push(doc.data());
@@ -35,27 +39,23 @@ const chatSystem = {
     },
 
     // 🔧 Processar mensagens do Firebase
-    processarMensagensFirebase(mensagensFirebase) {
-        // Carregar mensagens locais
-        let mensagensLocais = JSON.parse(localStorage.getItem('porter_chat') || '[]');
-        
-        // Criar mapa para evitar duplicados
-        const mapaMensagens = new Map();
-        
-        // Adicionar todas as mensagens do Firebase
-        mensagensFirebase.forEach(msg => {
-            mapaMensagens.set(msg.id, msg);
-        });
-        
-        // Adicionar mensagens locais que não estão no Firebase
-        mensagensLocais.forEach(msg => {
-            if (!mapaMensagens.has(msg.id)) {
-                mapaMensagens.set(msg.id, msg);
-                // Se a mensagem local não tem flag firebaseSync, enviar para Firebase
-                if (!msg.firebaseSync) {
-                    this.enviarParaFirebase(msg);
-                }
-            }
+  processarMensagensFirebase(mensagensFirebase) {
+    // Firebase é a fonte principal
+    const ordenadas = mensagensFirebase.sort(
+        (a, b) => new Date(a.timestamp) - new Date(b.timestamp)
+    );
+
+    localStorage.setItem('porter_chat', JSON.stringify(ordenadas));
+
+    if (document.getElementById('tab-chat') && 
+        !document.getElementById('tab-chat').classList.contains('hidden')) {
+        this.loadChat();
+    }
+
+    if (typeof app !== 'undefined' && app.atualizarBadgeChat) {
+        app.atualizarBadgeChat();
+    }
+}
         });
         
         // Converter mapa para array e ordenar
@@ -93,14 +93,14 @@ const chatSystem = {
             firebaseSync: true
         };
         
-        window.db.collection('chat_geral').add(mensagemParaFirebase)
-            .then((docRef) => {
-                console.log('✅ Mensagem enviada para Firebase:', docRef.id);
-            })
-            .catch((error) => {
-                console.error('❌ Erro ao enviar para Firebase:', error);
-            });
-    },
+        window.db
+  .collection('chat_messages')
+  .doc('global')
+  .collection('messages')
+  .orderBy('timestamp', 'desc')
+  .limit(50)
+  .onSnapshot(snapshot => {
+
 
     // 🔧 Função principal de carregar chat
     loadChat() {
