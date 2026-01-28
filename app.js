@@ -2704,4 +2704,24 @@ if (typeof firebaseHelper !== 'undefined') {
 document.addEventListener('DOMContentLoaded', function() {
     app.init();
 });
-// ==========================================================================
+window.app = app;
+
+if (typeof DATA !== 'undefined') {
+    window.DATA = DATA;
+}
+
+if (typeof chatSystem !== 'undefined') {
+    window.chatSystem = chatSystem;
+}
+
+if (typeof appEmail !== 'undefined') {
+    window.appEmail = appEmail;
+}
+
+if (typeof firebaseHelper !== 'undefined') {
+    window.firebaseHelper = firebaseHelper;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    app.init();
+});
