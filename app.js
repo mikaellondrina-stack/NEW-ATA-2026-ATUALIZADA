@@ -209,7 +209,7 @@ const app = {
                 this.updateOnlineUsers();
             }
         }, 10000);
-        // Inicializar imediamente
+        // Inicializar imediatamente
         this.updateOnlineUsers();
     },
 
@@ -2678,27 +2678,3 @@ const app = {
         `).join('');
     }
 };
-// Exportar para escopo global
-window.app = app;
-
-// Outras exportações necessárias (se as variáveis existirem)
-if (typeof DATA !== 'undefined') {
-    window.DATA = DATA;
-}
-
-if (typeof chatSystem !== 'undefined') {
-    window.chatSystem = chatSystem;
-}
-
-if (typeof appEmail !== 'undefined') {
-    window.appEmail = appEmail;
-}
-
-if (typeof firebaseHelper !== 'undefined') {
-    window.firebaseHelper = firebaseHelper;
-}
-
-// Inicializar automaticamente quando o DOM estiver pronto
-document.addEventListener('DOMContentLoaded', function() {
-    app.init();
-});
