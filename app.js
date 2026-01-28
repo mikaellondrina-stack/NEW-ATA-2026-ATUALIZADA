@@ -15,6 +15,13 @@ const app = {
     filtrosAtas: {},
     filtrosPresenca: {},
 
+    data: {
+        chat: [],
+        os: [],
+        atas: [],
+        onlineUsers: []
+    },
+
     init() {
         // 🔧 FIX 2: Restaurar sessão ao iniciar
         this.restaurarSessao();
@@ -60,16 +67,21 @@ const app = {
         this.carregarFiltrosSalvos();
 
         // Configurar clique fora da lista de online
-        document.addEventListener('click', (e) => {
-            const onlineList = document.getElementById('online-users-list');
-            const onlineDropdown = document.getElementById('online-users');
-            if (onlineList && onlineList.style.display === 'block' &&
-                !onlineDropdown.contains(e.target) &&
-                !onlineList.contains(e.target)) {
-                onlineList.style.display = 'none';
+                document.addEventListener('click', (e) => {
+            if (!e.target.closest('.notification-bell') && !e.target.closest('.notifications-panel')) {
+                document.getElementById('notifications-panel').classList.remove('show');
             }
         });
 
+        // 🔥 INICIALIZAR SISTEMA GLOBAL (Firebase)
+        if (typeof firebaseHelper !== 'undefined') {
+            firebaseHelper.inicializarFirebase();
+        }
+
+        if (typeof chatSystem !== 'undefined') {
+            chatSystem.init();
+        }
+    },
         // Configurar clique fora das notificações
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.notification-bell') && !e.target.closest('.notifications-panel')) {
