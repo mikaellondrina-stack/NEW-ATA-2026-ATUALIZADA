@@ -2702,27 +2702,3 @@ if (typeof firebaseHelper !== 'undefined') {
 document.addEventListener('DOMContentLoaded', function() {
     app.init();
 });
-// Exportar para escopo global
-window.app = app;
-
-// Outras exportações necessárias
-if (typeof DATA !== 'undefined') {
-    window.DATA = DATA;
-}
-
-if (typeof chatSystem !== 'undefined') {
-    window.chatSystem = chatSystem;
-}
-
-if (typeof appEmail !== 'undefined') {
-    window.appEmail = appEmail;
-}
-
-if (typeof firebaseHelper !== 'undefined') {
-    window.firebaseHelper = firebaseHelper;
-}
-
-// Inicializar automaticamente quando o DOM estiver pronto
-document.addEventListener('DOMContentLoaded', function() {
-    app.init();
-});
