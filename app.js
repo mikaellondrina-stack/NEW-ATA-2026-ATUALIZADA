@@ -108,14 +108,7 @@ const app = {
         }
         return false;
     }
-};
 
-// 🔥 GARANTIR que o app inicialize
-document.addEventListener('DOMContentLoaded', () => {
-    if (typeof app !== 'undefined') {
-        app.init();
-    }
-});
 
 
     setupEventListeners() {
@@ -314,7 +307,11 @@ document.addEventListener('DOMContentLoaded', () => {
     },
 
     // 🔧 FIX 3: botão online - função para mostrar/ocultar lista
-    toggleOnlineUsers() {
+    toggleOnlineUsers() { }; // FECHA O OBJETO app AQUI
+document.addEventListener('DOMContentLoaded', () => {
+    app.init();
+});
+
         const onlineList = document.getElementById('online-users-list');
         if (onlineList.style.display === 'block') {
             onlineList.style.display = 'none';
