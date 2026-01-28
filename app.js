@@ -15,70 +15,83 @@ const app = {
     filtrosAtas: {},
     filtrosPresenca: {},
 
-    data: {
-        chat: [],
-        os: [],
-        atas: [],
-        onlineUsers: []
-    },
+    init() {
+    // 🔧 FIX 2: Restaurar sessão ao iniciar
+    this.restaurarSessao();
 
-        init() {
-        this.restaurarSessao();
+    // GARANTIR que começa na tela de login se não houver sessão
+    if (!this.currentUser) {
+        document.getElementById('login-screen')?.classList.remove('hidden');
+        document.getElementById('main-content')?.classList.add('hidden');
+    } else {
+        this.showApp();
+    }
 
-        if (!this.currentUser) {
-            document.getElementById('login-screen').classList.remove('hidden');
-            document.getElementById('main-content').classList.add('hidden');
-        } else {
-            this.showApp();
+    // Limpar auto-preenchimento dos campos de login
+    setTimeout(() => {
+        const user = document.getElementById('login-user');
+        const pass = document.getElementById('login-pass');
+        const turno = document.getElementById('login-turno');
+        if (user) user.value = '';
+        if (pass) pass.value = '';
+        if (turno) turno.value = 'Diurno';
+    }, 100);
+
+    this.loadCondos();
+    this.loadFiltros();
+    this.loadNotifications();
+    this.setupEventListeners();
+    this.setupAutoSave();
+    this.setupOSPreview();
+    this.setupResponsive();
+
+    // Configurar datas padrão
+    const hoje = new Date();
+    const umaSemanaAtras = new Date();
+    umaSemanaAtras.setDate(umaSemanaAtras.getDate() - 7);
+
+    document.getElementById('filter-data-inicio')?.value = umaSemanaAtras.toISOString().split('T')[0];
+    document.getElementById('filter-data-fim')?.value = hoje.toISOString().split('T')[0];
+    document.getElementById('filter-presenca-inicio')?.value = umaSemanaAtras.toISOString().split('T')[0];
+    document.getElementById('filter-presenca-fim')?.value = hoje.toISOString().split('T')[0];
+    document.getElementById('os-data')?.value = hoje.toISOString().split('T')[0];
+
+    // Preencher datas do relatório
+    document.getElementById('report-data-inicio')?.value = umaSemanaAtras.toISOString().split('T')[0];
+    document.getElementById('report-data-fim')?.value = hoje.toISOString().split('T')[0];
+
+    this.carregarFiltrosSalvos();
+
+    // Configurar clique fora da lista de online
+    document.addEventListener('click', (e) => {
+        const onlineList = document.getElementById('online-users-list');
+        const onlineDropdown = document.getElementById('online-users');
+
+        if (
+            onlineList &&
+            onlineDropdown &&
+            onlineList.style.display === 'block' &&
+            !onlineDropdown.contains(e.target) &&
+            !onlineList.contains(e.target)
+        ) {
+            onlineList.style.display = 'none';
         }
+    });
 
-        setTimeout(() => {
-            document.getElementById('login-user').value = '';
-            document.getElementById('login-pass').value = '';
-            document.getElementById('login-turno').value = 'Diurno';
-        }, 100);
-
-        this.loadCondos();
-        this.loadFiltros();
-        this.loadNotifications();
-        this.setupEventListeners();
-        this.setupAutoSave();
-        this.setupOSPreview();
-        this.setupResponsive();
-
-        const hoje = new Date();
-        const umaSemanaAtras = new Date();
-        umaSemanaAtras.setDate(umaSemanaAtras.getDate() - 7);
-
-        document.getElementById('filter-data-inicio').value = umaSemanaAtras.toISOString().split('T')[0];
-        document.getElementById('filter-data-fim').value = hoje.toISOString().split('T')[0];
-        document.getElementById('filter-presenca-inicio').value = umaSemanaAtras.toISOString().split('T')[0];
-        document.getElementById('filter-presenca-fim').value = hoje.toISOString().split('T')[0];
-        document.getElementById('os-data').value = hoje.toISOString().split('T')[0];
-        document.getElementById('report-data-inicio').value = umaSemanaAtras.toISOString().split('T')[0];
-        document.getElementById('report-data-fim').value = hoje.toISOString().split('T')[0];
-
-        this.carregarFiltrosSalvos();
-
-        // Clique fora das notificações
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.notification-bell') && !e.target.closest('.notifications-panel')) {
-                document.getElementById('notifications-panel').classList.remove('show');
-            }
-        });
-
-        // Firebase
-        if (typeof firebaseHelper !== 'undefined') {
-            firebaseHelper.inicializarFirebase();
+    // Configurar clique fora das notificações
+    document.addEventListener('click', (e) => {
+        if (
+            !e.target.closest('.notification-bell') &&
+            !e.target.closest('.notifications-panel')
+        ) {
+            const panel = document.getElementById('notifications-panel');
+            if (panel) panel.classList.remove('show');
         }
-        if (typeof chatSystem !== 'undefined') {
-            chatSystem.init();
-        }
-    },
-
+    });
+},
 
     // 🔧 FIX 2: NOVA FUNÇÃO - Restaurar sessão ao iniciar
-      restaurarSessao() {
+    restaurarSessao() {
         try {
             // Tentar recuperar sessão do localStorage
             const sessaoSalva = localStorage.getItem('porter_session');
@@ -98,16 +111,14 @@ const app = {
                     console.log('⚠️ Sessão expirada');
                     localStorage.removeItem('porter_session');
                     localStorage.removeItem('porter_last_session');
-                            return false;
                 }
-            } else {
-                console.log('ℹ️ Nenhuma sessão salva');
             }
         } catch (e) {
-            console.error('❌ Erro ao restaurar sessão:', e);
+            console.log('❌ Erro ao restaurar sessão:', e);
         }
         return false;
     },
+
     setupEventListeners() {
         // Enter no login
         document.getElementById('login-pass').addEventListener('keypress', (e) => {
@@ -304,11 +315,7 @@ const app = {
     },
 
     // 🔧 FIX 3: botão online - função para mostrar/ocultar lista
-    toggleOnlineUsers() { };
-document.addEventListener('DOMContentLoaded', () => {
-    app.init();
-});
-
+    toggleOnlineUsers() {
         const onlineList = document.getElementById('online-users-list');
         if (onlineList.style.display === 'block') {
             onlineList.style.display = 'none';
