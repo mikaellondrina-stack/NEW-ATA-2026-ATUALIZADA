@@ -493,6 +493,14 @@
             .tabs {
                 padding: 0 1rem;
             }
+            @keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+.system-message {
+    animation: slideIn 0.3s ease-out;
+}
         }
 
         .tab-btn {
@@ -4066,6 +4074,118 @@ E-mail automático - Não responda
     this.showMessage(`Bem-vindo(a), ${funcionario.nome}!`, 'success');
 }
 
+        initMoodCheck() {
+    const container = document.getElementById('mood-check-container');
+    if (!container) return;
+    
+    // Verificar se já fez check hoje
+    const hoje = new Date().toDateString();
+    const ultimoMood = localStorage.getItem(`porter_mood_${this.currentUser.user}`);
+    
+    if (ultimoMood) {
+        const { date } = JSON.parse(ultimoMood);
+        if (date === hoje) {
+            container.classList.add('hidden');
+            return;
+        }
+    }
+    
+    container.classList.remove('hidden');
+    
+    // Criar opções de humor
+    const moods = [
+        { emoji: '😢', label: 'Péssimo', desc: 'Estou muito mal hoje', color: '#e74c3c' },
+        { emoji: '😔', label: 'Triste', desc: 'Não estou muito bem', color: '#e67e22' },
+        { emoji: '😐', label: 'Normal', desc: 'Dia comum, sem novidades', color: '#f39c12' },
+        { emoji: '🙂', label: 'Bom', desc: 'Estou bem, obrigado!', color: '#2ecc71' },
+        { emoji: '😄', label: 'Excelente', desc: 'Dia incrível!', color: '#27ae60' }
+    ];
+    
+    const optionsDiv = document.getElementById('mood-options');
+    optionsDiv.innerHTML = '';
+    
+    moods.forEach((mood, index) => {
+        const div = document.createElement('div');
+        div.className = 'mood-option';
+        div.innerHTML = `
+            <div class="mood-face" style="border-color: ${mood.color}; color: ${mood.color}">
+                <span style="font-size: 2.5rem;">${mood.emoji}</span>
+            </div>
+            <div class="mood-label">${mood.label}</div>
+            <div class="mood-description">${mood.desc}</div>
+        `;
+        
+        div.addEventListener('click', () => {
+            // Remover seleção anterior
+            document.querySelectorAll('.mood-option').forEach(el => {
+                el.classList.remove('selected');
+            });
+            
+            // Selecionar este
+            div.classList.add('selected');
+            this.selectedMood = mood;
+            
+            // Atualizar status
+            const statusDiv = document.getElementById('mood-status');
+            statusDiv.innerHTML = `
+                <i class="fas fa-check-circle" style="color: ${mood.color}"></i>
+                ${mood.label}: ${mood.desc}
+            `;
+            
+            // Habilitar botão de envio
+            document.getElementById('mood-submit-btn').disabled = false;
+        });
+        
+        optionsDiv.appendChild(div);
+    });
+}
+
+        loadCondos() {
+    const selectCondo = document.getElementById('ata-condo');
+    const selectFilterCondo = document.getElementById('filter-condo');
+    const selectReportCondo = document.getElementById('report-condo');
+    const selectOSCondo = document.getElementById('os-condo');
+    
+    if (!selectCondo) return;
+    
+    // Limpar opções
+    [selectCondo, selectFilterCondo, selectReportCondo, selectOSCondo].forEach(select => {
+        if (select) {
+            select.innerHTML = '<option value="">Selecione um condomínio...</option>';
+        }
+    });
+    
+    // Ordenar condomínios
+    const condosOrdenados = [...DATA.condominios].sort((a, b) => a.n.localeCompare(b.n));
+    
+    // Adicionar opções
+    condosOrdenados.forEach(condo => {
+        const option = document.createElement('option');
+        option.value = condo.n;
+        option.textContent = `${condo.n} (${condo.c})`;
+        
+        if (selectCondo) selectCondo.appendChild(option.cloneNode(true));
+        if (selectFilterCondo) selectFilterCondo.appendChild(option.cloneNode(true));
+        if (selectReportCondo) selectReportCondo.appendChild(option.cloneNode(true));
+        if (selectOSCondo) selectOSCondo.appendChild(option.cloneNode(true));
+    });
+},
+
+loadAtas() {
+    // Implementar carregamento de atas
+    console.log('Carregando atas...');
+},
+
+loadOS() {
+    // Implementar carregamento de OS
+    console.log('Carregando ordens de serviço...');
+},
+
+loadNotifications() {
+    // Implementar carregamento de notificações
+    console.log('Carregando notificações...');
+}
+
         setupEventListeners() {
             // Enter no login
             document.getElementById('login-pass').addEventListener('keypress', (e) => {
@@ -4168,4 +4288,241 @@ E-mail automático - Não responda
                     this.updateOnlineUsers();
                 }
             }, 10000);
+
+showMessage(message, type = 'info') {
+    // Remover mensagens anteriores
+    const existing = document.querySelector('.system-message');
+    if (existing) existing.remove();
+    
+    // Criar nova mensagem
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `system-message fade-in`;
+    messageDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 20px;
+        border-radius: 8px;
+        color: white;
+        z-index: 10000;
+        font-weight: bold;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        animation: slideIn 0.3s ease-out;
+    `;
+    
+    // Cores por tipo
+    const colors = {
+        success: '#27ae60',
+        danger: '#e74c3c',
+        warning: '#f39c12',
+        info: '#3498db'
+    };
+    
+    messageDiv.style.background = colors[type] || colors.info;
+    messageDiv.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : 
+                        type === 'danger' ? 'exclamation-circle' : 
+                        type === 'warning' ? 'exclamation-triangle' : 
+                        'info-circle'}"></i>
+        ${message}
+    `;
+    
+    document.body.appendChild(messageDiv);
+    
+    // Remover após 5 segundos
+    setTimeout(() => {
+        if (messageDiv.parentNode) {
+            messageDiv.style.opacity = '0';
+            messageDiv.style.transform = 'translateX(100%)';
+            setTimeout(() => {
+                if (messageDiv.parentNode) messageDiv.parentNode.removeChild(messageDiv);
+            }, 300);
+        }
+    }, 5000);
+},
+
+showApp() {
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('main-content').classList.remove('hidden');
+    
+    // Atualizar informações do usuário
+    this.updateUserInfo();
+    
+    // Carregar condomínios
+    this.loadCondos();
+},
+
+updateUserInfo() {
+    if (!this.currentUser) return;
+    
+    const userInfo = document.getElementById('user-info');
+    if (!userInfo) return;
+    
+    const now = new Date();
+    const loginTime = new Date(this.currentUser.loginTime);
+    const diffMs = now - loginTime;
+    const diffMins = Math.floor(diffMs / 60000);
+    
+    userInfo.innerHTML = `
+        <div class="user-info-name">
+            <i class="fas fa-user-circle"></i> ${this.currentUser.nome}
+        </div>
+        <div class="user-info-time">
+            <i class="fas fa-clock"></i> Online há ${diffMins} min • ${this.currentUser.turno}
+        </div>
+        <div class="user-info-role">
+            ${this.currentUser.role === 'ADMIN' ? '👑 ADMINISTRADOR' : '👤 OPERADOR'}
+        </div>
+    `;
+},
+
+registrarAcesso() {
+    if (!this.currentUser) return;
+    
+    const acesso = {
+        user: this.currentUser.user,
+        nome: this.currentUser.nome,
+        turno: this.currentUser.turno,
+        login: new Date().toISOString(),
+        role: this.currentUser.role
+    };
+    
+    let acessos = JSON.parse(localStorage.getItem('porter_acessos') || '[]');
+    acessos.push(acesso);
+    
+    // Manter apenas últimos 1000 acessos
+    if (acessos.length > 1000) {
+        acessos = acessos.slice(-1000);
+    }
+    
+    localStorage.setItem('porter_acessos', JSON.stringify(acessos));
+    
+    // Atualizar online users
+    this.updateOnlineUsers();
+},
+
+showMessage(message, type = 'info') {
+    // Remover mensagens anteriores
+    const existing = document.querySelector('.system-message');
+    if (existing) existing.remove();
+    
+    // Criar nova mensagem
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `system-message fade-in`;
+    messageDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 20px;
+        border-radius: 8px;
+        color: white;
+        z-index: 10000;
+        font-weight: bold;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        animation: slideIn 0.3s ease-out;
+    `;
+    
+    // Cores por tipo
+    const colors = {
+        success: '#27ae60',
+        danger: '#e74c3c',
+        warning: '#f39c12',
+        info: '#3498db'
+    };
+    
+    messageDiv.style.background = colors[type] || colors.info;
+    messageDiv.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : 
+                        type === 'danger' ? 'exclamation-circle' : 
+                        type === 'warning' ? 'exclamation-triangle' : 
+                        'info-circle'}"></i>
+        ${message}
+    `;
+    
+    document.body.appendChild(messageDiv);
+    
+    // Remover após 5 segundos
+    setTimeout(() => {
+        if (messageDiv.parentNode) {
+            messageDiv.style.opacity = '0';
+            messageDiv.style.transform = 'translateX(100%)';
+            setTimeout(() => {
+                if (messageDiv.parentNode) messageDiv.parentNode.removeChild(messageDiv);
+            }, 300);
+        }
+    }, 5000);
+},
+
+showApp() {
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('main-content').classList.remove('hidden');
+    
+    // Atualizar informações do usuário
+    this.updateUserInfo();
+    
+    // Carregar condomínios
+    this.loadCondos();
+},
+
+updateUserInfo() {
+    if (!this.currentUser) return;
+    
+    const userInfo = document.getElementById('user-info');
+    if (!userInfo) return;
+    
+    const now = new Date();
+    const loginTime = new Date(this.currentUser.loginTime);
+    const diffMs = now - loginTime;
+    const diffMins = Math.floor(diffMs / 60000);
+    
+    userInfo.innerHTML = `
+        <div class="user-info-name">
+            <i class="fas fa-user-circle"></i> ${this.currentUser.nome}
+        </div>
+        <div class="user-info-time">
+            <i class="fas fa-clock"></i> Online há ${diffMins} min • ${this.currentUser.turno}
+        </div>
+        <div class="user-info-role">
+            ${this.currentUser.role === 'ADMIN' ? '👑 ADMINISTRADOR' : '👤 OPERADOR'}
+        </div>
+    `;
+},
+
+registrarAcesso() {
+    if (!this.currentUser) return;
+    
+    const acesso = {
+        user: this.currentUser.user,
+        nome: this.currentUser.nome,
+        turno: this.currentUser.turno,
+        login: new Date().toISOString(),
+        role: this.currentUser.role
+    };
+    
+    let acessos = JSON.parse(localStorage.getItem('porter_acessos') || '[]');
+    acessos.push(acesso);
+    
+    // Manter apenas últimos 1000 acessos
+    if (acessos.length > 1000) {
+        acessos = acessos.slice(-1000);
+    }
+    
+    localStorage.setItem('porter_acessos', JSON.stringify(acessos));
+    
+    // Atualizar online users
+    this.updateOnlineUsers();
+},
+
+salvarSessao() {
+    if (!this.currentUser) return;
+    
+    const sessao = {
+        ...this.currentUser,
+        lastActivity: new Date().toISOString(),
+        loginTimestamp: this.currentUser.loginTime || new Date().toISOString()
+    };
+    
+    localStorage.setItem('porter_session', JSON.stringify(sessao));
+}
+            
             // Inicializar imediata
