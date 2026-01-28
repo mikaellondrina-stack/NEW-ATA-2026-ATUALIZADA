@@ -78,7 +78,7 @@ const app = {
 
 
     // 🔧 FIX 2: NOVA FUNÇÃO - Restaurar sessão ao iniciar
-    restaurarSessao() {
+      restaurarSessao() {
         try {
             // Tentar recuperar sessão do localStorage
             const sessaoSalva = localStorage.getItem('porter_session');
@@ -107,10 +107,7 @@ const app = {
             console.error('❌ Erro ao restaurar sessão:', e);
         }
         return false;
-    }
-
-
-
+    },
     setupEventListeners() {
         // Enter no login
         document.getElementById('login-pass').addEventListener('keypress', (e) => {
@@ -307,7 +304,7 @@ const app = {
     },
 
     // 🔧 FIX 3: botão online - função para mostrar/ocultar lista
-    toggleOnlineUsers() { }; // FECHA O OBJETO app AQUI
+    toggleOnlineUsers() { };
 document.addEventListener('DOMContentLoaded', () => {
     app.init();
 });
