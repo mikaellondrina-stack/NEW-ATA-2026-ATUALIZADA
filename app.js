@@ -1,4 +1,4 @@
-// Aplicação principal - VERSÃO OTIMIZADA
+// Aplicação principal
 const app = {
     currentUser: null,
     selectedMood: null,
@@ -14,24 +14,12 @@ const app = {
     currentPrivateChatTarget: null,
     filtrosAtas: {},
     filtrosPresenca: {},
-    
-    // Cache para reduzir chamadas
-    cache: {
-        onlineUsers: null,
-        onlineUsersTimestamp: 0,
-        chatMessages: null,
-        chatTimestamp: 0,
-        privateChats: {},
-        osList: null,
-        osTimestamp: 0,
-        moodOptions: null
-    },
 
     init() {
-        console.log('🚀 Inicializando app com otimizações');
-        
+        // 🔧 FIX 2: Restaurar sessão ao iniciar
         this.restaurarSessao();
         
+        // GARANTIR que começa na tela de login se não houver sessão
         if (!this.currentUser) {
             document.getElementById('login-screen').classList.remove('hidden');
             document.getElementById('main-content').classList.add('hidden');
@@ -39,6 +27,7 @@ const app = {
             this.showApp();
         }
 
+        // Limpar auto-preenchimento dos campos de login
         setTimeout(() => {
             document.getElementById('login-user').value = '';
             document.getElementById('login-pass').value = '';
@@ -53,6 +42,7 @@ const app = {
         this.setupOSPreview();
         this.setupResponsive();
 
+        // Configurar datas padrão
         const hoje = new Date();
         const umaSemanaAtras = new Date();
         umaSemanaAtras.setDate(umaSemanaAtras.getDate() - 7);
@@ -63,11 +53,13 @@ const app = {
         document.getElementById('filter-presenca-fim').value = hoje.toISOString().split('T')[0];
         document.getElementById('os-data').value = hoje.toISOString().split('T')[0];
 
+        // Preencher datas do relatório
         document.getElementById('report-data-inicio').value = umaSemanaAtras.toISOString().split('T')[0];
         document.getElementById('report-data-fim').value = hoje.toISOString().split('T')[0];
 
         this.carregarFiltrosSalvos();
 
+        // Configurar clique fora da lista de online
         document.addEventListener('click', (e) => {
             const onlineList = document.getElementById('online-users-list');
             const onlineDropdown = document.getElementById('online-users');
@@ -78,60 +70,29 @@ const app = {
             }
         });
 
+        // Configurar clique fora das notificações
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.notification-bell') && !e.target.closest('.notifications-panel')) {
                 document.getElementById('notifications-panel').classList.remove('show');
             }
         });
-        
-        this.initCache();
     },
 
-    initCache() {
-        const cacheSalvo = localStorage.getItem('porter_cache');
-        if (cacheSalvo) {
-            try {
-                const cacheData = JSON.parse(cacheSalvo);
-                const agora = Date.now();
-                const cacheAge = agora - cacheData.timestamp;
-                
-                if (cacheAge < 5 * 60 * 1000) {
-                    this.cache = cacheData.data;
-                    console.log('✅ Cache carregado');
-                }
-            } catch (e) {
-                console.log('❌ Erro ao carregar cache:', e);
-            }
-        }
-    },
-
-    salvarCache() {
-        try {
-            const cacheData = {
-                data: this.cache,
-                timestamp: Date.now()
-            };
-            localStorage.setItem('porter_cache', JSON.stringify(cacheData));
-        } catch (e) {
-            console.log('❌ Erro ao salvar cache:', e);
-        }
-    },
-
+    // 🔧 FIX 2: NOVA FUNÇÃO - Restaurar sessão ao iniciar
     restaurarSessao() {
         try {
+            // Tentar recuperar sessão do localStorage
             const sessaoSalva = localStorage.getItem('porter_session');
             if (sessaoSalva) {
                 const usuario = JSON.parse(sessaoSalva);
                 
+                // Verificar se a sessão não expirou (últimas 24 horas)
                 const ultimaAtividade = new Date(usuario.loginTimestamp || usuario.lastActivity);
                 const agora = new Date();
                 const horasDesdeLogin = (agora - ultimaAtividade) / (1000 * 60 * 60);
                 
-                if (horasDesdeLogin < 24) {
+                if (horasDesdeLogin < 24) { // Sessão válida por 24 horas
                     this.currentUser = usuario;
-                    usuario.lastActivity = agora.toISOString();
-                    localStorage.setItem('porter_session', JSON.stringify(usuario));
-                    
                     console.log('✅ Sessão restaurada:', usuario.nome);
                     return true;
                 } else {
@@ -147,10 +108,12 @@ const app = {
     },
 
     setupEventListeners() {
+        // Enter no login
         document.getElementById('login-pass').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') this.login();
         });
 
+        // Enter no chat
         document.getElementById('chat-input')?.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
@@ -158,21 +121,21 @@ const app = {
             }
         });
 
+        // 🔧 FIX 1: chat individual - garantir que o evento está configurado
         const privateChatSelect = document.getElementById('private-chat-target');
         if (privateChatSelect) {
-            privateChatSelect.addEventListener('change', (e) => {
+            // Remover event listeners anteriores para evitar duplicação
+            privateChatSelect.replaceWith(privateChatSelect.cloneNode(true));
+            
+            // Recapturar o elemento
+            const newSelect = document.getElementById('private-chat-target');
+            newSelect.addEventListener('change', (e) => {
                 this.currentPrivateChatTarget = e.target.value;
-                const agora = Date.now();
-                const cacheAge = agora - (this.cache.privateChats[this.currentPrivateChatTarget]?.timestamp || 0);
-                if (this.cache.privateChats[this.currentPrivateChatTarget] && cacheAge < 30 * 1000) {
-                    console.log('✅ Chat privado do cache');
-                    this.renderPrivateChatFromCache();
-                    return;
-                }
                 this.loadPrivateChat();
             });
         }
 
+        // Enter no chat privado
         document.getElementById('chat-private-input')?.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
@@ -180,13 +143,14 @@ const app = {
             }
         });
 
+        // Salvar logoff quando a página for fechada
         window.addEventListener('beforeunload', () => {
             if (this.currentUser) {
-                this.salvarCache();
-                this.salvarSessao();
+                this.salvarSessao(); // Apenas salvar sessão, não registrar logoff
             }
         });
 
+        // 🔧 FIX 3: botão online - corrigir evento de toggle
         const onlineDropdown = document.getElementById('online-users');
         if (onlineDropdown) {
             onlineDropdown.addEventListener('click', (e) => {
@@ -195,6 +159,7 @@ const app = {
             });
         }
 
+        // Configurar envio do formulário de OS
         const osForm = document.getElementById('os-form-email');
         if (osForm) {
             osForm.addEventListener('submit', (e) => {
@@ -202,22 +167,12 @@ const app = {
             });
         }
 
+        // 🔧 FIX 2: Recarregar usuários online ao voltar para a página
         window.addEventListener('pageshow', () => {
             if (this.currentUser) {
-                const agora = Date.now();
-                const cacheAge = agora - this.cache.onlineUsersTimestamp;
-                if (this.cache.onlineUsers && cacheAge < 30 * 1000) {
-                    this.onlineUsers = this.cache.onlineUsers;
-                    this.renderOnlineUsersList();
-                } else {
-                    this.updateOnlineUsers();
-                }
+                this.updateOnlineUsers();
             }
         });
-        
-        setInterval(() => {
-            this.salvarCache();
-        }, 60000);
     },
 
     setupAutoSave() {
@@ -225,23 +180,19 @@ const app = {
             if (this.currentUser) {
                 this.salvarSessao();
             }
-        }, 60000);
+        }, 30000);
     },
 
     setupResponsive() {
-        let resizeTimeout;
         window.addEventListener('resize', () => {
-            clearTimeout(resizeTimeout);
-            resizeTimeout = setTimeout(() => {
-                if (this.currentUser) {
-                    if (window.innerWidth > 1200) {
-                        document.getElementById('sidebar').style.display = 'block';
-                        document.getElementById('sidebar').classList.remove('show');
-                    } else {
-                        document.getElementById('sidebar').style.display = 'none';
-                    }
+            if (this.currentUser) {
+                if (window.innerWidth > 1200) {
+                    document.getElementById('sidebar').style.display = 'block';
+                    document.getElementById('sidebar').classList.remove('show');
+                } else {
+                    document.getElementById('sidebar').style.display = 'none';
                 }
-            }, 250);
+            }
         });
     },
 
@@ -252,25 +203,14 @@ const app = {
     },
 
     setupOnlineTracking() {
-        if (this.onlineInterval) {
-            clearInterval(this.onlineInterval);
-        }
-        
+        // 🔧 FIX 3: Atualizar status online a cada 10 segundos (mais frequente)
         this.onlineInterval = setInterval(() => {
             if (this.currentUser) {
                 this.updateOnlineUsers();
             }
-        }, 30000);
-        
-        const agora = Date.now();
-        const cacheAge = agora - this.cache.onlineUsersTimestamp;
-        
-        if (this.cache.onlineUsers && cacheAge < 30 * 1000) {
-            this.onlineUsers = this.cache.onlineUsers;
-            this.updateOnlineUI();
-        } else {
-            this.updateOnlineUsers();
-        }
+        }, 10000);
+        // Inicializar imediatamente
+        this.updateOnlineUsers();
     },
 
     getMoodStatusTexto(mood) {
@@ -284,24 +224,19 @@ const app = {
         return statusMap[mood] || 'Não avaliado';
     },
 
+    // 🔧 FIX 3: botão online - função completamente reformulada
     updateOnlineUsers() {
         if (!this.currentUser) return;
         
         const agora = new Date();
-        const agoraTimestamp = agora.getTime();
         
-        const cacheAge = agoraTimestamp - this.cache.onlineUsersTimestamp;
-        if (this.cache.onlineUsers && cacheAge < 30 * 1000) {
-            this.onlineUsers = this.cache.onlineUsers;
-            this.updateOnlineUI();
-            this.salvarSessaoLocal();
-            return;
-        }
+        // 1. Atualizar a própria sessão primeiro
+        this.salvarSessao();
         
-        this.salvarSessaoLocal();
-        
+        // 2. Buscar usuários online do Firebase
         let usuariosOnline = [];
         
+        // Adicionar usuário atual primeiro
         const moodAtual = this.getMoodAtual();
         const statusMood = this.getMoodStatusTexto(moodAtual);
         usuariosOnline.push({
@@ -313,15 +248,17 @@ const app = {
             online: true
         });
         
-        const onlineData = localStorage.getItem('porter_online_firebase');
-        if (onlineData) {
-            try {
+        // 3. Buscar outros usuários do Firebase
+        try {
+            const onlineData = localStorage.getItem('porter_online_firebase');
+            if (onlineData) {
                 const data = JSON.parse(onlineData);
-                const dataTime = new Date(data.timestamp).getTime();
-                const diferencaSegundos = (agoraTimestamp - dataTime) / 1000;
+                const dataTime = new Date(data.timestamp);
+                const diferencaSegundos = (agora - dataTime) / 1000;
                 
-                if (diferencaSegundos < 300) {
+                if (diferencaSegundos < 10) { // Dados recentes do Firebase
                     data.users.forEach(usuario => {
+                        // Pular usuário atual
                         if (usuario.user === this.currentUser.user) return;
                         
                         usuariosOnline.push({
@@ -337,31 +274,35 @@ const app = {
                         });
                     });
                 }
-            } catch (e) {
-                console.log('Erro ao buscar usuários online:', e);
             }
+        } catch (e) {
+            console.log('Erro ao buscar usuários online do Firebase:', e);
         }
         
         this.onlineUsers = usuariosOnline;
-        this.cache.onlineUsers = usuariosOnline;
-        this.cache.onlineUsersTimestamp = agoraTimestamp;
         
-        this.updateOnlineUI();
+        // 4. Atualizar contador no header
+        const onlineCount = document.getElementById('online-count');
+        if (onlineCount) {
+            if (this.onlineUsers.length === 1) {
+                onlineCount.textContent = '1 (apenas você)';
+                onlineCount.style.color = '#f39c12';
+            } else {
+                onlineCount.textContent = this.onlineUsers.length;
+                onlineCount.style.color = '#2ecc71';
+            }
+        }
+        
+        // 5. Se a lista estiver visível, atualizar
+        const onlineList = document.getElementById('online-users-list');
+        if (onlineList && onlineList.style.display === 'block') {
+            this.renderOnlineUsersList();
+        }
+        
         console.log('👥 Usuários online atualizados:', this.onlineUsers.length);
     },
 
-    salvarSessaoLocal() {
-        if (!this.currentUser) return;
-        
-        const sessionData = {
-            ...this.currentUser,
-            lastActivity: new Date().toISOString(),
-            mood: this.getMoodAtual()
-        };
-        
-        localStorage.setItem('porter_session', JSON.stringify(sessionData));
-    },
-
+    // 🔧 FIX 3: botão online - função para mostrar/ocultar lista
     toggleOnlineUsers() {
         const onlineList = document.getElementById('online-users-list');
         if (onlineList.style.display === 'block') {
@@ -369,21 +310,19 @@ const app = {
         } else {
             this.renderOnlineUsersList();
             onlineList.style.display = 'block';
-            
-            requestAnimationFrame(() => {
+            // Reposicionar se necessário
+            setTimeout(() => {
                 const rect = onlineList.getBoundingClientRect();
                 if (rect.bottom > window.innerHeight) {
                     onlineList.style.bottom = '100%';
                     onlineList.style.top = 'auto';
                 }
-            });
+            }, 10);
         }
     },
 
     renderOnlineUsersList() {
         const onlineList = document.getElementById('online-users-list');
-        if (!onlineList) return;
-        
         onlineList.innerHTML = '';
         
         if (this.onlineUsers.length === 0) {
@@ -401,12 +340,11 @@ const app = {
             return;
         }
         
-        const fragment = document.createDocumentFragment();
-        
         this.onlineUsers.forEach(user => {
             const userItem = document.createElement('div');
             userItem.className = 'online-user-item';
             
+            // Determinar status de atividade
             const ultimaAtividade = new Date(user.lastActivity);
             const agora = new Date();
             const diferencaMinutos = Math.floor((agora - ultimaAtividade) / (1000 * 60));
@@ -438,28 +376,22 @@ const app = {
                 </div>
                 <div class="online-status" style="background: ${user.isCurrentUser || diferencaMinutos < 5 ? '#2ecc71' : '#f39c12'}"></div>
             `;
-            fragment.appendChild(userItem);
+            onlineList.appendChild(userItem);
         });
-        
-        onlineList.appendChild(fragment);
     },
 
-    updateOnlineUI() {
-        const onlineCount = document.getElementById('online-count');
-        if (onlineCount) {
-            if (this.onlineUsers.length === 1) {
-                onlineCount.textContent = '1 (apenas você)';
-                onlineCount.style.color = '#f39c12';
-            } else {
-                onlineCount.textContent = this.onlineUsers.length;
-                onlineCount.style.color = '#2ecc71';
-            }
-        }
+    formatarTempoAtivo(dataAtividade) {
+        const agora = new Date();
+        const diferenca = agora - new Date(dataAtividade);
+        const minutos = Math.floor(diferenca / (1000 * 60));
         
-        const onlineList = document.getElementById('online-users-list');
-        if (onlineList && onlineList.style.display === 'block') {
-            this.renderOnlineUsersList();
-        }
+        if (minutos < 1) return 'Agora mesmo';
+        if (minutos === 1) return 'Há 1 minuto';
+        if (minutos < 60) return `Há ${minutos} minutos`;
+        
+        const horas = Math.floor(minutos / 60);
+        if (horas === 1) return 'Há 1 hora';
+        return `Há ${horas} horas`;
     },
 
     getCorPorMood(mood) {
@@ -498,53 +430,55 @@ const app = {
         this.lastLogoffTime = new Date().toISOString();
         localStorage.setItem('porter_last_logoff', this.lastLogoffTime);
         
-        this.limparTodosIntervalos();
+        // Limpar intervalos
+        if (this.chatInterval) {
+            clearInterval(this.chatInterval);
+            this.chatInterval = null;
+        }
         
+        if (this.privateChatInterval) {
+            clearInterval(this.privateChatInterval);
+            this.privateChatInterval = null;
+        }
+        
+        if (this.moodInterval) {
+            clearInterval(this.moodInterval);
+            this.moodInterval = null;
+        }
+        
+        if (this.onlineInterval) {
+            clearInterval(this.onlineInterval);
+            this.onlineInterval = null;
+        }
+        
+        // 🔧 FIX 2: Remover sessão específica do usuário
         localStorage.removeItem('porter_session');
         localStorage.removeItem(`porter_session_${this.currentUser.user}`);
         
+        // 🔧 FIX 3: Remover do registro de online no Firebase
         this.removeFromOnlineUsers();
     },
-    
-    limparTodosIntervalos() {
-        const intervalos = [
-            'chatInterval',
-            'privateChatInterval',
-            'moodInterval',
-            'onlineInterval'
-        ];
-        
-        intervalos.forEach(intervalo => {
-            if (this[intervalo]) {
-                clearInterval(this[intervalo]);
-                this[intervalo] = null;
-            }
-        });
-    },
 
+    // 🔧 FIX 3: Nova função para remover usuário da lista de online
     removeFromOnlineUsers() {
         try {
+            // Marcar como offline no Firebase
             if (window.db && this.currentUser) {
                 window.db.collection('online_users').doc(this.currentUser.user).update({
                     online: false,
                     lastActivity: new Date().toISOString()
                 }).then(() => {
-                    console.log('✅ Usuário offline no Firebase');
+                    console.log('✅ Usuário marcado como offline no Firebase');
                 }).catch(() => {});
             }
         } catch (e) {
-            console.log('Erro ao remover usuário:', e);
+            console.log('Erro ao remover usuário dos online:', e);
         }
     },
 
+    // 🔧 FIX 2: Função de salvar sessão melhorada
     salvarSessao() {
         if (!this.currentUser) return;
-        
-        const agora = Date.now();
-        const ultimaSincronizacao = localStorage.getItem('porter_last_firebase_sync') || 0;
-        const diferencaSegundos = (agora - ultimaSincronizacao) / 1000;
-        
-        const deveSincronizarFirebase = diferencaSegundos > 120;
         
         const sessionData = {
             ...this.currentUser,
@@ -552,14 +486,15 @@ const app = {
             mood: this.getMoodAtual()
         };
         
+        // Salvar sessão principal
         localStorage.setItem('porter_session', JSON.stringify(sessionData));
         
-        if (deveSincronizarFirebase && typeof firebaseHelper !== 'undefined' && firebaseHelper.sincronizarStatusOnlineComFirebase) {
+        // 🔧 FIX 3: Sincronizar status online com Firebase
+        if (typeof firebaseHelper !== 'undefined' && firebaseHelper.sincronizarStatusOnlineComFirebase) {
             firebaseHelper.sincronizarStatusOnlineComFirebase();
-            localStorage.setItem('porter_last_firebase_sync', agora.toString());
         }
         
-        console.log('✅ Sessão salva');
+        console.log('✅ Sessão salva para:', this.currentUser.nome);
     },
 
     loadCondos() {
@@ -576,8 +511,6 @@ const app = {
         filterSelect.innerHTML = '<option value="">Todos os condomínios</option>';
         reportSelect.innerHTML = '<option value="">Todos os condomínios</option>';
         
-        const fragment = document.createDocumentFragment();
-        
         DATA.condominios.sort((a,b) => a.n.localeCompare(b.n)).forEach(c => {
             const condoItem = document.createElement('div');
             condoItem.className = 'condo-item';
@@ -587,28 +520,30 @@ const app = {
                 <div class="condo-name">${c.n}</div>
                 <div class="condo-badge" id="badge-${c.n.replace(/\s+/g, '-')}">0</div>
             `;
-            fragment.appendChild(condoItem);
+            sidebarList.appendChild(condoItem);
             
             [ataSelect, osSelect, filterSelect, reportSelect].forEach(select => {
                 const opt = document.createElement('option');
                 opt.value = c.n;
                 opt.textContent = c.n;
-                select.appendChild(opt.cloneNode(true));
+                select.appendChild(opt);
             });
         });
+    },
+
+    loadFiltros() {
+        const filterOperador = document.getElementById('filter-presenca-operador');
+        filterOperador.innerHTML = '<option value="">Todos os operadores</option>';
         
-        sidebarList.appendChild(fragment);
+        DATA.funcionarios.sort((a,b) => a.nome.localeCompare(b.nome)).forEach(f => {
+            let opt = document.createElement('option');
+            opt.value = f.nome;
+            opt.textContent = f.nome;
+            filterOperador.appendChild(opt);
+        });
     },
 
     carregarMoodOptions() {
-        const moodCache = localStorage.getItem('porter_mood_options_cache');
-        if (moodCache && this.cache.moodOptions) {
-            const container = document.getElementById('mood-options');
-            container.innerHTML = this.cache.moodOptions;
-            this.reattachMoodEvents();
-            return;
-        }
-        
         const MOOD_OPTIONS = [
             { id: 1, label: "Zangado", color: "#e74c3c", status: "😠 Zangado", description: "Raiva ou tristeza profunda" },
             { id: 2, label: "Triste", color: "#e67e22", status: "😔 Triste", description: "Desânimo ou insatisfação" },
@@ -620,14 +555,12 @@ const app = {
         const container = document.getElementById('mood-options');
         container.innerHTML = '';
         
-        const fragment = document.createDocumentFragment();
-        
         MOOD_OPTIONS.forEach(mood => {
             const moodElement = document.createElement('div');
             moodElement.className = 'mood-option';
             moodElement.dataset.id = mood.id;
-            moodElement.dataset.color = mood.color;
-            moodElement.dataset.status = mood.status;
+            moodElement.style.color = mood.color;
+            moodElement.onclick = () => this.selecionarMood(mood.id);
             
             let svgContent = '';
             switch(mood.id) {
@@ -646,43 +579,30 @@ const app = {
                 <div class="mood-description">${mood.description}</div>
             `;
             
-            fragment.appendChild(moodElement);
-        });
-        
-        container.appendChild(fragment);
-        
-        this.cache.moodOptions = container.innerHTML;
-        localStorage.setItem('porter_mood_options_cache', container.innerHTML);
-        
-        this.reattachMoodEvents();
-    },
-    
-    reattachMoodEvents() {
-        document.querySelectorAll('.mood-option').forEach(el => {
-            el.onclick = () => {
-                const id = parseInt(el.dataset.id);
-                const status = el.dataset.status;
-                const color = el.dataset.color;
-                this.selecionarMood(id, status, color);
-            };
+            container.appendChild(moodElement);
         });
     },
 
-    selecionarMood(moodId, status, color) {
-        this.selectedMood = { id: moodId, status: status };
+    selecionarMood(moodId) {
+        const MOOD_OPTIONS = [
+            { id: 1, status: "😠 Zangado" },
+            { id: 2, status: "😔 Triste" },
+            { id: 3, status: "😐 Neutro" },
+            { id: 4, status: "🙂 Feliz" },
+            { id: 5, status: "😄 Radiante" }
+        ];
+        
+        this.selectedMood = MOOD_OPTIONS.find(m => m.id === moodId);
         
         document.querySelectorAll('.mood-option').forEach(el => {
             el.classList.remove('selected');
         });
         
-        const selectedEl = document.querySelector(`.mood-option[data-id="${moodId}"]`);
-        if (selectedEl) {
-            selectedEl.classList.add('selected');
-        }
+        document.querySelector(`.mood-option[data-id="${moodId}"]`).classList.add('selected');
         
         document.getElementById('mood-status').innerHTML = `
-            <i class="fas fa-check-circle" style="color: ${color}"></i>
-            <span>Selecionado: <strong>${status}</strong></span>
+            <i class="fas fa-check-circle" style="color: ${document.querySelector(`.mood-option[data-id="${moodId}"]`).style.color}"></i>
+            <span>Selecionado: <strong>${this.selectedMood.status}</strong></span>
         `;
         
         document.getElementById('mood-submit-btn').disabled = false;
@@ -727,7 +647,10 @@ const app = {
         
         document.getElementById('mood-submit-btn').disabled = true;
         
+        // Atualizar lista de online
         this.updateOnlineUsers();
+        
+        // Atualizar a área do usuário
         this.updateUserInfo();
         
         setTimeout(() => {
@@ -761,92 +684,107 @@ const app = {
         return moodHoje ? moodHoje.moodStatus.split(' ')[0] : '😐';
     },
 
+    updateCity() {
+        const condoName = document.getElementById('ata-condo').value;
+        const condo = DATA.condominios.find(c => c.n === condoName);
+        document.getElementById('ata-cidade').value = condo ? condo.c : "";
+    },
+
+    updateCityOS() {
+        const condoName = document.getElementById('os-condo').value;
+        const condo = DATA.condominios.find(c => c.n === condoName);
+        document.getElementById('os-cidade').value = condo ? condo.c : "";
+    },
+
     login() {
         const u = document.getElementById('login-user').value.trim();
         const p = document.getElementById('login-pass').value;
         const t = document.getElementById('login-turno').value;
         
-        const loginAttemptKey = `porter_login_attempt_${u}`;
-        const now = Date.now();
-        const lastAttempt = localStorage.getItem(loginAttemptKey) || 0;
-        
-        if (now - lastAttempt < 2000) {
-            alert('Aguarde 2 segundos entre tentativas de login.');
-            return;
-        }
-        
-        localStorage.setItem(loginAttemptKey, now.toString());
-        
         const user = DATA.funcionarios.find(f => f.user === u && f.pass === p);
         
         if (user) {
-            this.handleLoginSuccess(user, t);
+            this.currentUser = {
+                ...user,
+                turno: t,
+                loginTime: new Date().toLocaleString('pt-BR'),
+                loginTimestamp: new Date().toISOString(),
+                loginDate: new Date().toLocaleDateString('pt-BR'),
+                loginHour: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})
+            };
+            
+            localStorage.setItem('porter_session', JSON.stringify(this.currentUser));
+            
+            // Registrar login
+            let presencas = JSON.parse(localStorage.getItem('porter_presencas') || '[]');
+            presencas.unshift({
+                nome: user.nome,
+                turno: t,
+                data: new Date().toLocaleDateString('pt-BR'),
+                hora: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
+                timestamp: new Date().toISOString(),
+                dataISO: new Date().toISOString().split('T')[0],
+                tipo: 'login'
+            });
+            
+            if (presencas.length > 100) presencas = presencas.slice(0, 100);
+            localStorage.setItem('porter_presencas', JSON.stringify(presencas));
+            
+            this.showApp();
+            
+            // 🔧 FIX 1: Carregar usuários do chat privado
+            this.loadPrivateChatUsers();
         } else {
+            // 🆕 VERIFICAR SE É TÉCNICO
             const tecnico = DATA.tecnicos.find(t => {
                 const nomeTecnico = t.nome.split(' - ')[0].toLowerCase().replace(/\s+/g, '.');
                 return u === nomeTecnico && p === "Tecnico@2026";
             });
             
             if (tecnico) {
-                this.handleTecnicoLogin(tecnico, t);
+                this.currentUser = {
+                    nome: tecnico.nome,
+                    user: tecnico.nome.split(' - ')[0].toLowerCase().replace(/\s+/g, '.'),
+                    role: "TÉCNICO",
+                    turno: t,
+                    loginTime: new Date().toLocaleString('pt-BR'),
+                    loginTimestamp: new Date().toISOString(),
+                    loginDate: new Date().toLocaleDateString('pt-BR'),
+                    loginHour: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})
+                };
+                
+                localStorage.setItem('porter_session', JSON.stringify(this.currentUser));
+                
+                let presencas = JSON.parse(localStorage.getItem('porter_presencas') || '[]');
+                presencas.unshift({
+                    nome: tecnico.nome,
+                    turno: t,
+                    data: new Date().toLocaleDateString('pt-BR'),
+                    hora: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
+                    timestamp: new Date().toISOString(),
+                    dataISO: new Date().toISOString().split('T')[0],
+                    tipo: 'login'
+                });
+                
+                if (presencas.length > 100) presencas = presencas.slice(0, 100);
+                localStorage.setItem('porter_presencas', JSON.stringify(presencas));
+                
+                this.showApp();
+                
+                // 🔧 FIX 1: Carregar usuários do chat privado
+                this.loadPrivateChatUsers();
             } else {
-                alert('Credenciais inválidas!');
+                alert('Credenciais inválidas! Verifique usuário e senha.');
             }
         }
     },
-    
-    handleLoginSuccess(user, turno) {
-        this.currentUser = {
-            ...user,
-            turno: turno,
-            loginTime: new Date().toLocaleString('pt-BR'),
-            loginTimestamp: new Date().toISOString(),
-            loginDate: new Date().toLocaleDateString('pt-BR'),
-            loginHour: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})
-        };
-        
-        this.finalizarLogin(user.nome, turno);
-    },
-    
-    handleTecnicoLogin(tecnico, turno) {
-        this.currentUser = {
-            nome: tecnico.nome,
-            user: tecnico.nome.split(' - ')[0].toLowerCase().replace(/\s+/g, '.'),
-            role: "TÉCNICO",
-            turno: turno,
-            loginTime: new Date().toLocaleString('pt-BR'),
-            loginTimestamp: new Date().toISOString(),
-            loginDate: new Date().toLocaleDateString('pt-BR'),
-            loginHour: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})
-        };
-        
-        this.finalizarLogin(tecnico.nome, turno);
-    },
-    
-    finalizarLogin(nome, turno) {
-        localStorage.setItem('porter_session', JSON.stringify(this.currentUser));
-        
-        let presencas = JSON.parse(localStorage.getItem('porter_presencas') || '[]');
-        presencas.unshift({
-            nome: nome,
-            turno: turno,
-            data: new Date().toLocaleDateString('pt-BR'),
-            hora: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
-            timestamp: new Date().toISOString(),
-            dataISO: new Date().toISOString().split('T')[0],
-            tipo: 'login'
-        });
-        
-        if (presencas.length > 100) presencas = presencas.slice(0, 100);
-        localStorage.setItem('porter_presencas', JSON.stringify(presencas));
-        
-        this.showApp();
-    },
 
     showApp() {
+        // Transição suave
         document.getElementById('login-screen').classList.add('hidden');
         document.getElementById('main-content').classList.remove('hidden');
         
+        // MOSTRAR SIDEBAR APÓS LOGIN
         if (window.innerWidth > 1200) {
             document.getElementById('sidebar').style.display = 'block';
         }
@@ -863,40 +801,33 @@ const app = {
         this.updateNotificationBadges();
         this.salvarSessao();
         
-        const agora = Date.now();
-        const cacheAge = agora - this.cache.onlineUsersTimestamp;
-        if (this.cache.onlineUsers && cacheAge < 30 * 1000) {
-            this.onlineUsers = this.cache.onlineUsers;
-            this.updateOnlineUI();
-        } else {
-            this.updateOnlineUsers();
-        }
+        // 🔧 FIX 3: ATUALIZAR OPERADORES ONLINE IMEDIATAMENTE
+        this.updateOnlineUsers();
         
+        // Se for admin, mostrar controles
         if (this.currentUser.role === 'ADMIN' || this.currentUser.role === 'TÉCNICO') {
             document.getElementById('admin-controls').style.display = 'flex';
         }
         
+        // Iniciar chat
         this.loadChat();
-        this.chatInterval = setInterval(() => this.loadChat(), 30000);
+        this.chatInterval = setInterval(() => this.loadChat(), 5000);
         
+        // 🔧 FIX 1: Iniciar chat privado com usuários carregados
         this.loadPrivateChatUsers();
         this.privateChatInterval = setInterval(() => {
             if (this.currentPrivateChatTarget) {
-                const cacheKey = this.currentPrivateChatTarget;
-                const agora = Date.now();
-                const cacheAge = agora - (this.cache.privateChats[cacheKey]?.timestamp || 0);
-                
-                if (cacheAge < 30 * 1000) {
-                    return;
-                }
                 this.loadPrivateChat();
             }
-        }, 30000);
+        }, 5000);
         
+        // 🔧 FIX 3: Iniciar tracking de online melhorado
         this.setupOnlineTracking();
         
+        // 🆕 Inicializar visto por
         this.registrarVisualizacaoChat();
         
+        // Auto-preenche campos do funcionário na OS se estiver logado
         if (this.currentUser) {
             document.getElementById('os-funcionario').value = this.currentUser.nome;
             document.getElementById('os-email').value = `${this.currentUser.user}@porter.com.br`;
@@ -936,8 +867,28 @@ const app = {
         if (confirm('Deseja realmente sair do sistema?')) {
             this.registrarLogoff();
             
-            this.limparTodosIntervalos();
+            // Limpar intervalos primeiro
+            if (this.chatInterval) {
+                clearInterval(this.chatInterval);
+                this.chatInterval = null;
+            }
             
+            if (this.privateChatInterval) {
+                clearInterval(this.privateChatInterval);
+                this.privateChatInterval = null;
+            }
+            
+            if (this.moodInterval) {
+                clearInterval(this.moodInterval);
+                this.moodInterval = null;
+            }
+            
+            if (this.onlineInterval) {
+                clearInterval(this.onlineInterval);
+                this.onlineInterval = null;
+            }
+            
+            // 🔧 FIX 2: Limpar todas as sessões relacionadas
             localStorage.removeItem('porter_session');
             if (this.currentUser) {
                 localStorage.removeItem(`porter_session_${this.currentUser.user}`);
@@ -945,9 +896,13 @@ const app = {
             
             this.currentUser = null;
             
+            // Esconder aplicação
             document.getElementById('main-content').classList.add('hidden');
+            
+            // Mostrar login com transição suave
             document.getElementById('login-screen').classList.remove('hidden');
             
+            // Resetar formulário de login
             document.getElementById('login-user').value = '';
             document.getElementById('login-pass').value = '';
             
@@ -962,20 +917,15 @@ const app = {
         document.getElementById(tabId).classList.remove('hidden');
         btn.classList.add('active');
         
+        // Se for a aba de chat, carregar mensagens e marcar como visualizado
         if (tabId === 'tab-chat') {
             this.loadChat();
             this.marcarChatComoVisualizado();
         }
         
+        // 🔧 FIX 1: Se for a aba de chat privado, carregar usuários
         if (tabId === 'tab-chat-privado') {
-            const agora = Date.now();
-            const cacheAge = agora - this.cache.onlineUsersTimestamp;
-            
-            if (this.cache.onlineUsers && cacheAge < 30 * 1000) {
-                this.renderPrivateChatUsersFromCache();
-            } else {
-                this.loadPrivateChatUsers();
-            }
+            this.loadPrivateChatUsers();
         }
     },
 
@@ -988,7 +938,10 @@ const app = {
         document.getElementById('tab-count-fixas').textContent = fixas.length;
         document.getElementById('tab-count-os').textContent = os.length;
         
+        // 🆕 Usar função atualizarBadgeChat
         this.atualizarBadgeChat();
+        
+        // 🔧 FIX 1: Atualizar badge do chat privado
         this.atualizarBadgeChatPrivado();
     },
 
@@ -1031,6 +984,7 @@ const app = {
         const privateChats = JSON.parse(localStorage.getItem('porter_chat_privado') || '{}');
         let totalNaoVisualizadas = 0;
         
+        // Verificar todas as conversas privadas do usuário atual
         Object.keys(privateChats).forEach(chatId => {
             const [user1, user2] = chatId.split('_');
             if (user1 === this.currentUser.user || user2 === this.currentUser.user) {
@@ -1081,6 +1035,7 @@ const app = {
             mood: this.getMoodAtual()
         };
         
+        // Limpar visualizações antigas (mais de 1 hora)
         Object.keys(visualizacoes).forEach(user => {
             if (agora - visualizacoes[user].timestamp > 60 * 60 * 1000) {
                 delete visualizacoes[user];
@@ -1088,6 +1043,21 @@ const app = {
         });
         
         localStorage.setItem('porter_chat_views', JSON.stringify(visualizacoes));
+    },
+
+    obterVisualizacoesRecentes() {
+        const visualizacoes = JSON.parse(localStorage.getItem('porter_chat_views') || '{}');
+        const agora = Date.now();
+        const cincoMinutos = 5 * 60 * 1000;
+        
+        const visualizacoesRecentes = Object.entries(visualizacoes)
+            .filter(([user, data]) => agora - data.timestamp <= cincoMinutos)
+            .map(([user, data]) => ({
+                user,
+                ...data
+            }));
+        
+        return visualizacoesRecentes;
     },
 
     aplicarFiltrosAtas() {
@@ -1128,6 +1098,7 @@ const app = {
         this.currentCondoFilter = condoName;
         this.aplicarFiltrosAtas();
         
+        // Destacar item na sidebar
         document.querySelectorAll('.condo-item').forEach(item => {
             item.classList.remove('active');
         });
@@ -1137,6 +1108,7 @@ const app = {
             condoItem.classList.add('active');
         }
         
+        // Fechar sidebar em mobile
         if (window.innerWidth <= 1200) {
             this.toggleSidebar();
         }
@@ -1251,6 +1223,7 @@ const app = {
         
         this.criarNotificacao(condo, tipo, desc);
         
+        // Limpar formulário
         document.getElementById('ata-desc').value = "";
         document.getElementById('ata-condo').value = "";
         document.getElementById('ata-cidade').value = "";
@@ -1305,6 +1278,35 @@ const app = {
         this.loadNotifications();
     },
 
+    criarNotificacaoChatComAcao(chatMessage) {
+        const notificacao = {
+            id: Date.now(),
+            condo: 'Chat Geral',
+            tipo: 'chat_mensagem',
+            desc: `Nova mensagem de ${chatMessage.sender}: ${chatMessage.message.substring(0, 50)}${chatMessage.message.length > 50 ? '...' : ''}`,
+            data: new Date().toLocaleDateString('pt-BR'),
+            hora: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
+            timestamp: new Date().toISOString(),
+            lida: false,
+            acao: {
+                tipo: 'ir_para_chat',
+                mensagemId: chatMessage.id,
+                sender: chatMessage.sender
+            },
+            destaque: true
+        };
+        
+        let notificacoes = JSON.parse(localStorage.getItem('porter_notificacoes') || '[]');
+        notificacoes.unshift(notificacao);
+        
+        if (notificacoes.length > 50) notificacoes.pop();
+        localStorage.setItem('porter_notificacoes', JSON.stringify(notificacoes));
+        
+        this.loadNotifications();
+        this.updateNotificationBadges();
+        this.atualizarBadgeChat();
+    },
+
     loadNotifications() {
         const notificacoes = JSON.parse(localStorage.getItem('porter_notificacoes') || '[]');
         this.notifications = notificacoes;
@@ -1323,8 +1325,6 @@ const app = {
             `;
             return;
         }
-        
-        const fragment = document.createDocumentFragment();
         
         notificacoes.forEach(notif => {
             const item = document.createElement('div');
@@ -1356,10 +1356,9 @@ const app = {
                 ${acaoRapida}
             `;
             
-            fragment.appendChild(item);
+            list.appendChild(item);
         });
         
-        list.appendChild(fragment);
         this.updateNotificationBadges();
     },
 
@@ -1501,6 +1500,7 @@ const app = {
         }
     },
 
+    // FIX: BOTÃO COMENTAR - FUNCIONANDO CORRETAMENTE
     abrirComentarios(ataId) {
         let atas = JSON.parse(localStorage.getItem('porter_atas') || '[]');
         const ata = atas.find(a => a.id === ataId);
@@ -1555,6 +1555,7 @@ const app = {
         }, 300);
     },
 
+    // FIX: BOTÃO COMENTAR - ENVIO DIRETO SEM FECHAR MODAL
     adicionarComentarioModal(ataId) {
         const textoInput = document.getElementById('novo-comentario-texto');
         if (!textoInput) return;
@@ -1569,6 +1570,7 @@ const app = {
         this.adicionarComentario(ataId, texto);
         textoInput.value = '';
         
+        // Recarregar os comentários no modal sem fechar
         setTimeout(() => {
             this.abrirComentarios(ataId);
         }, 100);
@@ -1595,7 +1597,6 @@ const app = {
         }
         
         list.innerHTML = '';
-        const fragment = document.createDocumentFragment();
         
         fixas.forEach(a => {
             const podeExcluir = this.currentUser && (this.currentUser.role === 'ADMIN' || a.user === this.currentUser.user);
@@ -1632,115 +1633,40 @@ const app = {
                 </div>
             `;
             
-            fragment.appendChild(card);
+            list.appendChild(card);
         });
-        
-        list.appendChild(fragment);
     },
 
+    // 🔧 FIX 1: Função para salvar OS com Firebase
     saveOSComFirebase(osData) {
+        // 1. Salvar no localStorage (para backup e uso offline)
         let osList = JSON.parse(localStorage.getItem('porter_os') || '[]');
         osList.unshift(osData);
         
         if (osList.length > 100) osList = osList.slice(0, 100);
         localStorage.setItem('porter_os', JSON.stringify(osList));
         
-        this.cache.osList = osList;
-        this.cache.osTimestamp = Date.now();
-        
-        const agora = Date.now();
-        const ultimaSincronizacaoOS = localStorage.getItem('porter_last_os_sync') || 0;
-        const diferencaSegundos = (agora - ultimaSincronizacaoOS) / 1000;
-        
-        const deveSincronizarFirebase = diferencaSegundos > 120;
-        
-        if (deveSincronizarFirebase && typeof firebaseHelper !== 'undefined' && firebaseHelper.salvarOSNoFirebase) {
+        // 2. Salvar no Firebase (para compartilhamento entre máquinas)
+        if (typeof firebaseHelper !== 'undefined' && firebaseHelper.salvarOSNoFirebase) {
             firebaseHelper.salvarOSNoFirebase(osData)
                 .then(sucesso => {
                     if (sucesso) {
-                        console.log('✅ OS salva no Firebase');
-                        localStorage.setItem('porter_last_os_sync', agora.toString());
+                        console.log('✅ OS salva no Firebase com sucesso');
                     } else {
-                        console.log('⚠️ OS salva apenas localmente');
-                        this.agendarSincronizacaoOS(osData);
+                        console.log('⚠️ OS salva apenas localmente (Firebase indisponível)');
                     }
-                })
-                .catch(error => {
-                    console.error('❌ Erro ao salvar OS no Firebase:', error);
-                    this.agendarSincronizacaoOS(osData);
                 });
-        } else if (!deveSincronizarFirebase) {
-            console.log('⏭️  Sincronização de OS pulada');
-            this.adicionarOSParaSincronizacao(osData);
         }
         
         return osData;
     },
-    
-    adicionarOSParaSincronizacao(osData) {
-        let filaSincronizacao = JSON.parse(localStorage.getItem('porter_os_sync_queue') || '[]');
-        filaSincronizacao.push({
-            data: osData,
-            timestamp: Date.now(),
-            tentativas: 0
-        });
-        
-        if (filaSincronizacao.length > 10) {
-            filaSincronizacao = filaSincronizacao.slice(0, 10);
-        }
-        
-        localStorage.setItem('porter_os_sync_queue', JSON.stringify(filaSincronizacao));
-    },
-    
-    agendarSincronizacaoOS(osData) {
-        setTimeout(() => {
-            this.adicionarOSParaSincronizacao(osData);
-        }, 60000);
-    },
-    
-    processarFilaSincronizacao() {
-        const filaSincronizacao = JSON.parse(localStorage.getItem('porter_os_sync_queue') || '[]');
-        if (filaSincronizacao.length === 0) return;
-        
-        const agora = Date.now();
-        const ultimaSincronizacao = localStorage.getItem('porter_last_os_sync_batch') || 0;
-        const diferencaMinutos = (agora - ultimaSincronizacao) / (1000 * 60);
-        
-        if (diferencaMinutos < 5) return;
-        
-        console.log('🔄 Processando fila de sincronização:', filaSincronizacao.length);
-        
-        const itensParaProcessar = filaSincronizacao.slice(0, 5);
-        
-        itensParaProcessar.forEach((item, index) => {
-            setTimeout(() => {
-                if (typeof firebaseHelper !== 'undefined' && firebaseHelper.salvarOSNoFirebase) {
-                    firebaseHelper.salvarOSNoFirebase(item.data)
-                        .then(sucesso => {
-                            if (sucesso) {
-                                console.log(`✅ OS ${item.data.osId} sincronizada`);
-                                const novaFila = filaSincronizacao.filter(f => f !== item);
-                                localStorage.setItem('porter_os_sync_queue', JSON.stringify(novaFila));
-                            }
-                        })
-                        .catch(error => {
-                            console.error(`❌ Erro ao sincronizar OS:`, error);
-                            item.tentativas++;
-                            if (item.tentativas > 3) {
-                                const novaFila = filaSincronizacao.filter(f => f !== item);
-                                localStorage.setItem('porter_os_sync_queue', JSON.stringify(novaFila));
-                            }
-                        });
-                }
-            }, index * 2000);
-        });
-        
-        localStorage.setItem('porter_last_os_sync_batch', agora.toString());
-    },
 
+    // 🆕 FUNÇÃO PRINCIPAL DE ENVIO DE OS COM E-MAIL (ATUALIZADA)
     abrirOSComEmail(event) {
+        // Prevenir envio padrão do formulário
         if (event) event.preventDefault();
         
+        // Validar campos obrigatórios
         const condo = document.getElementById('os-condo').value;
         const funcionario = document.getElementById('os-funcionario').value.trim();
         const email = document.getElementById('os-email').value.trim();
@@ -1753,6 +1679,7 @@ const app = {
             return;
         }
         
+        // Validar e-mail
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
             alert('Por favor, insira um e-mail válido');
@@ -1760,14 +1687,17 @@ const app = {
             return;
         }
         
+        // Gerar ID da OS
         const osId = 'OS-' + Date.now().toString().slice(-6);
         this.lastOSId = osId;
         
+        // Obter data e hora atual
         const agora = new Date();
         const dataHora = agora.toLocaleString('pt-BR');
         const dataISO = agora.toISOString().split('T')[0];
         const hora = agora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'});
         
+        // Criar objeto da OS para salvar no sistema
         const novaOS = {
             id: Date.now(),
             osId: osId,
@@ -1785,47 +1715,59 @@ const app = {
             operador: this.currentUser ? this.currentUser.nome : funcionario,
             user: this.currentUser ? this.currentUser.user : 'anonimo',
             turno: this.currentUser ? this.currentUser.turno : 'Não informado',
-            status: 'Em branco',
-            statusOS: 'Em branco',
+            status: 'Em branco', // 🆕 STATUS PADRÃO
+            statusOS: 'Em branco', // 🆕 STATUS ESPECÍFICO DA OS
             timestamp: agora.toISOString(),
             prazoResposta: appEmail ? appEmail.calcularPrazoPorGravidade(gravidade) : '3 dias úteis',
             corGravidade: appEmail ? appEmail.getCorGravidade(gravidade) : '#666',
             enviadoPorEmail: true,
             dataEnvioEmail: agora.toISOString(),
-            tecnicoResponsavel: document.getElementById('os-tecnico').value || ''
+            tecnicoResponsavel: document.getElementById('os-tecnico').value || '' // 🆕 TÉCNICO RESPONSÁVEL
         };
         
+        // 🔧 FIX 1: Usar nova função para salvar com Firebase
         this.saveOSComFirebase(novaOS);
         
+        // Atualizar contagem de OS
         this.updateTabCounts();
         
+        // Adicionar campos ocultos com informações adicionais
         if (typeof appEmail !== 'undefined' && appEmail.adicionarCamposOcultosForm) {
             appEmail.adicionarCamposOcultosForm(osId, dataHora, novaOS.prazoResposta);
         }
         
+        // Mostrar mensagem de processamento
         this.showMessage('Enviando Ordem de Serviço...', 'info');
         
+        // Submeter o formulário para o FormSubmit
         setTimeout(() => {
+            // Submeter formulário
             const form = document.getElementById('os-form-email');
             form.submit();
             
+            // Mostrar tela de confirmação
             if (typeof appEmail !== 'undefined' && appEmail.mostrarConfirmacaoOS) {
                 appEmail.mostrarConfirmacaoOS(novaOS);
             } else {
                 this.mostrarConfirmacaoOSFallback(novaOS);
             }
             
+            // Criar notificação
             this.criarNotificacao(condo, 'Ordem de Serviço', `Nova OS ${osId}: ${gravidade} - ${desc.substring(0, 50)}...`);
+            
             this.showMessage('Ordem de Serviço aberta com sucesso!', 'success');
         }, 100);
     },
 
     mostrarConfirmacaoOSFallback(osData) {
+        // Ocultar formulário
         document.getElementById('os-form-container').classList.add('hidden');
         
+        // Mostrar tela de confirmação
         const confirmationScreen = document.getElementById('os-confirmation-screen');
         confirmationScreen.classList.remove('hidden');
         
+        // Preencher dados na tela de confirmação
         document.getElementById('os-confirmation-id').textContent = osData.osId;
         document.getElementById('os-confirmation-condo').textContent = osData.condo;
         document.getElementById('os-confirmation-gravidade').textContent = osData.gravidade;
@@ -1844,32 +1786,22 @@ const app = {
         this.renderOSList(filtradas, `Filtradas por gravidade: ${gravidade}`);
     },
 
+    // 🆕 FUNÇÃO PARA ATUALIZAR STATUS DA OS
     atualizarStatusOS(osId, novoStatus) {
         let osList = JSON.parse(localStorage.getItem('porter_os') || '[]');
         const index = osList.findIndex(os => os.id === osId);
         
         if (index !== -1) {
             osList[index].statusOS = novoStatus;
-            osList[index].status = novoStatus;
+            osList[index].status = novoStatus; // Mantém compatibilidade
             osList[index].dataAtualizacao = new Date().toISOString();
             osList[index].atualizadoPor = this.currentUser.nome;
             
             localStorage.setItem('porter_os', JSON.stringify(osList));
             
-            this.cache.osList = osList;
-            this.cache.osTimestamp = Date.now();
-            
-            const agora = Date.now();
-            const ultimaSincronizacao = localStorage.getItem('porter_last_os_status_sync') || 0;
-            const diferencaSegundos = (agora - ultimaSincronizacao) / 1000;
-            
-            if (diferencaSegundos > 60) {
-                if (typeof firebaseHelper !== 'undefined' && firebaseHelper.salvarOSNoFirebase) {
-                    firebaseHelper.salvarOSNoFirebase(osList[index]);
-                    localStorage.setItem('porter_last_os_status_sync', agora.toString());
-                }
-            } else {
-                this.adicionarOSParaSincronizacao(osList[index]);
+            // 🔧 FIX 1: Atualizar também no Firebase
+            if (typeof firebaseHelper !== 'undefined' && firebaseHelper.salvarOSNoFirebase) {
+                firebaseHelper.salvarOSNoFirebase(osList[index]);
             }
             
             this.renderOS();
@@ -1877,6 +1809,7 @@ const app = {
         }
     },
 
+    // 🆕 FUNÇÃO PARA EXCLUIR OS (APENAS TÉCNICO)
     excluirOS(osId) {
         if (this.currentUser.role !== 'TÉCNICO') {
             alert('Apenas técnicos podem excluir Ordens de Serviço.');
@@ -1891,6 +1824,7 @@ const app = {
         const osIndex = osList.findIndex(os => os.id === osId);
         
         if (osIndex !== -1) {
+            // Registrar exclusão
             let exclusoes = JSON.parse(localStorage.getItem('porter_exclusoes_os') || '[]');
             exclusoes.unshift({
                 osId: osList[osIndex].osId,
@@ -1903,15 +1837,13 @@ const app = {
             
             localStorage.setItem('porter_exclusoes_os', JSON.stringify(exclusoes));
             
+            // Remover OS do localStorage
             osList.splice(osIndex, 1);
             localStorage.setItem('porter_os', JSON.stringify(osList));
             
-            this.cache.osList = osList;
-            this.cache.osTimestamp = Date.now();
-            
+            // 🔧 FIX 1: Remover também do Firebase se possível
             if (window.db) {
-                const osIdStr = osList[osIndex]?.osId || osId.toString();
-                window.db.collection('ordens_servico').doc(osIdStr).delete()
+                window.db.collection('ordens_servico').doc(osId.toString()).delete()
                     .then(() => {
                         console.log('✅ OS removida do Firebase');
                     })
@@ -1940,7 +1872,6 @@ const app = {
         }
         
         list.innerHTML = '';
-        const fragment = document.createDocumentFragment();
         
         osList.forEach(os => {
             const podeExcluir = this.currentUser && (this.currentUser.role === 'TÉCNICO');
@@ -1949,6 +1880,7 @@ const app = {
                 (this.currentUser.role === 'OPERADOR' && os.statusOS === 'Técnico compareceu ao local')
             );
             
+            // 🆕 BOTÕES DE STATUS BASEADOS NO PERFIL
             const botoesStatus = this.gerarBotoesStatusOS(os, podeMudarStatus);
             
             const card = document.createElement('div');
@@ -1996,6 +1928,7 @@ const app = {
                         </div>
                     </div>
                 ` : ''}
+                <!-- 🆕 STATUS DA OS -->
                 <div style="margin: 15px 0; padding: 15px; background: #f8f9fa; border-radius: 8px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                         <strong><i class="fas fa-flag"></i> Status da OS:</strong>
@@ -2009,6 +1942,7 @@ const app = {
                             ${os.dataAtualizacao ? ` em ${new Date(os.dataAtualizacao).toLocaleString('pt-BR')}` : ''}
                         </div>
                     ` : ''}
+                    <!-- 🆕 BOTÕES DE AÇÃO -->
                     <div style="margin-top: 10px; display: flex; flex-wrap: wrap; gap: 5px;">
                         ${botoesStatus}
                     </div>
@@ -2030,12 +1964,11 @@ const app = {
                 </div>
             `;
             
-            fragment.appendChild(card);
+            list.appendChild(card);
         });
-        
-        list.appendChild(fragment);
     },
 
+    // 🆕 FUNÇÃO PARA GERAR BOTÕES DE STATUS
     gerarBotoesStatusOS(os, podeMudarStatus) {
         if (!podeMudarStatus) return '';
         
@@ -2051,6 +1984,7 @@ const app = {
         let botoes = '';
         
         statusOptions.forEach(status => {
+            // Verificar se o usuário tem permissão
             const podeUsar = status.class === 'all' || 
                            (status.class === 'tec-only' && this.currentUser.role === 'TÉCNICO');
             
@@ -2069,6 +2003,7 @@ const app = {
         return botoes;
     },
 
+    // 🆕 FUNÇÕES AUXILIARES PARA STATUS
     getClasseStatusOS(status) {
         const classes = {
             'Resolvida': 'os-status-resolvida',
@@ -2093,21 +2028,10 @@ const app = {
         return icones[status] || '📄';
     },
 
+    // 🔧 FIX 1: Função para renderizar OS buscando do Firebase
     renderOS() {
-        const agora = Date.now();
-        const cacheAge = agora - this.cache.osTimestamp;
-        
-        if (this.cache.osList && cacheAge < 60 * 1000) {
-            console.log('✅ Renderizando OS do cache');
-            this.renderOSList(this.cache.osList);
-            return;
-        }
-        
+        // Primeiro tentar carregar do Firebase, depois do localStorage como fallback
         const osList = JSON.parse(localStorage.getItem('porter_os') || '[]');
-        
-        this.cache.osList = osList;
-        this.cache.osTimestamp = agora;
-        
         this.renderOSList(osList);
     },
 
@@ -2132,10 +2056,6 @@ const app = {
         if (confirm('Tem certeza que deseja excluir esta Ordem de Serviço?')) {
             osList = osList.filter(os => os.id !== id);
             localStorage.setItem('porter_os', JSON.stringify(osList));
-            
-            this.cache.osList = osList;
-            this.cache.osTimestamp = Date.now();
-            
             this.renderOS();
             this.showMessage('Ordem de Serviço excluída!', 'success');
         }
@@ -2152,8 +2072,7 @@ const app = {
         
         const ehAutor = ata.user === this.currentUser.user;
         const ehAdmin = this.currentUser.role === 'ADMIN';
-        const ehTecnico = this.currentUser.role === 'TÉCNICO';
-        
+    const ehTecnico = this.currentUser.role === 'TÉCNICO';
         if (!ehAdmin && !ehAutor && !ehTecnico) {
             alert('Apenas o autor, técnicos ou administradores podem excluir este registro.');
             return;
@@ -2198,6 +2117,7 @@ const app = {
             sessions.some(s => s.user === f.user &&
                 (new Date() - new Date(s.lastActivity)) < 300000));
         
+        // 🆕 ADICIONAR TÉCNICOS LOGADOS
         const tecnicosLogados = DATA.tecnicos.filter(t => {
             const tecUser = t.nome.split(' - ')[0].toLowerCase().replace(/\s+/g, '.');
             return sessions.some(s => s.user === tecUser &&
@@ -2232,6 +2152,7 @@ const app = {
             <div style="margin: 1rem 0; max-height: 200px; overflow-y: auto;">
                 ${this.renderHistoricoRemocoes()}
             </div>
+            <!-- 🆕 HISTÓRICO DE EXCLUSÕES DE OS -->
             <h4 style="margin-top: 2rem;"><i class="fas fa-trash"></i> Histórico de Exclusões de OS</h4>
             <div style="margin: 1rem 0; max-height: 200px; overflow-y: auto;">
                 ${this.renderHistoricoExclusoesOS()}
@@ -2253,6 +2174,7 @@ const app = {
         document.getElementById('admin-modal').classList.add('show');
     },
 
+    // 🆕 FUNÇÃO PARA RENDERIZAR HISTÓRICO DE EXCLUSÕES DE OS
     renderHistoricoExclusoesOS() {
         const exclusoes = JSON.parse(localStorage.getItem('porter_exclusoes_os') || '[]');
         
@@ -2315,6 +2237,7 @@ const app = {
         if (confirm(`Tem certeza que deseja deslogar este usuário?`)) {
             let usuario = DATA.funcionarios.find(f => f.user === user);
             if (!usuario) {
+                // Verificar se é um técnico
                 usuario = DATA.tecnicos.find(t => 
                     t.nome.split(' - ')[0].toLowerCase().replace(/\s+/g, '.') === user
                 );
@@ -2477,7 +2400,6 @@ const app = {
         }
         
         list.innerHTML = '';
-        const fragment = document.createDocumentFragment();
         
         atas.forEach(a => {
             const podeExcluir = this.currentUser && (this.currentUser.role === 'ADMIN' || a.user === this.currentUser.user || this.currentUser.role === 'TÉCNICO');
@@ -2514,52 +2436,35 @@ const app = {
                 </div>
             `;
             
-            fragment.appendChild(card);
+            list.appendChild(card);
         });
         
-        list.appendChild(fragment);
         this.mostrarFiltrosAtivosAtas();
     },
 
+    // 🔧 FIX 1: Função para carregar usuários do chat privado (melhorada)
     loadPrivateChatUsers() {
         if (!this.currentUser) return;
         
         const select = document.getElementById('private-chat-target');
         if (!select) return;
         
-        const agora = Date.now();
-        const cacheAge = agora - this.cache.onlineUsersTimestamp;
-        
-        if (this.cache.onlineUsers && cacheAge < 60 * 1000) {
-            this.renderPrivateChatUsersFromCache();
-            return;
-        }
-        
         select.innerHTML = '<option value="">Selecione um operador...</option>';
         
-        const ultimaBuscaFirebase = localStorage.getItem('porter_chat_users_last_fetch') || 0;
-        const diferencaSegundos = (agora - ultimaBuscaFirebase) / 1000;
-        
-        if (diferencaSegundos > 120) {
-            this.buscarUsuariosChatFirebase(select);
-        } else {
-            this.usarCacheUsuariosChat(select);
-        }
-    },
-    
-    buscarUsuariosChatFirebase(select) {
+        // 🔧 FIX 2: Buscar usuários online do Firebase
         const onlineData = localStorage.getItem('porter_online_firebase');
         let usuariosDisponiveis = [];
         
         if (onlineData) {
             try {
                 const data = JSON.parse(onlineData);
-                const dataTime = new Date(data.timestamp).getTime();
-                const agora = Date.now();
+                const dataTime = new Date(data.timestamp);
+                const agora = new Date();
                 const diferencaSegundos = (agora - dataTime) / 1000;
                 
-                if (diferencaSegundos < 300) {
+                if (diferencaSegundos < 10) { // Dados recentes do Firebase
                     data.users.forEach(usuario => {
+                        // Pular usuário atual
                         if (usuario.user === app.currentUser.user) return;
                         
                         usuariosDisponiveis.push({
@@ -2569,79 +2474,49 @@ const app = {
                             online: true
                         });
                     });
-                    
-                    localStorage.setItem('porter_chat_users_last_fetch', agora.toString());
                 }
             } catch (e) {
                 console.error('Erro ao parsear dados online:', e);
             }
         }
         
+        // 🔧 FIX 1: Se não tiver dados do Firebase, usar dados locais como fallback
         if (usuariosDisponiveis.length === 0) {
-            this.usarFallbackUsuariosChat(select);
-            return;
-        }
-        
-        this.renderUsuariosChatSelect(select, usuariosDisponiveis);
-    },
-    
-    usarCacheUsuariosChat(select) {
-        const chatUsersCache = localStorage.getItem('porter_chat_users_cache');
-        if (chatUsersCache) {
-            try {
-                const cacheData = JSON.parse(chatUsersCache);
-                const cacheAge = Date.now() - cacheData.timestamp;
-                
-                if (cacheAge < 5 * 60 * 1000) {
-                    this.renderUsuariosChatSelect(select, cacheData.users);
-                    return;
+            // Adicionar funcionários (exceto o usuário atual)
+            DATA.funcionarios.forEach(f => {
+                if (f.user !== app.currentUser.user) {
+                    usuariosDisponiveis.push({
+                        nome: f.nome,
+                        user: f.user,
+                        role: f.role,
+                        online: false
+                    });
                 }
-            } catch (e) {
-                console.error('Erro ao usar cache:', e);
-            }
+            });
+            
+            // Adicionar técnicos (exceto o usuário atual)
+            DATA.tecnicos.forEach(t => {
+                const tecUser = t.nome.split(' - ')[0].toLowerCase().replace(/\s+/g, '.');
+                if (tecUser !== app.currentUser.user) {
+                    usuariosDisponiveis.push({
+                        nome: t.nome,
+                        user: tecUser,
+                        role: 'TÉCNICO',
+                        online: false
+                    });
+                }
+            });
         }
         
-        this.usarFallbackUsuariosChat(select);
-    },
-    
-    usarFallbackUsuariosChat(select) {
-        let usuariosDisponiveis = [];
-        
-        DATA.funcionarios.forEach(f => {
-            if (f.user !== app.currentUser.user) {
-                usuariosDisponiveis.push({
-                    nome: f.nome,
-                    user: f.user,
-                    role: f.role,
-                    online: false
-                });
-            }
-        });
-        
-        DATA.tecnicos.forEach(t => {
-            const tecUser = t.nome.split(' - ')[0].toLowerCase().replace(/\s+/g, '.');
-            if (tecUser !== app.currentUser.user) {
-                usuariosDisponiveis.push({
-                    nome: t.nome,
-                    user: tecUser,
-                    role: 'TÉCNICO',
-                    online: false
-                });
-            }
-        });
-        
-        this.renderUsuariosChatSelect(select, usuariosDisponiveis);
-    },
-    
-    renderUsuariosChatSelect(select, usuariosDisponiveis) {
+        // Ordenar por nome
         usuariosDisponiveis.sort((a, b) => a.nome.localeCompare(b.nome));
         
-        const fragment = document.createDocumentFragment();
-        
+        // Adicionar opções ao select
         usuariosDisponiveis.forEach(usuario => {
             const option = document.createElement('option');
             option.value = usuario.user;
             
+            // Formatar texto da opção
             let texto = usuario.nome;
             if (usuario.role === 'ADMIN') {
                 texto += ' 👑';
@@ -2649,6 +2524,7 @@ const app = {
                 texto += ' 🔧';
             }
             
+            // 🔧 FIX 1: Indicar status online
             if (usuario.online) {
                 texto += ' 🟢';
             } else {
@@ -2656,108 +2532,19 @@ const app = {
             }
             
             option.textContent = texto;
-            fragment.appendChild(option);
+            select.appendChild(option);
         });
         
-        select.appendChild(fragment);
-        
-        const cacheData = {
-            users: usuariosDisponiveis,
-            timestamp: Date.now()
-        };
-        localStorage.setItem('porter_chat_users_cache', JSON.stringify(cacheData));
-        
-        console.log('✅ Chat privado: ' + usuariosDisponiveis.length + ' usuários');
-    },
-    
-    renderPrivateChatUsersFromCache() {
-        const select = document.getElementById('private-chat-target');
-        if (!select) return;
-        
-        const chatUsersCache = localStorage.getItem('porter_chat_users_cache');
-        if (!chatUsersCache) {
-            this.loadPrivateChatUsers();
-            return;
-        }
-        
-        try {
-            const cacheData = JSON.parse(chatUsersCache);
-            const cacheAge = Date.now() - cacheData.timestamp;
-            
-            if (cacheAge < 5 * 60 * 1000) {
-                select.innerHTML = '<option value="">Selecione um operador...</option>';
-                const fragment = document.createDocumentFragment();
-                
-                cacheData.users.forEach(usuario => {
-                    const option = document.createElement('option');
-                    option.value = usuario.user;
-                    
-                    let texto = usuario.nome;
-                    if (usuario.role === 'ADMIN') texto += ' 👑';
-                    if (usuario.role === 'TÉCNICO') texto += ' 🔧';
-                    texto += usuario.online ? ' 🟢' : ' ⚫';
-                    
-                    option.textContent = texto;
-                    fragment.appendChild(option);
-                });
-                
-                select.appendChild(fragment);
-                console.log('✅ Usuários do chat do cache');
-            } else {
-                this.loadPrivateChatUsers();
-            }
-        } catch (e) {
-            this.loadPrivateChatUsers();
-        }
+        console.log('✅ Chat privado: ' + usuariosDisponiveis.length + ' usuários carregados');
     },
 
     loadPrivateChat() {
         if (!app.currentUser || !app.currentPrivateChatTarget) return;
         
-        const cacheKey = this.currentPrivateChatTarget;
-        const agora = Date.now();
-        const cacheAge = agora - (this.cache.privateChats[cacheKey]?.timestamp || 0);
-        
-        if (this.cache.privateChats[cacheKey] && cacheAge < 30 * 1000) {
-            console.log('✅ Chat privado do cache');
-            this.renderPrivateChatFromCache();
-            return;
-        }
-        
+        // Chama a função do sistema de chat
         if (typeof chatSystem !== 'undefined' && chatSystem.loadPrivateChat) {
             chatSystem.loadPrivateChat();
-            
-            setTimeout(() => {
-                this.atualizarCacheChatPrivado();
-            }, 1000);
         }
-    },
-    
-    atualizarCacheChatPrivado() {
-        if (!this.currentPrivateChatTarget) return;
-        
-        const privateChats = JSON.parse(localStorage.getItem('porter_chat_privado') || '{}');
-        const chatId = this.getChatId(this.currentUser.user, this.currentPrivateChatTarget);
-        
-        if (privateChats[chatId]) {
-            this.cache.privateChats[this.currentPrivateChatTarget] = {
-                messages: privateChats[chatId],
-                timestamp: Date.now()
-            };
-        }
-    },
-    
-    renderPrivateChatFromCache() {
-        const cacheData = this.cache.privateChats[this.currentPrivateChatTarget];
-        if (!cacheData || !cacheData.messages) return;
-        
-        if (typeof chatSystem !== 'undefined' && chatSystem.renderPrivateChatMessages) {
-            chatSystem.renderPrivateChatMessages(cacheData.messages);
-        }
-    },
-    
-    getChatId(user1, user2) {
-        return [user1, user2].sort().join('_');
     },
 
     sendPrivateChatMessage() {
@@ -2766,38 +2553,20 @@ const app = {
             return;
         }
         
+        // Chama a função do sistema de chat
         if (typeof chatSystem !== 'undefined' && chatSystem.sendPrivateChatMessage) {
             chatSystem.sendPrivateChatMessage();
-            
-            setTimeout(() => {
-                this.atualizarCacheChatPrivado();
-            }, 500);
         }
     },
 
+    // 🔧 FIX 1: Função para carregar chat
     loadChat() {
-        const agora = Date.now();
-        const cacheAge = agora - this.cache.chatTimestamp;
-        
-        if (this.cache.chatMessages && cacheAge < 30 * 1000) {
-            console.log('✅ Chat do cache');
-            if (typeof chatSystem !== 'undefined' && chatSystem.renderChatMessages) {
-                chatSystem.renderChatMessages(this.cache.chatMessages);
-            }
-            return;
-        }
-        
         if (typeof chatSystem !== 'undefined' && chatSystem.loadChat) {
             chatSystem.loadChat();
-            
-            setTimeout(() => {
-                const chatMessages = JSON.parse(localStorage.getItem('porter_chat') || '[]');
-                this.cache.chatMessages = chatMessages;
-                this.cache.chatTimestamp = Date.now();
-            }, 1000);
         }
     },
 
+    // 🔧 FIX 1: Função para enviar mensagem no chat
     sendChatMessage() {
         if (!app.currentUser) {
             alert('Você precisa estar logado para enviar mensagens.');
@@ -2806,26 +2575,23 @@ const app = {
         
         if (typeof chatSystem !== 'undefined' && chatSystem.sendChatMessage) {
             chatSystem.sendChatMessage();
-            
-            setTimeout(() => {
-                const chatMessages = JSON.parse(localStorage.getItem('porter_chat') || '[]');
-                this.cache.chatMessages = chatMessages;
-                this.cache.chatTimestamp = Date.now();
-            }, 500);
         }
     },
 
+    // FIX: HISTÓRICO DE LOGIN/LOGOFF - MOSTRAR JUNTOS
     renderPresenca() {
         const list = document.getElementById('presenca-lista');
         let presencas = JSON.parse(localStorage.getItem('porter_presencas') || '[]');
         let logoffs = JSON.parse(localStorage.getItem('porter_logoffs') || '[]');
         
+        // Combinar logins e logoffs
         let historicoCombinado = [];
         
         presencas.forEach(login => {
             const loginDate = login.dataISO || login.data;
             const loginTime = new Date(login.timestamp).getTime();
             
+            // Procurar logoff correspondente
             const logoffCorrespondente = logoffs.find(logoff => 
                 logoff.user === login.user && 
                 (logoff.dataISO || logoff.data) === loginDate &&
@@ -2843,6 +2609,7 @@ const app = {
             });
         });
         
+        // Adicionar logoffs sem login correspondente (se houver)
         logoffs.forEach(logoff => {
             const jaExiste = historicoCombinado.some(item => 
                 item.nome === logoff.nome && 
@@ -2869,6 +2636,7 @@ const app = {
             return new Date(timeB) - new Date(timeA);
         });
         
+        // Aplicar filtros
         if (this.filtrosPresenca.operador) {
             historicoCombinado = historicoCombinado.filter(p => p.nome === this.filtrosPresenca.operador);
         }
@@ -2910,13 +2678,3 @@ const app = {
         `).join('');
     }
 };
-
-setInterval(() => {
-    if (app.currentUser) {
-        app.processarFilaSincronizacao();
-    }
-}, 5 * 60 * 1000);
-
-document.addEventListener('DOMContentLoaded', () => {
-    app.init();
-});
