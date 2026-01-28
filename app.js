@@ -2678,8 +2678,6 @@ const app = {
         `).join('');
     }
 };
-
-// ==================== PARTE QUE VOCÊ PRECISA ADICIONAR ====================
 // Exportar para escopo global
 window.app = app;
 
@@ -2704,8 +2702,10 @@ if (typeof firebaseHelper !== 'undefined') {
 document.addEventListener('DOMContentLoaded', function() {
     app.init();
 });
+// Exportar para escopo global
 window.app = app;
 
+// Outras exportações necessárias
 if (typeof DATA !== 'undefined') {
     window.DATA = DATA;
 }
@@ -2722,6 +2722,7 @@ if (typeof firebaseHelper !== 'undefined') {
     window.firebaseHelper = firebaseHelper;
 }
 
+// Inicializar automaticamente quando o DOM estiver pronto
 document.addEventListener('DOMContentLoaded', function() {
     app.init();
 });
