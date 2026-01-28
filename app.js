@@ -98,13 +98,25 @@ const app = {
                     console.log('⚠️ Sessão expirada');
                     localStorage.removeItem('porter_session');
                     localStorage.removeItem('porter_last_session');
+                            return false;
                 }
+            } else {
+                console.log('ℹ️ Nenhuma sessão salva');
             }
         } catch (e) {
-            console.log('❌ Erro ao restaurar sessão:', e);
+            console.error('❌ Erro ao restaurar sessão:', e);
         }
         return false;
-    },
+    }
+};
+
+// 🔥 GARANTIR que o app inicialize
+document.addEventListener('DOMContentLoaded', () => {
+    if (typeof app !== 'undefined') {
+        app.init();
+    }
+});
+
 
     setupEventListeners() {
         // Enter no login
