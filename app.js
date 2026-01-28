@@ -22,11 +22,9 @@ const app = {
         onlineUsers: []
     },
 
-    init() {
-        // 🔧 FIX 2: Restaurar sessão ao iniciar
+        init() {
         this.restaurarSessao();
-        
-        // GARANTIR que começa na tela de login se não houver sessão
+
         if (!this.currentUser) {
             document.getElementById('login-screen').classList.remove('hidden');
             document.getElementById('main-content').classList.add('hidden');
@@ -34,7 +32,6 @@ const app = {
             this.showApp();
         }
 
-        // Limpar auto-preenchimento dos campos de login
         setTimeout(() => {
             document.getElementById('login-user').value = '';
             document.getElementById('login-pass').value = '';
@@ -49,46 +46,36 @@ const app = {
         this.setupOSPreview();
         this.setupResponsive();
 
-        // Configurar datas padrão
         const hoje = new Date();
         const umaSemanaAtras = new Date();
         umaSemanaAtras.setDate(umaSemanaAtras.getDate() - 7);
-        
+
         document.getElementById('filter-data-inicio').value = umaSemanaAtras.toISOString().split('T')[0];
         document.getElementById('filter-data-fim').value = hoje.toISOString().split('T')[0];
         document.getElementById('filter-presenca-inicio').value = umaSemanaAtras.toISOString().split('T')[0];
         document.getElementById('filter-presenca-fim').value = hoje.toISOString().split('T')[0];
         document.getElementById('os-data').value = hoje.toISOString().split('T')[0];
-
-        // Preencher datas do relatório
         document.getElementById('report-data-inicio').value = umaSemanaAtras.toISOString().split('T')[0];
         document.getElementById('report-data-fim').value = hoje.toISOString().split('T')[0];
 
         this.carregarFiltrosSalvos();
 
-        // Configurar clique fora da lista de online
-                document.addEventListener('click', (e) => {
-            if (!e.target.closest('.notification-bell') && !e.target.closest('.notifications-panel')) {
-                document.getElementById('notifications-panel').classList.remove('show');
-            }
-        });
-
-        // 🔥 INICIALIZAR SISTEMA GLOBAL (Firebase)
-        if (typeof firebaseHelper !== 'undefined') {
-            firebaseHelper.inicializarFirebase();
-        }
-
-        if (typeof chatSystem !== 'undefined') {
-            chatSystem.init();
-        }
-    },
-        // Configurar clique fora das notificações
+        // Clique fora das notificações
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.notification-bell') && !e.target.closest('.notifications-panel')) {
                 document.getElementById('notifications-panel').classList.remove('show');
             }
         });
+
+        // Firebase
+        if (typeof firebaseHelper !== 'undefined') {
+            firebaseHelper.inicializarFirebase();
+        }
+        if (typeof chatSystem !== 'undefined') {
+            chatSystem.init();
+        }
     },
+
 
     // 🔧 FIX 2: NOVA FUNÇÃO - Restaurar sessão ao iniciar
     restaurarSessao() {
