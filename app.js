@@ -16,85 +16,69 @@ const app = {
     filtrosPresenca: {},
 
     init() {
-    this.restaurarSessao();
-    
-    if (!this.currentUser) {
-        document.getElementById('login-screen').classList.remove('hidden');
-        document.getElementById('main-content').classList.add('hidden');
-    } else {
-        this.showApp();
-    }
-
-    setTimeout(() => {
-        document.getElementById('login-user').value = '';
-        document.getElementById('login-pass').value = '';
-        document.getElementById('login-turno').value = 'Diurno';
-    }, 100);
-
-    this.loadCondos();
-    this.loadFiltros();
-    this.loadNotifications();
-    this.setupEventListeners();
-    this.setupAutoSave();
-    this.setupOSPreview();
-    this.setupResponsive();
-
-    const hoje = new Date();
-    const umaSemanaAtras = new Date();
-    umaSemanaAtras.setDate(umaSemanaAtras.getDate() - 7);
-    
-    document.getElementById('filter-data-inicio').value = umaSemanaAtras.toISOString().split('T')[0];
-    document.getElementById('filter-data-fim').value = hoje.toISOString().split('T')[0];
-    document.getElementById('filter-presenca-inicio').value = umaSemanaAtras.toISOString().split('T')[0];
-    document.getElementById('filter-presenca-fim').value = hoje.toISOString().split('T')[0];
-    document.getElementById('os-data').value = hoje.toISOString().split('T')[0];
-
-    document.getElementById('report-data-inicio').value = umaSemanaAtras.toISOString().split('T')[0];
-    document.getElementById('report-data-fim').value = hoje.toISOString().split('T')[0];
-
-    this.carregarFiltrosSalvos();
-
-    document.addEventListener('click', (e) => {
-        const onlineList = document.getElementById('online-users-list');
-        const onlineDropdown = document.getElementById('online-users');
-        if (onlineList && onlineList.style.display === 'block' &&
-            !onlineDropdown.contains(e.target) &&
-            !onlineList.contains(e.target)) {
-            onlineList.style.display = 'none';
+        // 🔧 FIX 2: Restaurar sessão ao iniciar
+        this.restaurarSessao();
+        
+        // GARANTIR que começa na tela de login se não houver sessão
+        if (!this.currentUser) {
+            document.getElementById('login-screen').classList.remove('hidden');
+            document.getElementById('main-content').classList.add('hidden');
+        } else {
+            this.showApp();
         }
-    });
 
-    document.addEventListener('click', (e) => {
-        if (!e.target.closest('.notification-bell') && !e.target.closest('.notifications-panel')) {
-            document.getElementById('notifications-panel').classList.remove('show');
-        }
-    });
-    
-    // 🔥 INTERVALS OTIMIZADOS
-    this.onlineInterval = setInterval(() => {
-        if (this.currentUser) this.updateOnlineUsers();
-    }, 30000);
-    
-    this.chatInterval = setInterval(() => {
-        if (this.currentUser) this.loadChat();
-    }, 20000);
-    
-    this.privateChatInterval = setInterval(() => {
-        if (this.currentUser && this.currentPrivateChatTarget) this.loadPrivateChat();
-    }, 20000);
-    
-    this.sessionInterval = setInterval(() => {
-        if (this.currentUser) this.salvarSessao();
-    }, 180000);
-    
-    this.notificationInterval = setInterval(() => {
-        if (this.currentUser) this.loadNotifications();
-    }, 30000);
-    
-    this.lastOnlineUpdate = 0;
-    this.lastChatUpdate = 0;
-    this.lastSessionSave = 0;
-}
+        // Limpar auto-preenchimento dos campos de login
+        setTimeout(() => {
+            document.getElementById('login-user').value = '';
+            document.getElementById('login-pass').value = '';
+            document.getElementById('login-turno').value = 'Diurno';
+        }, 100);
+
+        this.loadCondos();
+        this.loadFiltros();
+        this.loadNotifications();
+        this.setupEventListeners();
+        this.setupAutoSave();
+        this.setupOSPreview();
+        this.setupResponsive();
+
+        // Configurar datas padrão
+        const hoje = new Date();
+        const umaSemanaAtras = new Date();
+        umaSemanaAtras.setDate(umaSemanaAtras.getDate() - 7);
+        
+        document.getElementById('filter-data-inicio').value = umaSemanaAtras.toISOString().split('T')[0];
+        document.getElementById('filter-data-fim').value = hoje.toISOString().split('T')[0];
+        document.getElementById('filter-presenca-inicio').value = umaSemanaAtras.toISOString().split('T')[0];
+        document.getElementById('filter-presenca-fim').value = hoje.toISOString().split('T')[0];
+        document.getElementById('os-data').value = hoje.toISOString().split('T')[0];
+
+        // Preencher datas do relatório
+        document.getElementById('report-data-inicio').value = umaSemanaAtras.toISOString().split('T')[0];
+        document.getElementById('report-data-fim').value = hoje.toISOString().split('T')[0];
+
+        this.carregarFiltrosSalvos();
+
+        // Configurar clique fora da lista de online
+        document.addEventListener('click', (e) => {
+            const onlineList = document.getElementById('online-users-list');
+            const onlineDropdown = document.getElementById('online-users');
+            if (onlineList && onlineList.style.display === 'block' &&
+                !onlineDropdown.contains(e.target) &&
+                !onlineList.contains(e.target)) {
+                onlineList.style.display = 'none';
+            }
+        });
+
+        // Configurar clique fora das notificações
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.notification-bell') && !e.target.closest('.notifications-panel')) {
+                document.getElementById('notifications-panel').classList.remove('show');
+            }
+        });
+    },
+
+    // 🔧 FIX 2: NOVA FUNÇÃO - Restaurar sessão ao iniciar
     restaurarSessao() {
         try {
             // Tentar recuperar sessão do localStorage
