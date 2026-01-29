@@ -5,7 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ata Operacional Porter - 2026</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="estilos.css">
+    <!-- SUPABASE SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -640,33 +642,29 @@
 </div>
 
 <!-- ============================================== -->
-<!-- FIREBASE SDKs (MANTENHA ESTES) -->
+<!-- BIBLIOTECAS EXTERNAS -->
 <!-- ============================================== -->
-<!-- ORDEM ATUALIZADA -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
-<!-- Bibliotecas externas -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-<!-- Nossos scripts (em ordem alfabética) -->
+<!-- ============================================== -->
+<!-- NOSSOS SCRIPTS ADAPTADOS PARA SUPABASE -->
+<!-- ============================================== -->
 <script src="data.js"></script>
-<script src="firebase.js"></script> <!-- APENAS OS e Online -->
+<script src="supabase.js"></script> <!-- NOVO: Substitui firebase.js -->
 <script src="app.js"></script>
 <script src="app-email.js"></script>
-<script src="chat.js"></script> <!-- Chat independente -->
+<script src="chat.js"></script>
 <script src="pdf.js"></script>
 <script src="utils.js"></script>
-<!-- 🔧 CORREÇÃO: Inicialização segura do sistema -->
+
+<!-- 🔧 INICIALIZAÇÃO DO SISTEMA -->
 <script>
 // 🔧 CORREÇÃO: Inicialização segura do sistema
 document.addEventListener('DOMContentLoaded', function() {
     // Garantir que app existe globalmente
     if (typeof app === 'undefined') {
-        console.error('❌ Erro: app não está definido. Verifique a ordem dos scripts.');
+        console.error('❌ Erro: app não está definido.');
         // Criar objeto app mínimo para evitar erros
         window.app = {
             init: function() {
@@ -683,7 +681,7 @@ document.addEventListener('DOMContentLoaded', function() {
         app.init();
     }
     
-    // 🔧 CORREÇÃO: Configurar evento do botão de login
+    // 🔧 Configurar evento do botão de login
     const loginButton = document.getElementById('login-button');
     if (loginButton) {
         loginButton.addEventListener('click', function() {
@@ -696,7 +694,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // 🔧 CORREÇÃO: Configurar Enter no campo de senha
+    // 🔧 Configurar Enter no campo de senha
     const loginPass = document.getElementById('login-pass');
     if (loginPass) {
         loginPass.addEventListener('keypress', function(e) {
@@ -708,51 +706,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // 🔧 CORREÇÃO: Forçar sincronização inicial após carregamento
-    setTimeout(() => {
-        if (app && app.currentUser && typeof app.updateOnlineUsers === 'function') {
-            console.log('🔄 Forçando sincronização inicial de usuários online...');
-            app.updateOnlineUsers();
-        }
-        
-        // 🔧 CORREÇÃO: Configurar listener para recarregar dados quando voltar à aba
-        document.addEventListener('visibilitychange', function() {
-            if (!document.hidden && app && app.currentUser) {
-                console.log('📱 Página visível novamente, atualizando dados...');
-                if (typeof app.updateOnlineUsers === 'function') {
-                    setTimeout(() => app.updateOnlineUsers(), 1000);
-                }
-            }
-        });
-    }, 3000);
-    
-    // 🔧 CORREÇÃO: Detectar atualização de página (F5)
-    if (window.performance && window.performance.navigation) {
-        const tipoNavegacao = window.performance.navigation.type;
-        if (tipoNavegacao === 1) { // TYPE_RELOAD = 1
-            console.log('🔄 Página recarregada (F5), mantendo sessão...');
-            if (app && app.currentUser) {
-                console.log('✅ Mantendo sessão do usuário:', app.currentUser.nome);
-                // Manter sessão ativa
-                setTimeout(() => {
-                    if (typeof app.salvarSessao === 'function') {
-                        app.salvarSessao();
-                    }
-                }, 500);
-            }
-        }
-    }
+    console.log('✅ Sistema Porter carregado com Supabase');
 });
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
