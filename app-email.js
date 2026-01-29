@@ -162,7 +162,7 @@ const appEmail = {
             os_id: osData.id,
             os_number: osData.osId,
             data: new Date().toLocaleString('pt-BR'),
-            destinatarios: ['londrina.tecnica1@porter.com.br', 'londrina.tecnicaplantao@porter.com.br', 'londrina.tenicaplantão1@porter.com.br'],
+            destinatarios: ['londrina.tecnica1@porter.com.br', 'londrina.tecnicaplantao@porter.com.br', 'londrina.tenicaplantao1@porter.com.br'],
             condo: osData.condo,
             gravidade: osData.gravidade,
             funcionario: osData.funcionario,
@@ -176,6 +176,24 @@ const appEmail = {
         historico.unshift(registro);
         if (historico.length > 50) historico.pop();
         localStorage.setItem('porter_os_emails', JSON.stringify(historico));
+        
+        // 🔧 ADAPTAÇÃO SUPABASE: Salvar também no Supabase se disponível
+        if (window.supabaseHelper && window.supabaseHelper.criarNotificacaoSupabase) {
+            // Criar uma notificação para o envio de email
+            const notificacaoData = {
+                id: registro.id,
+                condo: osData.condo,
+                tipo: 'Email OS',
+                desc: `OS ${osData.osId} enviada por email`,
+                data: new Date().toLocaleDateString('pt-BR'),
+                hora: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
+                timestamp: new Date().toISOString(),
+                lida: false,
+                destaque: true
+            };
+            
+            window.supabaseHelper.criarNotificacaoSupabase(notificacaoData);
+        }
     },
 
     gerarCorpoEmailOS(osData) {
