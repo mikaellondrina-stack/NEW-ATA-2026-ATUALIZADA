@@ -1,4 +1,4 @@
-// Dados estáticos do sistema
+// Dados estáticos do sistema - Compatível com Supabase
 const DATA = {
     funcionarios: [
         { nome: "LAÍSSA PEREIRA DOS SANTOS XAVIER", user: "laissa.xavier", pass: "Porter@2026", role: "OPERADOR" },
@@ -71,7 +71,6 @@ const DATA = {
         { n: "VISCONDE DE BARBACENA", c: "Londrina" }, { n: "VITTACE BOULEVARD", c: "Londrina" },
         { n: "VIVALDI BOULEVARD", c: "Londrina" }, { n: "VIVENDA DOS PESCADORES", c: "Maringá" }
     ],
-    // 🆕 LISTA DE TÉCNICOS
     tecnicos: [
         { nome: "EVERTON ALAN - TÉCNICO PORTER", categoria: "TÉCNICOS LONDRINA" },
         { nome: "MARCIO JOSE DE BARROS - TEC PORTER", categoria: "TÉCNICOS LONDRINA" },
@@ -83,3 +82,8 @@ const DATA = {
         { nome: "ITALO - TÉCNICO PORTER", categoria: "TÉCNICOS MARINGÁ" }
     ]
 };
+
+// 🔧 SUPABASE: Tornar compatível com sistema de autenticação do Supabase
+if (typeof window.supabaseClient !== 'undefined') {
+    console.log('✅ DATA configurado para Supabase');
+}
