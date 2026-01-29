@@ -2008,3 +2008,843 @@ table tr:hover {
         page-break-inside: avoid;
     }
 }
+/* 1. INDICADORES DE STATUS */
+.supabase-status-indicator {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 9998;
+    padding: 10px 15px;
+    border-radius: 25px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    animation: supabase-fade-in 0.3s ease-out;
+}
+
+.supabase-status-indicator.online {
+    background: rgba(62, 207, 142, 0.1);
+    color: #3ECF8E;
+    border-color: rgba(62, 207, 142, 0.3);
+}
+
+.supabase-status-indicator.offline {
+    background: rgba(245, 101, 101, 0.1);
+    color: #F56565;
+    border-color: rgba(245, 101, 101, 0.3);
+}
+
+.supabase-status-indicator.syncing {
+    background: rgba(237, 137, 54, 0.1);
+    color: #ED8936;
+    border-color: rgba(237, 137, 54, 0.3);
+}
+
+.supabase-status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.supabase-status-dot.online {
+    background: #3ECF8E;
+    animation: supabase-pulse 2s infinite;
+}
+
+.supabase-status-dot.offline {
+    background: #F56565;
+}
+
+.supabase-status-dot.syncing {
+    background: #ED8936;
+    animation: supabase-pulse 1.5s infinite;
+}
+
+/* 2. ANIMAÇÕES SUPABASE */
+@keyframes supabase-pulse {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.7;
+        transform: scale(1.1);
+    }
+}
+
+@keyframes supabase-fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes supabase-sync-spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes supabase-float {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-5px);
+    }
+}
+
+/* 3. PAINÉIS DE MIGRAÇÃO */
+.supabase-migration-panel {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border-left: 4px solid #3ECF8E;
+    border-right: 4px solid #4299E1;
+    background: linear-gradient(to right, rgba(62, 207, 142, 0.02), rgba(66, 153, 225, 0.02));
+}
+
+.supabase-migration-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    padding-bottom: 0.8rem;
+    border-bottom: 1px solid #e8f4fc;
+}
+
+.supabase-migration-title {
+    color: #2D3748;
+    font-size: 1.1rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.supabase-migration-progress {
+    background: #E2E8F0;
+    border-radius: 10px;
+    height: 8px;
+    overflow: hidden;
+    margin: 1rem 0;
+}
+
+.supabase-migration-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #3ECF8E, #4299E1);
+    border-radius: 10px;
+    transition: width 0.5s ease-in-out;
+}
+
+.supabase-migration-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.supabase-migration-stat {
+    text-align: center;
+    padding: 1rem;
+    background: #F7FAFC;
+    border-radius: 8px;
+    border: 1px solid #E2E8F0;
+}
+
+.supabase-migration-stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #2D3748;
+    margin-bottom: 0.3rem;
+}
+
+.supabase-migration-stat-label {
+    font-size: 0.85rem;
+    color: #718096;
+}
+
+/* 4. ESTATÍSTICAS SUPABASE */
+.supabase-stats-container {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border-top: 4px solid #4299E1;
+}
+
+.supabase-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.supabase-stat-card {
+    background: #F7FAFC;
+    padding: 1.2rem;
+    border-radius: 8px;
+    border-left: 3px solid #4299E1;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.supabase-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.supabase-stat-card.success {
+    border-left-color: #3ECF8E;
+}
+
+.supabase-stat-card.warning {
+    border-left-color: #ED8936;
+}
+
+.supabase-stat-card.danger {
+    border-left-color: #F56565;
+}
+
+.supabase-stat-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.8rem;
+    font-size: 1.2rem;
+}
+
+.supabase-stat-icon.success {
+    background: rgba(62, 207, 142, 0.1);
+    color: #3ECF8E;
+}
+
+.supabase-stat-icon.warning {
+    background: rgba(237, 137, 54, 0.1);
+    color: #ED8936;
+}
+
+.supabase-stat-icon.danger {
+    background: rgba(245, 101, 101, 0.1);
+    color: #F56565;
+}
+
+.supabase-stat-icon.neutral {
+    background: rgba(66, 153, 225, 0.1);
+    color: #4299E1;
+}
+
+.supabase-stat-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #2D3748;
+    margin-bottom: 0.3rem;
+}
+
+.supabase-stat-label {
+    font-size: 0.85rem;
+    color: #718096;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* 5. BOTÕES SUPABASE */
+.btn-supabase {
+    background: linear-gradient(135deg, #3ECF8E 0%, #38A169 100%);
+    color: white;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.3s;
+    font-size: 0.9rem;
+}
+
+.btn-supabase:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(62, 207, 142, 0.3);
+    background: linear-gradient(135deg, #38A169 0%, #3ECF8E 100%);
+}
+
+.btn-supabase.secondary {
+    background: linear-gradient(135deg, #4299E1 0%, #3182CE 100%);
+}
+
+.btn-supabase.secondary:hover {
+    box-shadow: 0 6px 12px rgba(66, 153, 225, 0.3);
+    background: linear-gradient(135deg, #3182CE 0%, #4299E1 100%);
+}
+
+.btn-supabase.outline {
+    background: transparent;
+    border: 2px solid #3ECF8E;
+    color: #3ECF8E;
+}
+
+.btn-supabase.outline:hover {
+    background: rgba(62, 207, 142, 0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(62, 207, 142, 0.2);
+}
+
+.btn-supabase.small {
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+}
+
+/* 6. BADGES SUPABASE */
+.badge-supabase {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.badge-supabase.online {
+    background: rgba(62, 207, 142, 0.15);
+    color: #3ECF8E;
+    border: 1px solid rgba(62, 207, 142, 0.3);
+}
+
+.badge-supabase.offline {
+    background: rgba(245, 101, 101, 0.15);
+    color: #F56565;
+    border: 1px solid rgba(245, 101, 101, 0.3);
+}
+
+.badge-supabase.syncing {
+    background: rgba(237, 137, 54, 0.15);
+    color: #ED8936;
+    border: 1px solid rgba(237, 137, 54, 0.3);
+}
+
+.badge-supabase.neutral {
+    background: rgba(66, 153, 225, 0.15);
+    color: #4299E1;
+    border: 1px solid rgba(66, 153, 225, 0.3);
+}
+
+/* Badge de origem de dados */
+.data-source-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    z-index: 1;
+}
+
+.data-source-badge.supabase {
+    background: #3ECF8E;
+    color: white;
+    box-shadow: 0 2px 4px rgba(62, 207, 142, 0.3);
+}
+
+.data-source-badge.local {
+    background: #A0AEC0;
+    color: white;
+    box-shadow: 0 2px 4px rgba(160, 174, 192, 0.3);
+}
+
+.data-source-badge.firebase {
+    background: #FFA726;
+    color: white;
+    box-shadow: 0 2px 4px rgba(255, 167, 38, 0.3);
+}
+
+/* 7. LOADING SUPABASE */
+.supabase-loading {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: 2rem;
+}
+
+.supabase-loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 3px solid rgba(62, 207, 142, 0.1);
+    border-top: 3px solid #3ECF8E;
+    border-right: 3px solid #4299E1;
+    border-radius: 50%;
+    animation: supabase-sync-spin 1.5s linear infinite;
+}
+
+.supabase-loading-text {
+    color: #718096;
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.supabase-loading-dots {
+    display: flex;
+    gap: 4px;
+}
+
+.supabase-loading-dots span {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #3ECF8E;
+    animation: supabase-pulse 1.4s ease-in-out infinite;
+}
+
+.supabase-loading-dots span:nth-child(2) {
+    animation-delay: 0.2s;
+    background: #4299E1;
+}
+
+.supabase-loading-dots span:nth-child(3) {
+    animation-delay: 0.4s;
+    background: #3ECF8E;
+}
+
+/* 8. MODAIS SUPABASE */
+.modal-supabase .modal-content {
+    border-top: 5px solid #3ECF8E;
+    max-width: 500px;
+}
+
+.modal-supabase-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #E2E8F0;
+}
+
+.modal-supabase-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(62, 207, 142, 0.1), rgba(66, 153, 225, 0.1));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #3ECF8E;
+    font-size: 1.5rem;
+}
+
+.modal-supabase-title {
+    flex: 1;
+    color: #2D3748;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.modal-supabase-body {
+    margin: 1.5rem 0;
+}
+
+.modal-supabase-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #E2E8F0;
+}
+
+/* 9. STATUS NO HEADER */
+.supabase-header-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    margin-left: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.supabase-header-status.online {
+    background: rgba(62, 207, 142, 0.2);
+    border-color: rgba(62, 207, 142, 0.4);
+}
+
+.supabase-header-status.offline {
+    background: rgba(245, 101, 101, 0.2);
+    border-color: rgba(245, 101, 101, 0.4);
+}
+
+/* 10. INDICADOR FLUTUANTE */
+.supabase-floating-indicator {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 9999;
+    padding: 12px 18px;
+    border-radius: 25px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    animation: supabase-float 3s ease-in-out infinite;
+}
+
+.supabase-floating-indicator.online {
+    background: rgba(62, 207, 142, 0.95);
+    color: white;
+}
+
+.supabase-floating-indicator.syncing {
+    background: rgba(237, 137, 54, 0.95);
+    color: white;
+}
+
+.supabase-floating-text {
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+/* 11. TOAST DE SINCRONIZAÇÃO */
+.supabase-sync-toast {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    z-index: 9999;
+    padding: 15px 20px;
+    border-radius: 10px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    max-width: 350px;
+    animation: supabase-fade-in 0.3s ease-out;
+    transform-origin: top right;
+}
+
+.supabase-sync-toast.success {
+    background: white;
+    border-left: 4px solid #3ECF8E;
+}
+
+.supabase-sync-toast.error {
+    background: white;
+    border-left: 4px solid #F56565;
+}
+
+.supabase-sync-toast.warning {
+    background: white;
+    border-left: 4px solid #ED8936;
+}
+
+.supabase-sync-toast-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.supabase-sync-toast.success .supabase-sync-toast-icon {
+    background: rgba(62, 207, 142, 0.1);
+    color: #3ECF8E;
+}
+
+.supabase-sync-toast.error .supabase-sync-toast-icon {
+    background: rgba(245, 101, 101, 0.1);
+    color: #F56565;
+}
+
+.supabase-sync-toast-content {
+    flex: 1;
+}
+
+.supabase-sync-toast-title {
+    font-weight: 600;
+    color: #2D3748;
+    margin-bottom: 4px;
+    font-size: 0.95rem;
+}
+
+.supabase-sync-toast-message {
+    color: #718096;
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+
+/* 12. RESPONSIVIDADE SUPABASE */
+@media (max-width: 768px) {
+    .supabase-status-indicator {
+        bottom: 70px;
+        right: 10px;
+        left: 10px;
+        text-align: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        padding: 8px 12px;
+    }
+    
+    .supabase-floating-indicator {
+        bottom: 70px;
+        right: 10px;
+        left: 10px;
+        justify-content: center;
+        padding: 10px 15px;
+    }
+    
+    .supabase-sync-toast {
+        top: 60px;
+        right: 10px;
+        left: 10px;
+        max-width: none;
+    }
+    
+    .supabase-migration-stats {
+        grid-template-columns: 1fr;
+    }
+    
+    .supabase-stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .supabase-header-status {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        margin-left: 0;
+        font-size: 0.7rem;
+        padding: 3px 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    .supabase-migration-panel {
+        padding: 1rem;
+    }
+    
+    .supabase-stat-card {
+        padding: 1rem;
+    }
+    
+    .btn-supabase {
+        padding: 0.7rem 1.2rem;
+        font-size: 0.85rem;
+    }
+    
+    .modal-supabase .modal-content {
+        width: 95%;
+        padding: 1.2rem;
+    }
+}
+
+/* 13. ANIMAÇÕES DE ENTRADA SUPABASE */
+.supabase-fade-in {
+    animation: supabase-fade-in 0.5s ease-out;
+}
+
+.supabase-slide-in {
+    animation: supabase-slide-in 0.4s ease-out;
+}
+
+@keyframes supabase-slide-in {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* 14. ESTILOS PARA DARK MODE SUPABASE */
+@media (prefers-color-scheme: dark) {
+    .supabase-migration-panel,
+    .supabase-stats-container,
+    .supabase-stat-card,
+    .modal-supabase .modal-content {
+        background: #2D3748;
+        color: #E2E8F0;
+    }
+    
+    .supabase-stat-card {
+        background: #4A5568;
+        border-color: #718096;
+    }
+    
+    .supabase-stat-value {
+        color: #E2E8F0;
+    }
+    
+    .supabase-stat-label {
+        color: #CBD5E0;
+    }
+    
+    .supabase-sync-toast {
+        background: #2D3748;
+        color: #E2E8F0;
+    }
+    
+    .supabase-sync-toast-title {
+        color: #E2E8F0;
+    }
+    
+    .supabase-sync-toast-message {
+        color: #CBD5E0;
+    }
+}
+
+/* 15. ESTILOS PARA ADMINISTRAÇÃO SUPABASE */
+.supabase-admin-panel {
+    background: linear-gradient(135deg, #1A202C 0%, #2D3748 100%);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    color: white;
+    border: 1px solid #4A5568;
+}
+
+.supabase-admin-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #4A5568;
+}
+
+.supabase-admin-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.supabase-admin-controls {
+    display: flex;
+    gap: 10px;
+}
+
+.supabase-admin-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.supabase-admin-card {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 1.2rem;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s;
+}
+
+.supabase-admin-card:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: #3ECF8E;
+    transform: translateY(-2px);
+}
+
+/* 16. INDICADOR DE PERFORMANCE SUPABASE */
+.supabase-performance-indicator {
+    position: relative;
+    height: 6px;
+    background: #E2E8F0;
+    border-radius: 3px;
+    overflow: hidden;
+    margin: 0.5rem 0;
+}
+
+.supabase-performance-bar {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 1s ease-in-out;
+}
+
+.supabase-performance-bar.good {
+    background: #3ECF8E;
+}
+
+.supabase-performance-bar.average {
+    background: #ED8936;
+}
+
+.supabase-performance-bar.poor {
+    background: #F56565;
+}
+
+/* 17. ESTILOS PARA TABELAS SUPABASE */
+.supabase-table-container {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border: 1px solid #E2E8F0;
+}
+
+.supabase-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.supabase-table th {
+    background: #F7FAFC;
+    color: #4A5568;
+    font-weight: 600;
+    text-align: left;
+    padding: 1rem;
+    border-bottom: 2px solid #E2E8F0;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.supabase-table td {
+    padding: 1rem;
+    border-bottom: 1px solid #E2E8F0;
+    color: #2D3748;
+    font-size: 0.9rem;
+}
+
+.supabase-table tr:hover {
+    background: #F7FAFC;
+}
+
+.supabase-table .supabase-row-highlight {
+    background: rgba(62, 207, 142, 0.05) !important;
+}
