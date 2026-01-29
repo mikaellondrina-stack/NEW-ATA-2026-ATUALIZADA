@@ -11,28 +11,27 @@ const DATA = {
         { nome: "EDSON SILVA MACÊDO", user: "edson.macedo", pass: "Porter@2026", role: "OPERADOR" },
         { nome: "MARIA CLARA RAMOS", user: "maria.ramos", pass: "Porter@2026", role: "OPERADOR" },
         { nome: "GABRIELY AMORIM CAMPOS", user: "gabriely.campos", pass: "Porter@2026", role: "OPERADOR" },
-        { nome: "SANDRA REGINA DA FRANÇA SILVA", user: "sandra.silva", pass: "Porter@2026", role: "OPERADOR" },
         { nome: "THAIS BENA LIMA", user: "thais.lima", pass: "Porter@2026", role: "OPERADOR" },
         { nome: "ABNER CAVALCANTE", user: "abner.cavalcante", pass: "Porter@2026", role: "OPERADOR" },
         { nome: "DAIANE LUCY RODRIGUES DE ALMEIDA", user: "daiane.almeida", pass: "Porter@2026", role: "OPERADOR" },
         { nome: "ALINY MELQUIADES DE SOUZA", user: "aliny.souza", pass: "Porter@2026", role: "OPERADOR" },
-        { nome: "LOUISE COSTA", user: "louise.costa", pass: "Porter@2026", role: "OPERADOR" },
         { nome: "ROSALIA TAIT KLINKERFUS", user: "rosalia.klinkerfus", pass: "Porter@2026", role: "OPERADOR" },
-        { nome: "MARIO ALEXANDRE CLEMENTIN", user: "mario.clementin", pass: "Porter@2026", role: "OPERADOR" },
-        { nome: "VANIA DO SOCORRO LEOCADIO", user: "vania.leocadio", pass: "Porter@2026", role: "OPERADOR" },
-        { nome: "JACKELINE ARAUJO SAMPAIO DIAS", user: "jackeline.dias", pass: "Porter@2026", role: "OPERADOR" },
-        { nome: "LUCAS VINICIUS DA SILVA", user: "lucas.v.silva", pass: "Porter@2026", role: "OPERADOR" },
-        { nome: "CARLOS HENRIQUE FERREIRA LEITE", user: "carlos.leite", pass: "Porter@2026", role: "OPERADOR" },
-        { nome: "LUIZ FERNANDO S MORYAMA DOS SANTOS", user: "luiz.santos", pass: "Porter@2026", role: "OPERADOR" },
+        { nome: "MARIO ALEXANDRE CLEMENTIN", user: "mario.clementin", pass: "Porter@2026", role: "OPERADOR N3" },
+        { nome: "VANIA DO SOCORRO LEOCADIO", user: "vania.leocadio", pass: "Porter@2026", role: "OPERADOR N2" },
+        { nome: "JACKELINE ARAUJO SAMPAIO DIAS", user: "jackeline.dias", pass: "Porter@2026", role: "OPERADOR N3" },
+        { nome: "LUCAS VINICIUS DA SILVA", user: "lucas.v.silva", pass: "Porter@2026", role: "OPERADOR N3" },
+        { nome: "CARLOS HENRIQUE FERREIRA LEITE", user: "carlos.leite", pass: "Porter@2026", role: "OPERADOR N2" },
+        { nome: "LUIZ FERNANDO S MORYAMA DOS SANTOS", user: "luiz.santos", pass: "Porter@2026", role: "OPERADOR N2" },
         { nome: "ERICK DE SOUZA RODRIGUES", user: "erick.rodrigues", pass: "Porter@2026", role: "OPERADOR" },
         { nome: "MATHEUS ROBERTO BRASIL SILVA", user: "matheus.silva", pass: "Porter@2026", role: "OPERADOR" },
-        { nome: "WELINGTON FELIPE ALVES BARBOSA", user: "wellington.barbosa", pass: "Porter@2026", role: "OPERADOR" },
-        { nome: "KAIC VITOR MARTINS DE BRITO", user: "kaic.brito", pass: "Porter@2026", role: "OPERADOR" },
+        { nome: "WELINGTON FELIPE ALVES BARBOSA", user: "welington.barbosa", pass: "Porter@2026", role: "OPERADOR" },
         { nome: "DEISY SANTOS CRUZ", user: "deisy.cruz", pass: "Porter@2026", role: "OPERADOR" },
         { nome: "DANIELE DA SILVA ROCHA", user: "daniele.rocha", pass: "Porter@2026", role: "OPERADOR" },
-        { nome: "ANA BEATRIZ PEREIRA", user: "ana.pereira", pass: "Porter@2026", role: "OPERADOR" },
-        { nome: "LUCAS DANIEL", user: "lucas.daniel", pass: "Porter@2026", role: "OPERADOR" },
+        { nome: "ANA BEATRIZ PEREIRA", user: "ana.pereira", pass: "Porter@2026", role: "OPERADOR N3" },
+        { nome: "LUCAS DANIEL", user: "lucas.daniel", pass: "Porter@2026", role: "ADMIN" },
         { nome: "ADMINISTRADOR PORTER", user: "admin.porter", pass: "Admin@2026", role: "ADMIN" }
+        { nome: "SUPERVISOR", user: "supervisor.porter", pass: "Super@2026", role: "ADMIN" }
+        { nome: "INSTRUTOR", user: "instrutor.porter", pass: "Treinamento@2026", role: "ADMIN" }
     ],
     condominios: [
         { n: "ALAMEDA PINHEIROS", c: "Londrina" }, { n: "ALGARVE", c: "Londrina" }, { n: "AMADEUS", c: "Londrina" },
@@ -81,5 +80,6 @@ const DATA = {
         { nome: "EMANOEL THOMAZ - AUXILIAR TÉCNICO", categoria: "AUXILIARES" },
         { nome: "VINICIUS MENDES - PORTER MARINGÁ", categoria: "TÉCNICOS MARINGÁ" },
         { nome: "ITALO - TÉCNICO PORTER", categoria: "TÉCNICOS MARINGÁ" }
+        { nome: "KAIC VITOR MARTINS DE BRITO" - AUXILIAR TÉCNICO", categoria: "AUXILIARES" },
     ]
 };
