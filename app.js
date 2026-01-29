@@ -1,4 +1,4 @@
-// Aplicação principal - ADAPTADO PARA SUPABASE
+// Aplicação principal
 const app = {
     currentUser: null,
     selectedMood: null,
@@ -76,59 +76,6 @@ const app = {
                 document.getElementById('notifications-panel').classList.remove('show');
             }
         });
-        
-        // 🔧 SUPABASE: Inicializar sincronização
-        this.inicializarSincronizacaoSupabase();
-    },
-
-    // 🔧 SUPABASE: Inicializar sincronização
-    inicializarSincronizacaoSupabase() {
-        // Aguardar Supabase carregar
-        setTimeout(() => {
-            if (window.supabaseHelper) {
-                // Carregar dados do Supabase se estiver online
-                if (navigator.onLine) {
-                    console.log('🌐 Online - Sincronizando com Supabase...');
-                    
-                    // Sincronizar dados do Supabase para local
-                    this.carregarDadosIniciaisSupabase();
-                } else {
-                    console.log('🔌 Offline - Usando dados locais');
-                }
-            }
-        }, 2000);
-    },
-
-    // 🔧 SUPABASE: Carregar dados iniciais do Supabase
-    async carregarDadosIniciaisSupabase() {
-        if (!window.supabaseHelper) return;
-        
-        try {
-            console.log('🔄 Carregando dados iniciais do Supabase...');
-            
-            // Carregar OS do Supabase
-            if (window.supabaseHelper.sincronizarOSSupabaseParaLocal) {
-                await window.supabaseHelper.sincronizarOSSupabaseParaLocal();
-            }
-            
-            // Carregar Atas do Supabase
-            if (window.supabaseHelper.sincronizarAtasSupabaseParaLocal) {
-                await window.supabaseHelper.sincronizarAtasSupabaseParaLocal();
-            }
-            
-            // Carregar usuários online
-            if (window.supabaseHelper.atualizarListaOnlineDoSupaBase) {
-                await window.supabaseHelper.atualizarListaOnlineDoSupaBase();
-            }
-            
-            // Atualizar interfaces
-            this.renderAll();
-            this.updateOnlineUsers();
-            
-            console.log('✅ Dados iniciais do Supabase carregados');
-        } catch (error) {
-            console.error('❌ Erro ao carregar dados do Supabase:', error);
-        }
     },
 
     // 🔧 FIX 2: NOVA FUNÇÃO - Restaurar sessão ao iniciar
@@ -199,10 +146,7 @@ const app = {
         // Salvar logoff quando a página for fechada
         window.addEventListener('beforeunload', () => {
             if (this.currentUser) {
-                this.salvarSessao(); // Apenas salvar sessão
-                
-                // 🔧 SUPABASE: Registrar logoff
-                this.registrarLogoffSupabase();
+                this.salvarSessao(); // Apenas salvar sessão, não registrar logoff
             }
         });
 
@@ -227,14 +171,6 @@ const app = {
         window.addEventListener('pageshow', () => {
             if (this.currentUser) {
                 this.updateOnlineUsers();
-            }
-        });
-        
-        // 🔧 SUPABASE: Sincronizar quando voltar online
-        window.addEventListener('online', () => {
-            if (this.currentUser) {
-                console.log('🌐 Conexão restaurada - Sincronizando...');
-                this.carregarDadosIniciaisSupabase();
             }
         });
     },
@@ -267,18 +203,12 @@ const app = {
     },
 
     setupOnlineTracking() {
-        // 🔧 FIX 3: Atualizar status online a cada 10 segundos
+        // 🔧 FIX 3: Atualizar status online a cada 10 segundos (mais frequente)
         this.onlineInterval = setInterval(() => {
             if (this.currentUser) {
                 this.updateOnlineUsers();
-                
-                // 🔧 SUPABASE: Sincronizar status online
-                if (window.supabaseHelper && window.supabaseHelper.sincronizarStatusOnlineComSupabase) {
-                    window.supabaseHelper.sincronizarStatusOnlineComSupabase();
-                }
             }
         }, 10000);
-        
         // Inicializar imediatamente
         this.updateOnlineUsers();
     },
@@ -303,7 +233,7 @@ const app = {
         // 1. Atualizar a própria sessão primeiro
         this.salvarSessao();
         
-        // 2. Buscar usuários online do Supabase (ou Firebase como fallback)
+        // 2. Buscar usuários online do Firebase
         let usuariosOnline = [];
         
         // Adicionar usuário atual primeiro
@@ -318,61 +248,35 @@ const app = {
             online: true
         });
         
-        // 3. 🔧 SUPABASE: Buscar outros usuários do Supabase
+        // 3. Buscar outros usuários do Firebase
         try {
-            const onlineData = localStorage.getItem('porter_online_supabase');
+            const onlineData = localStorage.getItem('porter_online_firebase');
             if (onlineData) {
                 const data = JSON.parse(onlineData);
                 const dataTime = new Date(data.timestamp);
                 const diferencaSegundos = (agora - dataTime) / 1000;
                 
-                if (diferencaSegundos < 30) { // Dados recentes do Supabase
+                if (diferencaSegundos < 10) { // Dados recentes do Firebase
                     data.users.forEach(usuario => {
                         // Pular usuário atual
-                        if (usuario.usuario === this.currentUser.user) return;
+                        if (usuario.user === this.currentUser.user) return;
                         
                         usuariosOnline.push({
                             nome: usuario.nome,
-                            user: usuario.usuario,
+                            user: usuario.user,
                             role: usuario.role,
-                            lastActivity: usuario.last_activity,
+                            lastActivity: usuario.lastActivity,
                             mood: usuario.mood || '😐',
                             moodStatus: this.getMoodStatusTexto(usuario.mood || '😐'),
                             isCurrentUser: false,
-                            online: usuario.online,
+                            online: true,
                             turno: usuario.turno || 'Diurno'
                         });
                     });
                 }
-            } else {
-                // Fallback para dados Firebase
-                const onlineDataFB = localStorage.getItem('porter_online_firebase');
-                if (onlineDataFB) {
-                    const data = JSON.parse(onlineDataFB);
-                    const dataTime = new Date(data.timestamp);
-                    const diferencaSegundos = (agora - dataTime) / 1000;
-                    
-                    if (diferencaSegundos < 10) {
-                        data.users.forEach(usuario => {
-                            if (usuario.user === this.currentUser.user) return;
-                            
-                            usuariosOnline.push({
-                                nome: usuario.nome,
-                                user: usuario.user,
-                                role: usuario.role,
-                                lastActivity: usuario.lastActivity,
-                                mood: usuario.mood || '😐',
-                                moodStatus: this.getMoodStatusTexto(usuario.mood || '😐'),
-                                isCurrentUser: false,
-                                online: true,
-                                turno: usuario.turno || 'Diurno'
-                            });
-                        });
-                    }
-                }
             }
         } catch (e) {
-            console.log('Erro ao buscar usuários online:', e);
+            console.log('Erro ao buscar usuários online do Firebase:', e);
         }
         
         this.onlineUsers = usuariosOnline;
@@ -526,9 +430,6 @@ const app = {
         this.lastLogoffTime = new Date().toISOString();
         localStorage.setItem('porter_last_logoff', this.lastLogoffTime);
         
-        // 🔧 SUPABASE: Registrar logoff no Supabase
-        this.registrarLogoffSupabase(logoffData);
-        
         // Limpar intervalos
         if (this.chatInterval) {
             clearInterval(this.chatInterval);
@@ -554,42 +455,24 @@ const app = {
         localStorage.removeItem('porter_session');
         localStorage.removeItem(`porter_session_${this.currentUser.user}`);
         
-        // 🔧 SUPABASE: Remover da lista de online
-        this.removerUsuarioOnlineSupabase();
+        // 🔧 FIX 3: Remover do registro de online no Firebase
+        this.removeFromOnlineUsers();
     },
-    
-    // 🔧 SUPABASE: Registrar logoff no Supabase
-    async registrarLogoffSupabase(logoffData = null) {
-        if (!window.supabaseHelper) return;
-        
+
+    // 🔧 FIX 3: Nova função para remover usuário da lista de online
+    removeFromOnlineUsers() {
         try {
-            if (!logoffData && this.currentUser) {
-                logoffData = {
-                    user: this.currentUser.user,
-                    nome: this.currentUser.nome,
-                    data: new Date().toLocaleDateString('pt-BR'),
-                    hora: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
-                    timestamp: new Date().toISOString(),
-                    turno: this.currentUser.turno
-                };
+            // Marcar como offline no Firebase
+            if (window.db && this.currentUser) {
+                window.db.collection('online_users').doc(this.currentUser.user).update({
+                    online: false,
+                    lastActivity: new Date().toISOString()
+                }).then(() => {
+                    console.log('✅ Usuário marcado como offline no Firebase');
+                }).catch(() => {});
             }
-            
-            if (logoffData) {
-                await window.supabaseHelper.registrarLogoffSupabase(logoffData);
-            }
-        } catch (error) {
-            console.error('❌ Erro ao registrar logoff no Supabase:', error);
-        }
-    },
-    
-    // 🔧 SUPABASE: Remover usuário da lista de online
-    async removerUsuarioOnlineSupabase() {
-        if (!window.supabaseHelper) return;
-        
-        try {
-            await window.supabaseHelper.removerUsuarioOnline();
-        } catch (error) {
-            console.error('❌ Erro ao remover usuário online:', error);
+        } catch (e) {
+            console.log('Erro ao remover usuário dos online:', e);
         }
     },
 
@@ -606,9 +489,9 @@ const app = {
         // Salvar sessão principal
         localStorage.setItem('porter_session', JSON.stringify(sessionData));
         
-        // 🔧 SUPABASE: Sincronizar status online com Supabase
-        if (window.supabaseHelper && window.supabaseHelper.sincronizarStatusOnlineComSupabase) {
-            window.supabaseHelper.sincronizarStatusOnlineComSupabase();
+        // 🔧 FIX 3: Sincronizar status online com Firebase
+        if (typeof firebaseHelper !== 'undefined' && firebaseHelper.sincronizarStatusOnlineComFirebase) {
+            firebaseHelper.sincronizarStatusOnlineComFirebase();
         }
         
         console.log('✅ Sessão salva para:', this.currentUser.nome);
@@ -725,7 +608,7 @@ const app = {
         document.getElementById('mood-submit-btn').disabled = false;
     },
 
-    async enviarMood() {
+    enviarMood() {
         if (!this.selectedMood || !this.currentUser) return;
         
         const hoje = new Date();
@@ -753,11 +636,6 @@ const app = {
         
         if (moods.length > 500) moods = moods.slice(0, 500);
         localStorage.setItem('porter_moods', JSON.stringify(moods));
-        
-        // 🔧 SUPABASE: Salvar mood no Supabase
-        if (window.supabaseHelper && window.supabaseHelper.salvarMoodNoSupabase) {
-            await window.supabaseHelper.salvarMoodNoSupabase(moodData);
-        }
         
         const resultDiv = document.getElementById('mood-result');
         resultDiv.innerHTML = `
@@ -839,26 +717,18 @@ const app = {
             
             // Registrar login
             let presencas = JSON.parse(localStorage.getItem('porter_presencas') || '[]');
-            const presencaData = {
+            presencas.unshift({
                 nome: user.nome,
                 turno: t,
                 data: new Date().toLocaleDateString('pt-BR'),
                 hora: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
                 timestamp: new Date().toISOString(),
                 dataISO: new Date().toISOString().split('T')[0],
-                tipo: 'login',
-                user: user.user
-            };
-            
-            presencas.unshift(presencaData);
+                tipo: 'login'
+            });
             
             if (presencas.length > 100) presencas = presencas.slice(0, 100);
             localStorage.setItem('porter_presencas', JSON.stringify(presencas));
-            
-            // 🔧 SUPABASE: Registrar presença no Supabase
-            if (window.supabaseHelper && window.supabaseHelper.registrarPresencaSupabase) {
-                window.supabaseHelper.registrarPresencaSupabase(presencaData);
-            }
             
             this.showApp();
             
@@ -886,26 +756,18 @@ const app = {
                 localStorage.setItem('porter_session', JSON.stringify(this.currentUser));
                 
                 let presencas = JSON.parse(localStorage.getItem('porter_presencas') || '[]');
-                const presencaData = {
+                presencas.unshift({
                     nome: tecnico.nome,
                     turno: t,
                     data: new Date().toLocaleDateString('pt-BR'),
                     hora: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
                     timestamp: new Date().toISOString(),
                     dataISO: new Date().toISOString().split('T')[0],
-                    tipo: 'login',
-                    user: tecnico.nome.split(' - ')[0].toLowerCase().replace(/\s+/g, '.')
-                };
-                
-                presencas.unshift(presencaData);
+                    tipo: 'login'
+                });
                 
                 if (presencas.length > 100) presencas = presencas.slice(0, 100);
                 localStorage.setItem('porter_presencas', JSON.stringify(presencas));
-                
-                // 🔧 SUPABASE: Registrar presença no Supabase
-                if (window.supabaseHelper && window.supabaseHelper.registrarPresencaSupabase) {
-                    window.supabaseHelper.registrarPresencaSupabase(presencaData);
-                }
                 
                 this.showApp();
                 
@@ -1325,7 +1187,7 @@ const app = {
         return `${dia}/${mes}/${ano}`;
     },
 
-    async saveAta() {
+    saveAta() {
         const condo = document.getElementById('ata-condo').value;
         const desc = document.getElementById('ata-desc').value.trim();
         const tipo = document.getElementById('ata-tipo').value;
@@ -1359,11 +1221,6 @@ const app = {
         if (atas.length > 200) atas = atas.slice(0, 200);
         localStorage.setItem('porter_atas', JSON.stringify(atas));
         
-        // 🔧 SUPABASE: Salvar ata no Supabase
-        if (window.supabaseHelper && window.supabaseHelper.salvarAtaNoSupabase) {
-            await window.supabaseHelper.salvarAtaNoSupabase(novaAta);
-        }
-        
         this.criarNotificacao(condo, tipo, desc);
         
         // Limpar formulário
@@ -1376,7 +1233,7 @@ const app = {
         this.updateNotificationBadges();
     },
 
-    async criarNotificacao(condo, tipo, desc) {
+    criarNotificacao(condo, tipo, desc) {
         const notificacao = {
             id: Date.now(),
             condo,
@@ -1393,11 +1250,6 @@ const app = {
         
         if (notificacoes.length > 50) notificacoes.pop();
         localStorage.setItem('porter_notificacoes', JSON.stringify(notificacoes));
-        
-        // 🔧 SUPABASE: Criar notificação no Supabase
-        if (window.supabaseHelper && window.supabaseHelper.criarNotificacaoSupabase) {
-            await window.supabaseHelper.criarNotificacaoSupabase(notificacao);
-        }
         
         if (tipo === 'Ordem de Serviço') {
             this.criarNotificacaoChat(`Nova OS criada em ${condo}: ${desc.substring(0, 80)}...`);
@@ -1785,8 +1637,8 @@ const app = {
         });
     },
 
-    // 🔧 SUPABASE: Função para salvar OS com Supabase
-    async saveOSComSupabase(osData) {
+    // 🔧 FIX 1: Função para salvar OS com Firebase
+    saveOSComFirebase(osData) {
         // 1. Salvar no localStorage (para backup e uso offline)
         let osList = JSON.parse(localStorage.getItem('porter_os') || '[]');
         osList.unshift(osData);
@@ -1794,21 +1646,23 @@ const app = {
         if (osList.length > 100) osList = osList.slice(0, 100);
         localStorage.setItem('porter_os', JSON.stringify(osList));
         
-        // 2. 🔧 SUPABASE: Salvar no Supabase (para compartilhamento entre máquinas)
-        if (window.supabaseHelper && window.supabaseHelper.salvarOSNoSupabase) {
-            const sucesso = await window.supabaseHelper.salvarOSNoSupabase(osData);
-            if (sucesso) {
-                console.log('✅ OS salva no Supabase com sucesso');
-            } else {
-                console.log('⚠️ OS salva apenas localmente (Supabase indisponível)');
-            }
+        // 2. Salvar no Firebase (para compartilhamento entre máquinas)
+        if (typeof firebaseHelper !== 'undefined' && firebaseHelper.salvarOSNoFirebase) {
+            firebaseHelper.salvarOSNoFirebase(osData)
+                .then(sucesso => {
+                    if (sucesso) {
+                        console.log('✅ OS salva no Firebase com sucesso');
+                    } else {
+                        console.log('⚠️ OS salva apenas localmente (Firebase indisponível)');
+                    }
+                });
         }
         
         return osData;
     },
 
     // 🆕 FUNÇÃO PRINCIPAL DE ENVIO DE OS COM E-MAIL (ATUALIZADA)
-    async abrirOSComEmail(event) {
+    abrirOSComEmail(event) {
         // Prevenir envio padrão do formulário
         if (event) event.preventDefault();
         
@@ -1861,18 +1715,18 @@ const app = {
             operador: this.currentUser ? this.currentUser.nome : funcionario,
             user: this.currentUser ? this.currentUser.user : 'anonimo',
             turno: this.currentUser ? this.currentUser.turno : 'Não informado',
-            status: 'Em branco',
-            statusOS: 'Em branco',
+            status: 'Em branco', // 🆕 STATUS PADRÃO
+            statusOS: 'Em branco', // 🆕 STATUS ESPECÍFICO DA OS
             timestamp: agora.toISOString(),
             prazoResposta: appEmail ? appEmail.calcularPrazoPorGravidade(gravidade) : '3 dias úteis',
             corGravidade: appEmail ? appEmail.getCorGravidade(gravidade) : '#666',
             enviadoPorEmail: true,
             dataEnvioEmail: agora.toISOString(),
-            tecnicoResponsavel: document.getElementById('os-tecnico').value || ''
+            tecnicoResponsavel: document.getElementById('os-tecnico').value || '' // 🆕 TÉCNICO RESPONSÁVEL
         };
         
-        // 🔧 SUPABASE: Usar nova função para salvar com Supabase
-        await this.saveOSComSupabase(novaOS);
+        // 🔧 FIX 1: Usar nova função para salvar com Firebase
+        this.saveOSComFirebase(novaOS);
         
         // Atualizar contagem de OS
         this.updateTabCounts();
@@ -1933,21 +1787,21 @@ const app = {
     },
 
     // 🆕 FUNÇÃO PARA ATUALIZAR STATUS DA OS
-    async atualizarStatusOS(osId, novoStatus) {
+    atualizarStatusOS(osId, novoStatus) {
         let osList = JSON.parse(localStorage.getItem('porter_os') || '[]');
         const index = osList.findIndex(os => os.id === osId);
         
         if (index !== -1) {
             osList[index].statusOS = novoStatus;
-            osList[index].status = novoStatus;
+            osList[index].status = novoStatus; // Mantém compatibilidade
             osList[index].dataAtualizacao = new Date().toISOString();
             osList[index].atualizadoPor = this.currentUser.nome;
             
             localStorage.setItem('porter_os', JSON.stringify(osList));
             
-            // 🔧 SUPABASE: Atualizar também no Supabase
-            if (window.supabaseHelper && window.supabaseHelper.atualizarStatusOSNoSupabase) {
-                await window.supabaseHelper.atualizarStatusOSNoSupabase(osId, novoStatus, this.currentUser.nome);
+            // 🔧 FIX 1: Atualizar também no Firebase
+            if (typeof firebaseHelper !== 'undefined' && firebaseHelper.salvarOSNoFirebase) {
+                firebaseHelper.salvarOSNoFirebase(osList[index]);
             }
             
             this.renderOS();
@@ -1956,7 +1810,7 @@ const app = {
     },
 
     // 🆕 FUNÇÃO PARA EXCLUIR OS (APENAS TÉCNICO)
-    async excluirOS(osId) {
+    excluirOS(osId) {
         if (this.currentUser.role !== 'TÉCNICO') {
             alert('Apenas técnicos podem excluir Ordens de Serviço.');
             return;
@@ -1987,9 +1841,15 @@ const app = {
             osList.splice(osIndex, 1);
             localStorage.setItem('porter_os', JSON.stringify(osList));
             
-            // 🔧 SUPABASE: Remover também do Supabase se possível
-            if (window.supabaseHelper && window.supabaseHelper.excluirOSNoSupabase) {
-                await window.supabaseHelper.excluirOSNoSupabase(osId);
+            // 🔧 FIX 1: Remover também do Firebase se possível
+            if (window.db) {
+                window.db.collection('ordens_servico').doc(osId.toString()).delete()
+                    .then(() => {
+                        console.log('✅ OS removida do Firebase');
+                    })
+                    .catch(error => {
+                        console.error('❌ Erro ao remover OS do Firebase:', error);
+                    });
             }
             
             this.renderOS();
@@ -2168,14 +2028,14 @@ const app = {
         return icones[status] || '📄';
     },
 
-    // 🔧 FIX 1: Função para renderizar OS buscando do Supabase
+    // 🔧 FIX 1: Função para renderizar OS buscando do Firebase
     renderOS() {
-        // Primeiro tentar carregar do localStorage (já sincronizado pelo Supabase)
+        // Primeiro tentar carregar do Firebase, depois do localStorage como fallback
         const osList = JSON.parse(localStorage.getItem('porter_os') || '[]');
         this.renderOSList(osList);
     },
 
-    async deleteOS(id) {
+    deleteOS(id) {
         let osList = JSON.parse(localStorage.getItem('porter_os') || '[]');
         const os = osList.find(o => o.id === id);
         
@@ -2196,18 +2056,12 @@ const app = {
         if (confirm('Tem certeza que deseja excluir esta Ordem de Serviço?')) {
             osList = osList.filter(os => os.id !== id);
             localStorage.setItem('porter_os', JSON.stringify(osList));
-            
-            // 🔧 SUPABASE: Excluir do Supabase também
-            if (window.supabaseHelper && window.supabaseHelper.excluirOSNoSupabase) {
-                await window.supabaseHelper.excluirOSNoSupabase(id);
-            }
-            
             this.renderOS();
             this.showMessage('Ordem de Serviço excluída!', 'success');
         }
     },
 
-    async deleteAta(id) {
+    deleteAta(id) {
         let atas = JSON.parse(localStorage.getItem('porter_atas') || '[]');
         const ata = atas.find(a => a.id === id);
         
@@ -2218,8 +2072,7 @@ const app = {
         
         const ehAutor = ata.user === this.currentUser.user;
         const ehAdmin = this.currentUser.role === 'ADMIN';
-        const ehTecnico = this.currentUser.role === 'TÉCNICO';
-        
+    const ehTecnico = this.currentUser.role === 'TÉCNICO';
         if (!ehAdmin && !ehAutor && !ehTecnico) {
             alert('Apenas o autor, técnicos ou administradores podem excluir este registro.');
             return;
@@ -2241,9 +2094,6 @@ const app = {
             
             atas = atas.filter(a => a.id !== id);
             localStorage.setItem('porter_atas', JSON.stringify(atas));
-            
-            // 🔧 SUPABASE: Aqui seria necessário uma função para excluir do Supabase
-            // Por enquanto, apenas do localStorage
             
             this.renderAll();
             this.showMessage('Registro excluído com sucesso!', 'success');
@@ -2318,12 +2168,6 @@ const app = {
                 <button class="btn btn-danger" onclick="app.clearAllData()" style="margin-left: 10px;">
                     <i class="fas fa-trash"></i> Limpar Todos os Dados
                 </button>
-                <!-- 🔧 SUPABASE: Botão de migração -->
-                ${window.supabaseHelper ? `
-                <button class="btn btn-info" onclick="window.supabaseHelper.migrarDadosLocaisParaSupabase()" style="margin-left: 10px;">
-                    <i class="fas fa-cloud-upload-alt"></i> Migrar para Supabase
-                </button>
-                ` : ''}
             </div>
         `;
         
@@ -2607,8 +2451,8 @@ const app = {
         
         select.innerHTML = '<option value="">Selecione um operador...</option>';
         
-        // 🔧 SUPABASE: Buscar usuários online do Supabase
-        const onlineData = localStorage.getItem('porter_online_supabase');
+        // 🔧 FIX 2: Buscar usuários online do Firebase
+        const onlineData = localStorage.getItem('porter_online_firebase');
         let usuariosDisponiveis = [];
         
         if (onlineData) {
@@ -2618,16 +2462,16 @@ const app = {
                 const agora = new Date();
                 const diferencaSegundos = (agora - dataTime) / 1000;
                 
-                if (diferencaSegundos < 30) {
+                if (diferencaSegundos < 10) { // Dados recentes do Firebase
                     data.users.forEach(usuario => {
                         // Pular usuário atual
-                        if (usuario.usuario === app.currentUser.user) return;
+                        if (usuario.user === app.currentUser.user) return;
                         
                         usuariosDisponiveis.push({
                             nome: usuario.nome,
-                            user: usuario.usuario,
+                            user: usuario.user,
                             role: usuario.role,
-                            online: usuario.online
+                            online: true
                         });
                     });
                 }
@@ -2636,7 +2480,7 @@ const app = {
             }
         }
         
-        // 🔧 FIX 1: Se não tiver dados do Supabase, usar dados locais como fallback
+        // 🔧 FIX 1: Se não tiver dados do Firebase, usar dados locais como fallback
         if (usuariosDisponiveis.length === 0) {
             // Adicionar funcionários (exceto o usuário atual)
             DATA.funcionarios.forEach(f => {
