@@ -1,61 +1,108 @@
-// Sistema de Chat - ADAPTADO PARA SUPABASE
 const chatSystem = {
     // 🔧 Inicialização do chat
     init() {
         console.log('💬 Chat System iniciado');
-        // O listener do Supabase já está configurado em supabase.js
-        // Aqui apenas carregamos as mensagens iniciais
-        this.carregarMensagensIniciais();
+        this.setupFirebaseListener();
     },
 
-    // 🔧 Carregar mensagens iniciais do Supabase
-    async carregarMensagensIniciais() {
-        if (!window.supabaseClient) {
-            console.log('⚠️ Supabase não disponível para chat');
-            // Usar localStorage como fallback
-            this.loadChat();
+    // 🔧 Configurar listener do Firebase para chat
+    setupFirebaseListener() {
+        if (!window.db) {
+            console.log('⚠️ Firebase não disponível para chat');
             return;
         }
 
-        try {
-            const { data, error } = await window.supabaseClient
-                .from('chat_geral')
-                .select('*')
-                .order('timestamp', { ascending: false })
-                .limit(50);
+        console.log('🔧 Configurando listener Firebase para chat...');
 
-            if (error) throw error;
+        // Ouvir mensagens do chat geral
+        window.db.collection('chat_geral')
+            .orderBy('timestamp', 'desc')
+            .limit(50)
+            .onSnapshot((snapshot) => {
+                const mensagens = [];
+                snapshot.forEach((doc) => {
+                    mensagens.push(doc.data());
+                });
 
-            console.log('📨 Mensagens carregadas do Supabase:', data.length);
+                console.log('📨 Mensagens recebidas do Firebase:', mensagens.length);
 
-            // Converter para formato local
-            const mensagensLocais = data.map(item => ({
-                id: parseInt(item.firebase_id) || Date.now(),
-                sender: item.sender,
-                senderRole: item.sender_role,
-                senderMood: item.sender_mood,
-                message: item.message,
-                time: item.time,
-                timestamp: item.timestamp,
-                date: item.date,
-                firebaseSync: true,
-                supabase_id: item.id
-            }));
+                // Mesclar com mensagens locais
+                this.processarMensagensFirebase(mensagens);
 
-            // Salvar no localStorage
-            localStorage.setItem('porter_chat', JSON.stringify(mensagensLocais));
-            
-            // Atualizar interface
+            }, (error) => {
+                console.error('❌ Erro no listener do chat:', error);
+            });
+    },
+
+    // 🔧 Processar mensagens do Firebase
+    processarMensagensFirebase(mensagensFirebase) {
+        // Carregar mensagens locais
+        let mensagensLocais = JSON.parse(localStorage.getItem('porter_chat') || '[]');
+        
+        // Criar mapa para evitar duplicados
+        const mapaMensagens = new Map();
+        
+        // Adicionar todas as mensagens do Firebase
+        mensagensFirebase.forEach(msg => {
+            mapaMensagens.set(msg.id, msg);
+        });
+        
+        // Adicionar mensagens locais que não estão no Firebase
+        mensagensLocais.forEach(msg => {
+            if (!mapaMensagens.has(msg.id)) {
+                mapaMensagens.set(msg.id, msg);
+                // Se a mensagem local não tem flag firebaseSync, enviar para Firebase
+                if (!msg.firebaseSync) {
+                    this.enviarParaFirebase(msg);
+                }
+            }
+        });
+        
+        // Converter mapa para array e ordenar
+        const todasMensagens = Array.from(mapaMensagens.values());
+        todasMensagens.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+        
+        // Salvar no localStorage
+        localStorage.setItem('porter_chat', JSON.stringify(todasMensagens));
+        
+        // Atualizar interface se a aba de chat estiver visível
+        if (document.getElementById('tab-chat') && 
+            !document.getElementById('tab-chat').classList.contains('hidden')) {
             this.loadChat();
-            
-        } catch (error) {
-            console.error('❌ Erro ao carregar mensagens:', error);
-            // Fallback para localStorage
-            this.loadChat();
+        }
+        
+        // Atualizar badge
+        if (typeof app !== 'undefined' && app.atualizarBadgeChat) {
+            app.atualizarBadgeChat();
         }
     },
 
-    // 🔧 Função principal de carregar chat (compatível com interface)
+    // 🔧 Enviar mensagem para Firebase
+    enviarParaFirebase(mensagem) {
+        if (!window.db) return;
+        
+        const mensagemParaFirebase = {
+            id: mensagem.id,
+            sender: mensagem.sender,
+            senderRole: mensagem.senderRole,
+            senderMood: mensagem.senderMood,
+            message: mensagem.message,
+            time: mensagem.time,
+            timestamp: mensagem.timestamp,
+            date: mensagem.date,
+            firebaseSync: true
+        };
+        
+        window.db.collection('chat_geral').add(mensagemParaFirebase)
+            .then((docRef) => {
+                console.log('✅ Mensagem enviada para Firebase:', docRef.id);
+            })
+            .catch((error) => {
+                console.error('❌ Erro ao enviar para Firebase:', error);
+            });
+    },
+
+    // 🔧 Função principal de carregar chat
     loadChat() {
         if (!document.getElementById('chat-messages')) return;
         
@@ -63,8 +110,7 @@ const chatSystem = {
         const chat = JSON.parse(localStorage.getItem('porter_chat') || '[]');
         
         // Mostrar controles admin se for admin ou técnico
-        if (window.app && window.app.currentUser && 
-            (window.app.currentUser.role === 'ADMIN' || window.app.currentUser.role === 'TÉCNICO')) {
+        if (app.currentUser && (app.currentUser.role === 'ADMIN' || app.currentUser.role === 'TÉCNICO')) {
             const adminControls = document.getElementById('chat-admin-controls');
             if (adminControls) adminControls.style.display = 'flex';
         }
@@ -85,7 +131,7 @@ const chatSystem = {
         container.innerHTML = '';
         
         chatOrdenado.forEach(msg => {
-            const isSent = msg.sender === (window.app?.currentUser?.nome || '');
+            const isSent = msg.sender === app.currentUser.nome;
             const messageDiv = document.createElement('div');
             messageDiv.className = `chat-message ${isSent ? 'sent' : 'received'}`;
             messageDiv.dataset.id = msg.id;
@@ -99,8 +145,7 @@ const chatSystem = {
                     <span class="chat-message-time">${msg.date} ${msg.time}</span>
                 </div>
                 <div class="chat-message-text">${msg.message}</div>
-                ${window.app && window.app.currentUser && 
-                 (window.app.currentUser.role === 'ADMIN' || window.app.currentUser.role === 'TÉCNICO') && !isSent ?
+                ${app.currentUser && (app.currentUser.role === 'ADMIN' || app.currentUser.role === 'TÉCNICO') && !isSent ?
                     `<div style="margin-top: 5px; text-align: right;">
                         <button class="btn btn-danger btn-sm" onclick="chatSystem.deleteChatMessage(${msg.id})">
                             <i class="fas fa-trash"></i>
@@ -119,14 +164,14 @@ const chatSystem = {
         }, 100);
         
         // Atualizar badge
-        if (window.app && window.app.atualizarBadgeChat) {
-            window.app.atualizarBadgeChat();
+        if (typeof app !== 'undefined' && app.atualizarBadgeChat) {
+            app.atualizarBadgeChat();
         }
     },
 
-    // 🔧 Enviar mensagem (adaptado para Supabase)
-    async sendChatMessage() {
-        if (!window.app || !window.app.currentUser) {
+    // 🔧 Enviar mensagem
+    sendChatMessage() {
+        if (!app.currentUser) {
             alert('Você precisa estar logado para enviar mensagens.');
             return;
         }
@@ -144,9 +189,9 @@ const chatSystem = {
         // Criar objeto da mensagem
         const chatMessage = {
             id: Date.now(),
-            sender: window.app.currentUser.nome,
-            senderRole: window.app.currentUser.role,
-            senderMood: window.app.getMoodAtual ? window.app.getMoodAtual() : '😐',
+            sender: app.currentUser.nome,
+            senderRole: app.currentUser.role,
+            senderMood: app.getMoodAtual(),
             message: message,
             time: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
             timestamp: new Date().toISOString(),
@@ -161,9 +206,9 @@ const chatSystem = {
         if (chat.length > 200) chat = chat.slice(-200);
         localStorage.setItem('porter_chat', JSON.stringify(chat));
         
-        // 2. Enviar para Supabase (se disponível)
-        if (window.supabaseHelper && window.supabaseHelper.enviarMensagemChatSupabase) {
-            await window.supabaseHelper.enviarMensagemChatSupabase(chatMessage);
+        // 2. Enviar para Firebase (se disponível)
+        if (window.db) {
+            this.enviarParaFirebase(chatMessage);
         }
         
         // 3. Limpar campo e restaurar botão
@@ -179,85 +224,52 @@ const chatSystem = {
         this.loadChat();
         
         // 5. Criar notificação
-        if (window.app && window.app.criarNotificacaoChatComAcao) {
-            window.app.criarNotificacaoChatComAcao(chatMessage);
+        if (typeof app !== 'undefined' && app.criarNotificacaoChatComAcao) {
+            app.criarNotificacaoChatComAcao(chatMessage);
         }
     },
 
-    // 🔧 Deletar mensagem (apenas para admin/tecnico)
-    async deleteChatMessage(id) {
-        if (!window.app || !window.app.currentUser || 
-            (window.app.currentUser.role !== 'ADMIN' && window.app.currentUser.role !== 'TÉCNICO')) {
+    // 🔧 Deletar mensagem
+    deleteChatMessage(id) {
+        if (!app.currentUser || (app.currentUser.role !== 'ADMIN' && app.currentUser.role !== 'TÉCNICO')) {
             alert('Apenas administradores ou técnicos podem excluir mensagens.');
             return;
         }
         
         if (!confirm('Tem certeza que deseja excluir esta mensagem?')) return;
         
-        // 1. Remover do localStorage
         let chat = JSON.parse(localStorage.getItem('porter_chat') || '[]');
         chat = chat.filter(msg => msg.id !== id);
         localStorage.setItem('porter_chat', JSON.stringify(chat));
         
-        // 2. Remover do Supabase se possível (pela firebase_id)
-        if (window.supabaseClient) {
-            try {
-                // Primeiro encontrar a mensagem para obter o firebase_id
-                const mensagemRemovida = chat.find(msg => msg.id === id);
-                if (mensagemRemovida && mensagemRemovida.firebase_id) {
-                    await window.supabaseClient
-                        .from('chat_geral')
-                        .delete()
-                        .eq('firebase_id', mensagemRemovida.firebase_id.toString());
-                }
-            } catch (error) {
-                console.error('❌ Erro ao excluir mensagem do Supabase:', error);
-            }
-        }
-        
         this.loadChat();
         
-        if (window.app && window.app.updateTabCounts) {
-            window.app.updateTabCounts();
+        if (typeof app !== 'undefined' && app.updateTabCounts) {
+            app.updateTabCounts();
         }
     },
 
-    // 🔧 Limpar chat (apenas para admin/tecnico)
-    async clearChat() {
-        if (!window.app || !window.app.currentUser || 
-            (window.app.currentUser.role !== 'ADMIN' && window.app.currentUser.role !== 'TÉCNICO')) {
+    // 🔧 Limpar chat
+    clearChat() {
+        if (!app.currentUser || (app.currentUser.role !== 'ADMIN' && app.currentUser.role !== 'TÉCNICO')) {
             alert('Apenas administradores ou técnicos podem limpar o chat.');
             return;
         }
         
         if (!confirm('Tem certeza que deseja limpar todas as mensagens do chat?')) return;
         
-        // 1. Limpar localStorage
         localStorage.removeItem('porter_chat');
-        
-        // 2. Limpar do Supabase se possível
-        if (window.supabaseClient) {
-            try {
-                await window.supabaseClient
-                    .from('chat_geral')
-                    .delete()
-                    .neq('id', 0); // Delete all
-            } catch (error) {
-                console.error('❌ Erro ao limpar chat do Supabase:', error);
-            }
-        }
-        
         this.loadChat();
         
-        if (window.app) {
-            if (window.app.updateTabCounts) window.app.updateTabCounts();
-            if (window.app.showMessage) window.app.showMessage('Chat limpo com sucesso!', 'success');
+        if (typeof app !== 'undefined') {
+            app.updateTabCounts();
+            app.showMessage('Chat limpo com sucesso!', 'success');
         }
     },
 
     // 🔧 Funções do chat privado (mantidas do sistema original)
     loadPrivateChatUsers() {
-        if (!window.app || !window.app.currentUser) return;
+        if (!app.currentUser) return;
         
         const select = document.getElementById('private-chat-target');
         if (!select) return;
@@ -266,12 +278,12 @@ const chatSystem = {
         
         // Usar lista de usuários do sistema
         const todosUsuarios = [
-            ...window.DATA.funcionarios.filter(f => f.user !== window.app.currentUser.user),
-            ...window.DATA.tecnicos.map(t => ({
+            ...DATA.funcionarios.filter(f => f.user !== app.currentUser.user),
+            ...DATA.tecnicos.map(t => ({
                 nome: t.nome,
                 user: t.nome.split(' - ')[0].toLowerCase().replace(/\s+/g, '.'),
                 role: 'TÉCNICO'
-            })).filter(t => t.user !== window.app.currentUser.user)
+            })).filter(t => t.user !== app.currentUser.user)
         ];
         
         todosUsuarios.sort((a, b) => a.nome.localeCompare(b.nome));
@@ -285,70 +297,66 @@ const chatSystem = {
     },
 
     loadPrivateChat() {
-        if (!window.app || !window.app.currentPrivateChatTarget) return;
+        if (!app.currentUser || !app.currentPrivateChatTarget) return;
         
         const container = document.getElementById('chat-private-messages');
         const privateChats = JSON.parse(localStorage.getItem('porter_chat_privado') || '{}');
         
-        const chatId = this.getPrivateChatId(window.app.currentUser.user, window.app.currentPrivateChatTarget);
+        const chatId = this.getPrivateChatId(app.currentUser.user, app.currentPrivateChatTarget);
         const messages = privateChats[chatId] || [];
         
         // Habilitar campos
         const input = document.getElementById('chat-private-input');
         const sendBtn = document.getElementById('chat-private-send-btn');
         
-        if (window.app.currentPrivateChatTarget) {
-            if (input) input.disabled = false;
-            if (sendBtn) sendBtn.disabled = false;
+        if (app.currentPrivateChatTarget) {
+            input.disabled = false;
+            sendBtn.disabled = false;
         }
         
         if (messages.length === 0) {
-            if (container) {
-                container.innerHTML = `
-                    <div style="text-align: center; padding: 2rem; color: var(--gray);">
-                        <i class="fas fa-comment-slash" style="font-size: 2rem; margin-bottom: 1rem;"></i>
-                        <p>Nenhuma mensagem ainda. Comece a conversa!</p>
-                    </div>
-                `;
-            }
+            container.innerHTML = `
+                <div style="text-align: center; padding: 2rem; color: var(--gray);">
+                    <i class="fas fa-comment-slash" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+                    <p>Nenhuma mensagem ainda. Comece a conversa!</p>
+                </div>
+            `;
             return;
         }
         
         const messagesOrdenado = [...messages].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
         
-        if (container) {
-            container.innerHTML = '';
+        container.innerHTML = '';
+        
+        messagesOrdenado.forEach(msg => {
+            const isSent = msg.sender === app.currentUser.user;
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-message ${isSent ? 'sent' : 'received'}`;
             
-            messagesOrdenado.forEach(msg => {
-                const isSent = msg.sender === window.app.currentUser.user;
-                const messageDiv = document.createElement('div');
-                messageDiv.className = `chat-message ${isSent ? 'sent' : 'received'}`;
-                
-                const senderInfo = window.DATA.funcionarios.find(f => f.user === msg.sender) || 
-                                  { nome: msg.sender, role: 'OPERADOR' };
-                
-                messageDiv.innerHTML = `
-                    <div class="chat-message-header">
-                        <span class="chat-message-sender">
-                            <span style="font-size: 1.1rem; margin-right: 5px;">${msg.senderMood || '😐'}</span>
-                            ${senderInfo.nome.split(' ')[0]} ${senderInfo.role === 'ADMIN' ? '👑' : ''}
-                        </span>
-                        <span class="chat-message-time">${msg.date} ${msg.time}</span>
-                    </div>
-                    <div class="chat-message-text">${msg.message}</div>
-                `;
-                
-                container.appendChild(messageDiv);
-            });
+            const senderInfo = DATA.funcionarios.find(f => f.user === msg.sender) || 
+                              { nome: msg.sender, role: 'OPERADOR' };
             
-            setTimeout(() => {
-                container.scrollTop = container.scrollHeight;
-            }, 100);
-        }
+            messageDiv.innerHTML = `
+                <div class="chat-message-header">
+                    <span class="chat-message-sender">
+                        <span style="font-size: 1.1rem; margin-right: 5px;">${msg.senderMood || '😐'}</span>
+                        ${senderInfo.nome.split(' ')[0]} ${senderInfo.role === 'ADMIN' ? '👑' : ''}
+                    </span>
+                    <span class="chat-message-time">${msg.date} ${msg.time}</span>
+                </div>
+                <div class="chat-message-text">${msg.message}</div>
+            `;
+            
+            container.appendChild(messageDiv);
+        });
+        
+        setTimeout(() => {
+            container.scrollTop = container.scrollHeight;
+        }, 100);
     },
 
     sendPrivateChatMessage() {
-        if (!window.app || !window.app.currentUser || !window.app.currentPrivateChatTarget) {
+        if (!app.currentUser || !app.currentPrivateChatTarget) {
             alert('Selecione um destinatário primeiro.');
             return;
         }
@@ -363,15 +371,15 @@ const chatSystem = {
         sendBtn.innerHTML = '<div class="loading"></div>';
         sendBtn.disabled = true;
         
-        const chatId = this.getPrivateChatId(window.app.currentUser.user, window.app.currentPrivateChatTarget);
+        const chatId = this.getPrivateChatId(app.currentUser.user, app.currentPrivateChatTarget);
         
         const chatMessage = {
             id: Date.now(),
-            sender: window.app.currentUser.user,
-            senderName: window.app.currentUser.nome,
-            senderRole: window.app.currentUser.role,
-            senderMood: window.app.getMoodAtual ? window.app.getMoodAtual() : '😐',
-            receiver: window.app.currentPrivateChatTarget,
+            sender: app.currentUser.user,
+            senderName: app.currentUser.nome,
+            senderRole: app.currentUser.role,
+            senderMood: app.getMoodAtual(),
+            receiver: app.currentPrivateChatTarget,
             message: message,
             time: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
             timestamp: new Date().toISOString(),
@@ -403,8 +411,8 @@ const chatSystem = {
         this.loadPrivateChat();
         
         // Atualizar badge
-        if (window.app && window.app.atualizarBadgeChatPrivado) {
-            window.app.atualizarBadgeChatPrivado();
+        if (typeof app !== 'undefined' && app.atualizarBadgeChatPrivado) {
+            app.atualizarBadgeChatPrivado();
         }
     },
 
@@ -423,27 +431,26 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // 🔧 Inicializar também quando o app estiver pronto
-if (typeof window.app !== 'undefined') {
-    // Manter compatibilidade com chamadas do app
-    window.app.loadChat = function() {
+if (typeof app !== 'undefined') {
+    app.loadChat = function() {
         if (typeof chatSystem !== 'undefined' && chatSystem.loadChat) {
             chatSystem.loadChat();
         }
     };
     
-    window.app.sendChatMessage = function() {
+    app.sendChatMessage = function() {
         if (typeof chatSystem !== 'undefined' && chatSystem.sendChatMessage) {
             chatSystem.sendChatMessage();
         }
     };
     
-    window.app.loadPrivateChat = function() {
+    app.loadPrivateChat = function() {
         if (typeof chatSystem !== 'undefined' && chatSystem.loadPrivateChat) {
             chatSystem.loadPrivateChat();
         }
     };
     
-    window.app.sendPrivateChatMessage = function() {
+    app.sendPrivateChatMessage = function() {
         if (typeof chatSystem !== 'undefined' && chatSystem.sendPrivateChatMessage) {
             chatSystem.sendPrivateChatMessage();
         }
