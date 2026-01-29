@@ -30,8 +30,6 @@ const DATA = {
         { nome: "ANA BEATRIZ PEREIRA", user: "ana.pereira", pass: "Porter@2026", role: "OPERADOR N3" },
         { nome: "LUCAS DANIEL", user: "lucas.daniel", pass: "Porter@2026", role: "ADMIN" },
         { nome: "ADMINISTRADOR PORTER", user: "admin.porter", pass: "Admin@2026", role: "ADMIN" }
-        { nome: "SUPERVISOR", user: "supervisor.porter", pass: "Super@2026", role: "ADMIN" }
-        { nome: "INSTRUTOR", user: "instrutor.porter", pass: "Treinamento@2026", role: "ADMIN" }
     ],
     condominios: [
         { n: "ALAMEDA PINHEIROS", c: "Londrina" }, { n: "ALGARVE", c: "Londrina" }, { n: "AMADEUS", c: "Londrina" },
