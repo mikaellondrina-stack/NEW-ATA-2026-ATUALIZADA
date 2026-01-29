@@ -1,4 +1,4 @@
-// Dados estáticos do sistema - ATUALIZADO
+// Dados estáticos do sistema
 const DATA = {
     funcionarios: [
         { nome: "LAÍSSA PEREIRA DOS SANTOS XAVIER", user: "laissa.xavier", pass: "Porter@2026", role: "OPERADOR" },
@@ -27,9 +27,7 @@ const DATA = {
         { nome: "ERICK DE SOUZA RODRIGUES", user: "erick.rodrigues", pass: "Porter@2026", role: "OPERADOR" },
         { nome: "MATHEUS ROBERTO BRASIL SILVA", user: "matheus.silva", pass: "Porter@2026", role: "OPERADOR" },
         { nome: "WELINGTON FELIPE ALVES BARBOSA", user: "wellington.barbosa", pass: "Porter@2026", role: "OPERADOR" },
-        // ⬇️ KAIC AGORA COMO AUXILIAR TÉCNICO ⬇️
-        { nome: "KAIC VITOR MARTINS DE BRITO", user: "kaic.brito", pass: "Porter@2026", role: "AUXILIAR_TECNICO" },
-        // ⬆️ ALTERAÇÃO REALIZADA ⬆️
+        { nome: "KAIC VITOR MARTINS DE BRITO", user: "kaic.brito", pass: "Porter@2026", role: "OPERADOR" },
         { nome: "DEISY SANTOS CRUZ", user: "deisy.cruz", pass: "Porter@2026", role: "OPERADOR" },
         { nome: "DANIELE DA SILVA ROCHA", user: "daniele.rocha", pass: "Porter@2026", role: "OPERADOR" },
         { nome: "ANA BEATRIZ PEREIRA", user: "ana.pereira", pass: "Porter@2026", role: "OPERADOR" },
@@ -37,9 +35,43 @@ const DATA = {
         { nome: "ADMINISTRADOR PORTER", user: "admin.porter", pass: "Admin@2026", role: "ADMIN" }
     ],
     condominios: [
-        // ... (mantido igual)
+        { n: "ALAMEDA PINHEIROS", c: "Londrina" }, { n: "ALGARVE", c: "Londrina" }, { n: "AMADEUS", c: "Londrina" },
+        { n: "AMARILIS", c: "Londrina" }, { n: "AMERICA", c: "Londrina" }, { n: "ANITA GARIBALDI", c: "Londrina" },
+        { n: "AQUALUNA", c: "Londrina" }, { n: "ARIANE", c: "Londrina" }, { n: "ARQUITETO JULIO RIBEIRO", c: "Londrina" },
+        { n: "ATHENAS", c: "Londrina" }, { n: "BARAO CATUAI", c: "Londrina" }, { n: "BASE - PORTER LONDRINA", c: "Londrina" },
+        { n: "BELLEVILLE", c: "Londrina" }, { n: "BENTO MUNHOZ DA ROCHA NETTO II", c: "Maringá" },
+        { n: "BIARRITZ", c: "Londrina" }, { n: "BOSQUE", c: "Londrina" }, { n: "CAMPOS ELISEOS", c: "Londrina" },
+        { n: "CASABLANCA", c: "Londrina" }, { n: "CASA CONDOMINIO (Londrina)", c: "Londrina" },
+        { n: "CASA CONDOMÍNIO (Maringá)", c: "Maringá" }, { n: "CASARIO DO PORTO", c: "Londrina" },
+        { n: "CENTRO EMPRESARIAL NEWTON CAMARA", c: "Londrina" }, { n: "CIDADE DOS PASSAROS", c: "Arapongas" },
+        { n: "CITZEN PARK", c: "Maringá" }, { n: "COMERCIAL CAMBARA", c: "Londrina" }, { n: "DOLCE VIE", c: "Londrina" },
+        { n: "EBANO", c: "Londrina" }, { n: "ENSEADAS", c: "Londrina" }, { n: "EUROCENTER", c: "Londrina" },
+        { n: "FERNANDA", c: "Londrina" }, { n: "FLOR DA MATA", c: "Londrina" }, { n: "FLOR DE LOTUS", c: "Londrina" },
+        { n: "FLORENZA", c: "Londrina" }, { n: "GOLDEN GATE", c: "Londrina" }, { n: "GOLDENVILLE", c: "Londrina" },
+        { n: "GRAO PARA", c: "Londrina" }, { n: "GREENFIELDS", c: "Londrina" }, { n: "HEIMTAL PARK", c: "Londrina" },
+        { n: "HYDE PARK", c: "Londrina" }, { n: "INDREL INDUSTRIA DE REFRIGERACAO LONDRINENSE LTDA", c: "Londrina" },
+        { n: "INEDITO", c: "Londrina" }, { n: "JOAO DINARDI", c: "Londrina" }, { n: "LAKE VAN GOGH", c: "Londrina" },
+        { n: "LA SENA", c: "Cambé" }, { n: "LE REVE", c: "Londrina" }, { n: "MAR DEL PLATA", c: "Londrina" },
+        { n: "MAXIMUS RESIDENCE", c: "Londrina" }, { n: "MGL - MECANICA EIRELI", c: "Cambé" },
+        { n: "MONT BLANC", c: "Londrina" }, { n: "MORADA IMPERIAL", c: "Londrina" }, { n: "MUNDO NOVO", c: "Londrina" },
+        { n: "NEW PLAZA RESIDENCE", c: "Maringá" }, { n: "NICOLA PAGAN", c: "Londrina" },
+        { n: "ORTIZ (Cambé)", c: "Cambé" }, { n: "PALAIS LAC DOR", c: "Londrina" }, { n: "PARQUE IMPERIAL", c: "Londrina" },
+        { n: "PEROLA NEGRA", c: "Londrina" }, { n: "PETIT VILLE", c: "Londrina" }, { n: "POLARIS", c: "Londrina" },
+        { n: "PORTLAND RESIDENCE", c: "Londrina" }, { n: "PRIME HOUSE", c: "Londrina" }, { n: "PRIVILEGE JAMAICA", c: "Londrina" },
+        { n: "QUINTA DA BOA VISTA III A", c: "Londrina" }, { n: "QUINTA DA BOA VISTA VI", c: "Londrina" },
+        { n: "RIO TEJO", c: "Maringá" }, { n: "RIO TEVERE", c: "Maringá" }, { n: "SANTOS", c: "Londrina" },
+        { n: "SAO GABRIEL", c: "Maringá" }, { n: "SERRA VERDE", c: "Londrina" }, { n: "SIRMIONE", c: "Maringá" },
+        { n: "SOLAR MONTREAUX", c: "Londrina" }, { n: "SPAZIO LAS PALMAS", c: "Londrina" },
+        { n: "SPEZIA", c: "Londrina" }, { n: "STRAUSS BOULEVARD", c: "Londrina" }, { n: "TAPUIAS JARDIN", c: "Londrina" },
+        { n: "TERRALIS JARDIN RESIDENCE", c: "Londrina" }, { n: "TERRASSE JARDIN", c: "Londrina" },
+        { n: "TORRES BRASIL", c: "Londrina" }, { n: "UNIVERSITOP", c: "Londrina" },
+        { n: "VENICE DOWNTOWN", c: "Londrina" }, { n: "VILLA BELLA (Cambé)", c: "Cambé" },
+        { n: "VILLA DAS TORRES", c: "Cambé" }, { n: "VILLAGE LA CORUNA", c: "Londrina" },
+        { n: "VILLAGGIO DO ENGENHO", c: "Cambé" }, { n: "VILLA ROMANA", c: "Londrina" },
+        { n: "VISCONDE DE BARBACENA", c: "Londrina" }, { n: "VITTACE BOULEVARD", c: "Londrina" },
+        { n: "VIVALDI BOULEVARD", c: "Londrina" }, { n: "VIVENDA DOS PESCADORES", c: "Maringá" }
     ],
-    // 🆕 LISTA DE TÉCNICOS - KAIC ADICIONADO
+    // 🆕 LISTA DE TÉCNICOS
     tecnicos: [
         { nome: "EVERTON ALAN - TÉCNICO PORTER", categoria: "TÉCNICOS LONDRINA" },
         { nome: "MARCIO JOSE DE BARROS - TEC PORTER", categoria: "TÉCNICOS LONDRINA" },
@@ -47,9 +79,6 @@ const DATA = {
         { nome: "WELINGTON SANTOS - AUXILIAR TÉCNICO", categoria: "AUXILIARES" },
         { nome: "CLEBERSON SILVA - AUXILIAR TÉCNICO TÁTICO PORTER", categoria: "AUXILIARES" },
         { nome: "EMANOEL THOMAZ - AUXILIAR TÉCNICO", categoria: "AUXILIARES" },
-        // ⬇️ KAIC ADICIONADO À LISTA DE TÉCNICOS ⬇️
-        { nome: "KAIC VITOR MARTINS DE BRITO - AUXILIAR TÉCNICO", categoria: "AUXILIARES" },
-        // ⬆️ NOVO REGISTRO ⬆️
         { nome: "VINICIUS MENDES - PORTER MARINGÁ", categoria: "TÉCNICOS MARINGÁ" },
         { nome: "ITALO - TÉCNICO PORTER", categoria: "TÉCNICOS MARINGÁ" }
     ]
