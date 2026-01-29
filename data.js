@@ -1,4 +1,4 @@
-// Dados estáticos do sistema - Compatível com Supabase
+// Dados estáticos do sistema
 const DATA = {
     funcionarios: [
         { nome: "LAÍSSA PEREIRA DOS SANTOS XAVIER", user: "laissa.xavier", pass: "Porter@2026", role: "OPERADOR" },
@@ -27,7 +27,7 @@ const DATA = {
         { nome: "ERICK DE SOUZA RODRIGUES", user: "erick.rodrigues", pass: "Porter@2026", role: "OPERADOR" },
         { nome: "MATHEUS ROBERTO BRASIL SILVA", user: "matheus.silva", pass: "Porter@2026", role: "OPERADOR" },
         { nome: "WELINGTON FELIPE ALVES BARBOSA", user: "wellington.barbosa", pass: "Porter@2026", role: "OPERADOR" },
-        { nome: "KAIC VITOR MARTINS DE BRITO", user: "kaic.brito", pass: "Porter@2026", role: "AUXILIAR TÉCNICO" },
+        { nome: "KAIC VITOR MARTINS DE BRITO", user: "kaic.brito", pass: "Porter@2026", role: "OPERADOR" },
         { nome: "DEISY SANTOS CRUZ", user: "deisy.cruz", pass: "Porter@2026", role: "OPERADOR" },
         { nome: "DANIELE DA SILVA ROCHA", user: "daniele.rocha", pass: "Porter@2026", role: "OPERADOR" },
         { nome: "ANA BEATRIZ PEREIRA", user: "ana.pereira", pass: "Porter@2026", role: "OPERADOR" },
@@ -71,6 +71,7 @@ const DATA = {
         { n: "VISCONDE DE BARBACENA", c: "Londrina" }, { n: "VITTACE BOULEVARD", c: "Londrina" },
         { n: "VIVALDI BOULEVARD", c: "Londrina" }, { n: "VIVENDA DOS PESCADORES", c: "Maringá" }
     ],
+    // 🆕 LISTA DE TÉCNICOS
     tecnicos: [
         { nome: "EVERTON ALAN - TÉCNICO PORTER", categoria: "TÉCNICOS LONDRINA" },
         { nome: "MARCIO JOSE DE BARROS - TEC PORTER", categoria: "TÉCNICOS LONDRINA" },
@@ -82,8 +83,3 @@ const DATA = {
         { nome: "ITALO - TÉCNICO PORTER", categoria: "TÉCNICOS MARINGÁ" }
     ]
 };
-
-// 🔧 SUPABASE: Tornar compatível com sistema de autenticação do Supabase
-if (typeof window.supabaseClient !== 'undefined') {
-    console.log('✅ DATA configurado para Supabase');
-}
