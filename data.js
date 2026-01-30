@@ -70,16 +70,16 @@ const DATA = {
         { n: "VISCONDE DE BARBACENA", c: "Londrina" }, { n: "VITTACE BOULEVARD", c: "Londrina" },
         { n: "VIVALDI BOULEVARD", c: "Londrina" }, { n: "VIVENDA DOS PESCADORES", c: "Maringá" }
     ],
-    // 🆕 LISTA DE TÉCNICOS
+    // 🆕 LISTA DE TÉCNICOS COM LOGIN E SENHA
     tecnicos: [
-        { nome: "EVERTON ALAN - TÉCNICO PORTER", categoria: "TÉCNICOS LONDRINA" },
-        { nome: "MARCIO JOSE DE BARROS - TEC PORTER", categoria: "TÉCNICOS LONDRINA" },
-        { nome: "VALDEIR COITO - TÉCNICO PORTER", categoria: "TÉCNICOS LONDRINA" },
-        { nome: "WELINGTON SANTOS - AUXILIAR TÉCNICO", categoria: "AUXILIARES" },
-        { nome: "KAIC VITOR MARTINS DE BRITO - AUXILIAR TÉCNICO", categoria: "AUXILIARES" },
-        { nome: "CLEBERSON SILVA - AUXILIAR TÉCNICO TÁTICO PORTER", categoria: "AUXILIARES" },
-        { nome: "EMANOEL THOMAZ - AUXILIAR TÉCNICO", categoria: "AUXILIARES" },
-        { nome: "VINICIUS MENDES - PORTER MARINGÁ", categoria: "TÉCNICOS MARINGÁ" },
-        { nome: "ITALO - TÉCNICO PORTER", categoria: "TÉCNICOS MARINGÁ" }
+        { nome: "EVERTON ALAN - TÉCNICO PORTER", categoria: "TÉCNICOS LONDRINA", user: "everton.alan", pass: "Tec@2026", role: "TECNICO" },
+        { nome: "MARCIO JOSE DE BARROS - TEC PORTER", categoria: "TÉCNICOS LONDRINA", user: "marcio.barros", pass: "Tec@2026", role: "TECNICO" },
+        { nome: "VALDEIR COITO - TÉCNICO PORTER", categoria: "TÉCNICOS LONDRINA", user: "valdeir.coito", pass: "Tec@2026", role: "TECNICO" },
+        { nome: "WELINGTON SANTOS - AUXILIAR TÉCNICO", categoria: "AUXILIARES", user: "wellington.santos", pass: "Tec@2026", role: "TECNICO" },
+        { nome: "KAIC VITOR MARTINS DE BRITO - AUXILIAR TÉCNICO", categoria: "AUXILIARES", user: "kaic.brito", pass: "Tec@2026", role: "TECNICO" },
+        { nome: "CLEBERSON SILVA - AUXILIAR TÉCNICO TÁTICO PORTER", categoria: "AUXILIARES", user: "cleberson.silva", pass: "Tec@2026", role: "TECNICO" },
+        { nome: "EMANOEL THOMAZ - AUXILIAR TÉCNICO", categoria: "AUXILIARES", user: "emanoel.thomaz", pass: "Tec@2026", role: "TECNICO" },
+        { nome: "VINICIUS MENDES - PORTER MARINGÁ", categoria: "TÉCNICOS MARINGÁ", user: "vinicius.mendes", pass: "Tec@2026", role: "TECNICO" },
+        { nome: "ITALO - TÉCNICO PORTER", categoria: "TÉCNICOS MARINGÁ", user: "italo.porter", pass: "Tec@2026", role: "TECNICO" }
     ]
 };
