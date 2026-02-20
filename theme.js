@@ -9,24 +9,6 @@ const themeSystem = {
         } else {
             this.updateThemeIcon(false);
         }
-        
-        // Adicionar botão de tema se não existir
-        this.ensureThemeButton();
-    },
-    
-    ensureThemeButton() {
-        const themeBtn = document.getElementById('theme-toggle-btn');
-        if (!themeBtn) {
-            const headerRight = document.querySelector('header > div:last-child');
-            if (headerRight) {
-                const btn = document.createElement('button');
-                btn.id = 'theme-toggle-btn';
-                btn.className = 'theme-toggle';
-                btn.innerHTML = '<i class="fas fa-moon"></i>';
-                btn.onclick = () => this.toggleTheme();
-                headerRight.insertBefore(btn, headerRight.firstChild);
-            }
-        }
     },
     
     toggleTheme() {
@@ -65,7 +47,7 @@ function showToast(message, type = 'success', duration = 3000) {
     };
     
     toast.innerHTML = `
-        <i class="fas ${icons[type] || icons.info}" style="font-size: 1.5rem; color: var(--${type});"></i>
+        <i class="fas ${icons[type] || icons.info}" style="font-size: 1.5rem; color: var(--${type === 'error' ? 'danger' : type});"></i>
         <div>
             <strong style="display: block; margin-bottom: 4px;">${type.toUpperCase()}</strong>
             <span>${message}</span>
@@ -103,7 +85,6 @@ function updateCondoBadges() {
                 if (count > 0) {
                     badge.textContent = count > 99 ? '99+' : count;
                     badge.classList.add('has-notification');
-                    // Trigger animation
                     badge.style.animation = 'none';
                     badge.offsetHeight;
                     badge.style.animation = 'badgePop 0.3s ease-out';
@@ -116,19 +97,7 @@ function updateCondoBadges() {
     }
 }
 
-// Adicionar animação de slideOutRight
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes slideOutRight {
-        to {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-    }
-`;
-document.head.appendChild(style);
-
-// Exportar para uso global
+// Tornar funções globais
 window.themeSystem = themeSystem;
 window.showToast = showToast;
 window.updateCondoBadges = updateCondoBadges;
