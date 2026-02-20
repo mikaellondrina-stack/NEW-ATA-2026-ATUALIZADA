@@ -35,7 +35,7 @@
         <button class="btn btn-primary" id="login-button">
             <i class="fas fa-sign-in-alt"></i> ACESSAR SISTEMA
         </button>
-        <div style="margin-top: 1.5rem; text-align: center; font-size: 0.8rem; color: var(--gray);">
+        <div style="margin-top: 1.5rem; text-align: center; font-size: 0.8rem; color: #7f8c8d;">
             <i class="fas fa-info-circle"></i> Use suas credenciais fornecidas pela Porter
         </div>
     </div>
@@ -135,7 +135,7 @@
             <i class="fas fa-comments"></i> CHAT GERAL
             <span class="chat-badge" id="chat-badge">0</span>
         </button>
-        <button class="tab-btn" onclick="app.switchTab('tab-chat-privado', this)" id="tab-chat-privado-btn">
+        <button class="tab-btn" onclick="app.switchTab('tab-chat-privado', this)">
             <i class="fas fa-user-secret"></i> CHAT PRIVADO
             <span class="chat-badge" id="chat-private-badge">0</span>
         </button>
@@ -222,20 +222,20 @@
                 <h2><i class="fas fa-plus-circle"></i> Novo Registro de Ocorrência</h2>
                 <div class="grid-2">
                     <div class="form-group">
-                        <label><i class="fas fa-building"></i> Condomínio</label>
-                        <select id="ata-condo" onchange="app.updateCity()">
+                        <label><i class="fas fa-building"></i> Condomínio *</label>
+                        <select id="ata-condo" onchange="app.updateCity()" required>
                             <option value="">Selecione um condomínio...</option>
                         </select>
                     </div>
                     <div class="form-group">
                         <label><i class="fas fa-city"></i> Cidade</label>
-                        <input type="text" id="ata-cidade" readonly style="background: #f8f9fa;">
+                        <input type="text" id="ata-cidade" readonly>
                     </div>
                 </div>
                 <div class="grid-2">
                     <div class="form-group">
-                        <label><i class="fas fa-tag"></i> Tipo de Registro</label>
-                        <select id="ata-tipo">
+                        <label><i class="fas fa-tag"></i> Tipo de Registro *</label>
+                        <select id="ata-tipo" required>
                             <option value="Informação">📝 Informação</option>
                             <option value="Ocorrência">⚠️ Ocorrência</option>
                             <option value="Incidente">🚨 Incidente</option>
@@ -251,10 +251,10 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label><i class="fas fa-align-left"></i> Descrição dos Fatos</label>
-                    <textarea id="ata-desc" rows="5" placeholder="Descreva detalhadamente os fatos ocorridos..."></textarea>
+                    <label><i class="fas fa-align-left"></i> Descrição dos Fatos *</label>
+                    <textarea id="ata-desc" rows="5" placeholder="Descreva detalhadamente os fatos ocorridos..." required></textarea>
                 </div>
-                <button class="btn btn-primary" onclick="app.saveAta()">
+                <button type="button" class="btn btn-primary" onclick="app.saveAta()">
                     <i class="fas fa-save"></i> SALVAR REGISTRO
                 </button>
             </div>
@@ -269,7 +269,7 @@
                     <i class="fas fa-thumbtack"></i>
                     <h3>Informações Fixas dos Condomínios</h3>
                 </div>
-                <p style="color: var(--warning); margin-bottom: 1rem;">
+                <p style="color: #856404; margin-bottom: 1rem;">
                     <i class="fas fa-info-circle"></i> Estas são informações importantes que permanecem visíveis para todos os operadores.
                 </p>
             </div>
@@ -282,16 +282,16 @@
             <div id="os-confirmation-screen" class="os-confirmation hidden">
                 <i class="fas fa-check-circle"></i>
                 <h2>Ordem de Serviço Aberta com Sucesso!</h2>
-                <p style="font-size: 1.1rem; color: var(--gray); margin-bottom: 2rem;">
+                <p style="font-size: 1.1rem; color: #7f8c8d; margin-bottom: 2rem;">
                     A sua ordem de serviço foi registrada e enviada por e-mail.
                 </p>
                 <div class="details">
-                    <div><strong>📋 Número da OS:</strong> <span id="os-confirmation-id"></span></div>
-                    <div><strong>🏢 Condomínio:</strong> <span id="os-confirmation-condo"></span></div>
-                    <div><strong>⚠️ Gravidade:</strong> <span id="os-confirmation-gravidade"></span></div>
-                    <div><strong>👤 Funcionário:</strong> <span id="os-confirmation-funcionario"></span></div>
-                    <div><strong>📧 E-mail:</strong> <span id="os-confirmation-email"></span></div>
-                    <div><strong>📅 Data/Hora:</strong> <span id="os-confirmation-data"></span></div>
+                    <div style="margin-bottom: 10px;"><strong>📋 Número da OS:</strong> <span id="os-confirmation-id"></span></div>
+                    <div style="margin-bottom: 10px;"><strong>🏢 Condomínio:</strong> <span id="os-confirmation-condo"></span></div>
+                    <div style="margin-bottom: 10px;"><strong>⚠️ Gravidade:</strong> <span id="os-confirmation-gravidade"></span></div>
+                    <div style="margin-bottom: 10px;"><strong>👤 Funcionário:</strong> <span id="os-confirmation-funcionario"></span></div>
+                    <div style="margin-bottom: 10px;"><strong>📧 E-mail:</strong> <span id="os-confirmation-email"></span></div>
+                    <div style="margin-bottom: 10px;"><strong>📅 Data/Hora:</strong> <span id="os-confirmation-data"></span></div>
                 </div>
                 <div class="back-to-os">
                     <button class="btn btn-primary" onclick="appEmail.voltarParaFormOS()">
@@ -583,33 +583,36 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-<!-- ARQUIVOS DO SISTEMA -->
+<!-- ARQUIVOS DO SISTEMA (ORDEM CORRETA) -->
 <script src="data.js"></script>
 <script src="firebase.js"></script>
+<script src="theme.js"></script>
 <script src="app.js"></script>
 <script src="app-email.js"></script>
 <script src="chat.js"></script>
 <script src="pdf.js"></script>
-<script src="theme.js"></script>
 <script src="utils.js"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Inicializar sistema
-    if (app && typeof app.init === 'function') {
+    console.log('🚀 Inicializando sistema...');
+    
+    // Inicializar app
+    if (window.app && typeof app.init === 'function') {
         app.init();
     }
     
     // Inicializar tema
-    if (themeSystem && typeof themeSystem.init === 'function') {
+    if (window.themeSystem && typeof themeSystem.init === 'function') {
         themeSystem.init();
     }
     
     // Configurar botão de login
     const loginButton = document.getElementById('login-button');
     if (loginButton) {
-        loginButton.addEventListener('click', function() {
-            if (app && typeof app.login === 'function') {
+        loginButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (window.app && typeof app.login === 'function') {
                 app.login();
             }
         });
@@ -619,11 +622,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const loginPass = document.getElementById('login-pass');
     if (loginPass) {
         loginPass.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter' && app && typeof app.login === 'function') {
+            if (e.key === 'Enter' && window.app && typeof app.login === 'function') {
                 app.login();
             }
         });
     }
+    
+    console.log('✅ Sistema inicializado com sucesso!');
 });
 </script>
 </body>
