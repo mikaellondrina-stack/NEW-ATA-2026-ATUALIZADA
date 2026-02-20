@@ -1,4 +1,4 @@
-// Configuração do Firebase (sua configuração)
+// Configuração do Firebase
 const firebaseConfig = {
     apiKey: "AIzaSyDma392hveHDF6NShluBGbmGc3FYxc7ogA",
     authDomain: "porter-ata-2026-v2.firebaseapp.com",
@@ -17,7 +17,6 @@ window.db = firebase.firestore();
 window.auth = firebase.auth();
 
 const firebaseHelper = {
-    // 🔧 Funções de OS (mantenha essas)
     salvarOSNoFirebase(os) {
         if (!window.db) return Promise.resolve(false);
         
@@ -44,8 +43,6 @@ const firebaseHelper = {
                     osList.push(doc.data());
                 });
                 
-                console.log('📋 OS recebidas do Firebase:', osList.length);
-                
                 localStorage.setItem('porter_os_firebase', JSON.stringify({
                     timestamp: new Date().toISOString(),
                     data: osList
@@ -56,7 +53,6 @@ const firebaseHelper = {
             });
     },
 
-    // 🔧 Funções de Online (mantenha essas)
     sincronizarStatusOnlineComFirebase() {
         if (!window.db || !app || !app.currentUser) return;
         
@@ -125,13 +121,9 @@ const firebaseHelper = {
         
         console.log('✅ Firebase inicializado');
         
-        // 🔧 Configurar OS
         this.configurarOSFirebase();
-        
-        // 🔧 Configurar Online
         this.configurarMonitoramentoOnlineFirebase();
         
-        // 🔧 Atualizar status online periodicamente
         setInterval(() => {
             if (app && app.currentUser) {
                 this.sincronizarStatusOnlineComFirebase();
@@ -148,3 +140,5 @@ if (document.readyState === 'loading') {
 } else {
     firebaseHelper.inicializarFirebase();
 }
+
+window.firebaseHelper = firebaseHelper;
