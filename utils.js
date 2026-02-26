@@ -19,27 +19,39 @@ const utils = {
     },
 
     sendChatMessage() {
-        chatSystem.sendChatMessage();
+        if (typeof chatSystem !== 'undefined') {
+            chatSystem.sendChatMessage();
+        }
     },
 
     loadPrivateChat() {
-        chatSystem.loadPrivateChat();
+        if (typeof chatSystem !== 'undefined') {
+            chatSystem.loadPrivateChat();
+        }
     },
 
     sendPrivateChatMessage() {
-        chatSystem.sendPrivateChatMessage();
+        if (typeof chatSystem !== 'undefined') {
+            chatSystem.sendPrivateChatMessage();
+        }
     },
 
     generatePDF() {
-        pdfGenerator.generatePDF();
+        if (typeof pdfGenerator !== 'undefined') {
+            pdfGenerator.generatePDF();
+        }
     },
 
     voltarParaFormOS() {
-        appEmail.voltarParaFormOS();
+        if (typeof appEmail !== 'undefined') {
+            appEmail.voltarParaFormOS();
+        }
     },
 
     verDetalhesEmailOS(osId) {
-        appEmail.verDetalhesEmailOS(osId);
+        if (typeof appEmail !== 'undefined') {
+            appEmail.verDetalhesEmailOS(osId);
+        }
     }
 };
 
@@ -76,23 +88,63 @@ document.addEventListener('visibilitychange', function() {
             console.log('📱 Página voltou a ficar visível');
             if (app && typeof app.salvarSessao === 'function') {
                 app.salvarSessao();
-            } else {
-                if (app && app.currentUser) {
-                    localStorage.setItem('porter_sessao', JSON.stringify({
-                        user: app.currentUser,
-                        timestamp: new Date().toISOString()
-                    }));
-                }
+            } else if (app && app.currentUser) {
+                localStorage.setItem('porter_sessao', JSON.stringify({
+                    user: app.currentUser,
+                    timestamp: new Date().toISOString()
+                }));
             }
         }
     }
 });
 
-window.sendChatMessage = chatSystem ? chatSystem.sendChatMessage : utils.sendChatMessage;
-window.loadPrivateChat = chatSystem ? chatSystem.loadPrivateChat : utils.loadPrivateChat;
-window.sendPrivateChatMessage = chatSystem ? chatSystem.sendPrivateChatMessage : utils.sendPrivateChatMessage;
-window.generatePDF = pdfGenerator ? pdfGenerator.generatePDF : utils.generatePDF;
-window.voltarParaFormOS = appEmail ? appEmail.voltarParaFormOS : utils.voltarParaFormOS;
-window.verDetalhesEmailOS = appEmail ? appEmail.verDetalhesEmailOS : utils.verDetalhesEmailOS;
+window.sendChatMessage = function() {
+    if (typeof chatSystem !== 'undefined') {
+        chatSystem.sendChatMessage();
+    } else {
+        utils.sendChatMessage();
+    }
+};
+
+window.loadPrivateChat = function() {
+    if (typeof chatSystem !== 'undefined') {
+        chatSystem.loadPrivateChat();
+    } else {
+        utils.loadPrivateChat();
+    }
+};
+
+window.sendPrivateChatMessage = function() {
+    if (typeof chatSystem !== 'undefined') {
+        chatSystem.sendPrivateChatMessage();
+    } else {
+        utils.sendPrivateChatMessage();
+    }
+};
+
+window.generatePDF = function() {
+    if (typeof pdfGenerator !== 'undefined') {
+        pdfGenerator.generatePDF();
+    } else {
+        utils.generatePDF();
+    }
+};
+
+window.voltarParaFormOS = function() {
+    if (typeof appEmail !== 'undefined') {
+        appEmail.voltarParaFormOS();
+    } else {
+        utils.voltarParaFormOS();
+    }
+};
+
+window.verDetalhesEmailOS = function(osId) {
+    if (typeof appEmail !== 'undefined') {
+        appEmail.verDetalhesEmailOS(osId);
+    } else {
+        utils.verDetalhesEmailOS(osId);
+    }
+};
+
 window.destacarMensagemChat = utils.destacarMensagemChat;
 window.fecharModalEmail = utils.fecharModalEmail;
