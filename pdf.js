@@ -1,4 +1,3 @@
-// Sistema de geração de PDF
 const pdfGenerator = {
     generatePDF() {
         const condo = document.getElementById('report-condo').value;
@@ -57,14 +56,13 @@ const pdfGenerator = {
         }
         
         if (dados.length === 0) {
-            alert('Nenhum registro encontrado para os filtros selecionados.');
+            app.showToast('Nenhum registro encontrado', 'warning');
             return;
         }
         
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
         
-        // Cabeçalho
         doc.setFillColor(26, 58, 95);
         doc.rect(0, 0, 210, 30, 'F');
         doc.setTextColor(255, 255, 255);
@@ -73,20 +71,16 @@ const pdfGenerator = {
         doc.setFontSize(12);
         doc.text('Ata Operacional - 2026', 105, 22, { align: 'center' });
         
-        // Título do relatório
         doc.setTextColor(0, 0, 0);
         doc.setFontSize(16);
         doc.text(titulo, 105, 40, { align: 'center' });
         
-        // Filtros aplicados
         doc.setFontSize(10);
         let filtrosTexto = `Condomínio: ${condo || 'Todos'} | Período: ${dataInicio || 'Início'} a ${dataFim || 'Fim'}`;
         doc.text(filtrosTexto, 105, 50, { align: 'center' });
         
-        // Data de geração
         doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR')}`, 105, 55, { align: 'center' });
         
-        // Conteúdo
         let y = 70;
         
         dados.forEach((item, index) => {
@@ -142,7 +136,6 @@ const pdfGenerator = {
             }
         });
         
-        // Rodapé
         doc.setFontSize(8);
         doc.setTextColor(100, 100, 100);
         doc.text(`Total de registros: ${dados.length}`, 105, 285, { align: 'center' });
@@ -150,6 +143,6 @@ const pdfGenerator = {
         
         doc.save(`relatorio-porter-${new Date().toISOString().slice(0, 10)}.pdf`);
         app.closeReportModal();
-        app.showMessage('Relatório gerado com sucesso!', 'success');
+        app.showToast('Relatório gerado com sucesso!', 'success');
     }
 };
