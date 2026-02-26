@@ -1,4 +1,3 @@
-// Sistema de e-mail e envio de OS
 const appEmail = {
     setupOSPreview() {
         const gravidadeSelect = document.getElementById('os-gravidade');
@@ -41,16 +40,22 @@ const appEmail = {
                 texto: '🚨 EMERGÊNCIA',
                 icone: 'fa-bell',
                 cor: '#8b0000',
-                prazo: 'Prazo: 4 horas - ATENÇÃO MÁXIMA'
+                prazo: 'Prazo: 4 horas'
             }
         };
         
         const config = configs[gravidade] || configs['Média'];
         
-        previewTexto.textContent = config.texto;
-        previewTexto.style.color = config.cor;
-        previewIcone.innerHTML = `<i class="fas ${config.icone}" style="color: ${config.cor}"></i>`;
-        previewPrazo.textContent = config.prazo;
+        if (previewTexto) {
+            previewTexto.textContent = config.texto;
+            previewTexto.style.color = config.cor;
+        }
+        if (previewIcone) {
+            previewIcone.innerHTML = `<i class="fas ${config.icone}" style="color: ${config.cor}"></i>`;
+        }
+        if (previewPrazo) {
+            previewPrazo.textContent = config.prazo;
+        }
         previewDiv.style.display = 'block';
         previewDiv.style.borderLeft = `4px solid ${config.cor}`;
     },
@@ -88,13 +93,11 @@ const appEmail = {
     adicionarCamposOcultosForm(osId, dataHora, prazoResposta) {
         const form = document.getElementById('os-form-email');
         
-        // Remover campos ocultos anteriores (se houver)
         ['os-id', 'data-hora', 'prazo-resposta'].forEach(name => {
             const existing = form.querySelector(`input[name="${name}"]`);
             if (existing) existing.remove();
         });
         
-        // Adicionar campos ocultos com informações adicionais
         const camposOcultos = [
             { name: 'os-id', value: osId },
             { name: 'data-hora', value: dataHora },
@@ -113,14 +116,11 @@ const appEmail = {
     },
 
     mostrarConfirmacaoOS(osData) {
-        // Ocultar formulário
         document.getElementById('os-form-container').classList.add('hidden');
         
-        // Mostrar tela de confirmação
         const confirmationScreen = document.getElementById('os-confirmation-screen');
         confirmationScreen.classList.remove('hidden');
         
-        // Preencher dados na tela de confirmação
         document.getElementById('os-confirmation-id').textContent = osData.osId;
         document.getElementById('os-confirmation-condo').textContent = osData.condo;
         document.getElementById('os-confirmation-gravidade').textContent = osData.gravidade;
@@ -128,26 +128,18 @@ const appEmail = {
         document.getElementById('os-confirmation-email').textContent = osData.email;
         document.getElementById('os-confirmation-data').textContent = `${osData.data} ${osData.hora}`;
         
-        // Registrar envio no histórico
         this.registrarEnvioDetalhadoOS(osData);
     },
 
     voltarParaFormOS() {
-        // Mostrar formulário
         document.getElementById('os-form-container').classList.remove('hidden');
-        
-        // Ocultar tela de confirmação
         document.getElementById('os-confirmation-screen').classList.add('hidden');
-        
-        // Limpar formulário
         document.getElementById('os-form-email').reset();
         
-        // Restaurar cidade
         if (typeof app !== 'undefined' && app.updateCityOS) {
             app.updateCityOS();
         }
         
-        // Auto-preenche campos do funcionário se estiver logado
         if (typeof app !== 'undefined' && app.currentUser) {
             document.getElementById('os-funcionario').value = app.currentUser.nome;
             document.getElementById('os-email').value = `${app.currentUser.user}@porter.com.br`;
@@ -216,43 +208,6 @@ E-mail automático - Não responda
 ========================================`;
     },
 
-    mostrarDetalhesEmailOS(osData, emails) {
-        const corpoEmail = this.gerarCorpoEmailOS(osData);
-        
-        const modalContent = `
-            <div style="padding: 20px; max-width: 800px;">
-                <h3><i class="fas fa-envelope"></i> Detalhes do E-mail da OS</h3>
-                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0;">
-                    <strong><i class="fas fa-paper-plane"></i> De:</strong> sistema@porter.com.br<br>
-                    <strong><i class="fas fa-users"></i> Para:</strong> ${emails.join(', ')}<br>
-                    <strong><i class="fas fa-tag"></i> Assunto:</strong> [PORTER OS] ${osData.gravidade} - ${osData.condo}
-                </div>
-                <div style="background: white; border: 1px solid #ddd; border-radius: 8px; padding: 20px;
-                    margin: 15px 0; font-family: monospace; white-space: pre-wrap;
-                    max-height: 300px; overflow-y: auto;">
-                    ${corpoEmail}
-                </div>
-                <div style="background: #e8f4fc; padding: 15px; border-radius: 8px; margin: 15px 0;">
-                    <i class="fas fa-info-circle"></i> <strong>Nota:</strong>
-                    Em produção, este e-mail seria enviado automaticamente para todos os destinatários.
-                </div>
-                <div style="display: flex; gap: 10px; margin-top: 20px;">
-                    <button class="btn btn-primary" onclick="app.copiarConteudoEmail()">
-                        <i class="fas fa-copy"></i> Copiar Conteúdo
-                    </button>
-                    <button class="btn btn-success" onclick="app.abrirClienteEmail('${osData.condo}', '${emails.join(',')}')">
-                        <i class="fas fa-envelope-open"></i> Abrir no Cliente de E-mail
-                    </button>
-                    <button class="btn btn-clear" onclick="app.fecharModalEmail()">
-                        Fechar
-                    </button>
-                </div>
-            </div>
-        `;
-        
-        this.criarModal('Detalhes do E-mail', modalContent);
-    },
-
     criarModal(titulo, conteudo) {
         this.fecharModalEmail();
         
@@ -265,14 +220,14 @@ E-mail automático - Não responda
         `;
         
         modal.innerHTML = `
-            <div style="background: white; border-radius: 12px; max-width: 900px;
+            <div style="background: var(--white); border-radius: 12px; max-width: 900px;
                 width: 100%; max-height: 90vh; overflow-y: auto;
-                box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
-                <div style="padding: 20px; border-bottom: 1px solid #eee;">
-                    <h3 style="margin: 0; display: flex; justify-content: space-between; align-items: center;">
+                box-shadow: 0 10px 30px var(--shadow);">
+                <div style="padding: 20px; border-bottom: 1px solid var(--border-color);">
+                    <h3 style="margin: 0; display: flex; justify-content: space-between; align-items: center; color: var(--text-primary);">
                         ${titulo}
-                        <button onclick="app.fecharModalEmail()" style="background: none; border: none;
-                        font-size: 1.5rem; cursor: pointer; color: #666;">&times;</button>
+                        <button onclick="utils.fecharModalEmail()" style="background: none; border: none;
+                        font-size: 1.5rem; cursor: pointer; color: var(--gray);">&times;</button>
                     </h3>
                 </div>
                 <div>${conteudo}</div>
@@ -293,7 +248,7 @@ E-mail automático - Não responda
         
         if (conteudo) {
             navigator.clipboard.writeText(conteudo)
-                .then(() => app.showMessage('Conteúdo copiado!', 'success'))
+                .then(() => app.showToast('Conteúdo copiado!', 'success'))
                 .catch(() => {
                     const textarea = document.createElement('textarea');
                     textarea.value = conteudo;
@@ -301,7 +256,7 @@ E-mail automático - Não responda
                     textarea.select();
                     document.execCommand('copy');
                     document.body.removeChild(textarea);
-                    app.showMessage('Conteúdo copiado!', 'success');
+                    app.showToast('Conteúdo copiado!', 'success');
                 });
         }
     },
@@ -311,7 +266,7 @@ E-mail automático - Não responda
         const corpo = encodeURIComponent(`Prezado,\n\nSegue Ordem de Serviço do condomínio ${condo}.\n\nAtenciosamente,\nSistema Porter`);
         
         window.open(`mailto:${emails}?subject=${assunto}&body=${corpo}`, '_blank');
-        app.showMessage('Cliente de e-mail aberto! Preencha o corpo com os detalhes da OS.', 'info');
+        app.showToast('Cliente de e-mail aberto!', 'info');
     },
 
     verDetalhesEmailOS(osId) {
@@ -324,20 +279,20 @@ E-mail automático - Não responda
         if (!os) return;
         
         const corpoEmail = this.gerarCorpoEmailOS(os);
-        const emails = os.emails || [];
+        const emails = os.emails || ['londrina.tecnica1@porter.com.br', 'londrina.tecnicaplantao@porter.com.br'];
         
         const modalContent = `
             <div style="padding: 20px;">
                 <h3><i class="fas fa-envelope"></i> E-mail da OS - ${os.condo}</h3>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0;">
-                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                    <div style="background: var(--hover-bg); padding: 15px; border-radius: 8px;">
                         <h4><i class="fas fa-info-circle"></i> Informações</h4>
                         <p><strong>Destinatários:</strong> ${emails.length}</p>
                         <p><strong>Gravidade:</strong> ${os.gravidade}</p>
                         <p><strong>Data:</strong> ${os.data} ${os.hora}</p>
                         ${envio ? `<p><strong>Registrado em:</strong> ${envio.data}</p>` : ''}
                     </div>
-                    <div style="background: #e8f4fc; padding: 15px; border-radius: 8px;">
+                    <div style="background: var(--info)20; padding: 15px; border-radius: 8px;">
                         <h4><i class="fas fa-users"></i> Destinatários</h4>
                         <div style="max-height: 100px; overflow-y: auto;">
                             ${emails.map(email => `<div>📧 ${email}</div>`).join('')}
@@ -346,20 +301,20 @@ E-mail automático - Não responda
                 </div>
                 <div style="margin: 20px 0;">
                     <h4><i class="fas fa-file-alt"></i> Conteúdo do E-mail</h4>
-                    <div style="background: white; border: 1px solid #ddd; padding: 15px;
+                    <div style="background: var(--white); border: 1px solid var(--border-color); padding: 15px;
                         border-radius: 6px; font-family: monospace; white-space: pre-wrap;
-                        max-height: 300px; overflow-y: auto; margin-top: 10px;">
+                        max-height: 300px; overflow-y: auto; margin-top: 10px; color: var(--text-primary);">
                         ${corpoEmail}
                     </div>
                 </div>
                 <div style="display: flex; gap: 10px; margin-top: 20px;">
                     <button class="btn btn-primary" onclick="appEmail.copiarConteudoEmail()">
-                        <i class="fas fa-copy"></i> Copiar Conteúdo
+                        <i class="fas fa-copy"></i> Copiar
                     </button>
                     <button class="btn btn-success" onclick="appEmail.abrirClienteEmail('${os.condo}', '${emails.join(',')}')">
-                        <i class="fas fa-envelope-open"></i> Abrir no Cliente de E-mail
+                        <i class="fas fa-envelope-open"></i> Abrir Cliente
                     </button>
-                    <button class="btn btn-clear" onclick="appEmail.fecharModalEmail()">
+                    <button class="btn btn-clear" onclick="utils.fecharModalEmail()">
                         Fechar
                     </button>
                 </div>
