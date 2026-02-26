@@ -53,6 +53,13 @@ const app = {
 
         this.carregarFiltrosSalvos();
         this.setupClickOutsideHandlers();
+        
+        // Verificar badges a cada 3 segundos
+        setInterval(() => {
+            if (this.currentUser) {
+                this.updateNotificationBadges();
+            }
+        }, 3000);
     },
 
     initTheme() {
@@ -1053,6 +1060,8 @@ const app = {
     },
 
     filtrarPorCondominio(condoName) {
+        console.log('🔍 Filtrando por condomínio:', condoName);
+        
         document.getElementById('filter-condo').value = condoName;
         this.currentCondoFilter = condoName;
         this.aplicarFiltrosAtas();
@@ -1064,10 +1073,34 @@ const app = {
         const condoItem = document.querySelector(`.condo-item[data-condo="${condoName}"]`);
         if (condoItem) {
             condoItem.classList.add('active');
+            this.marcarNotificacoesPorCondominioComoLidas(condoName);
         }
         
         if (window.innerWidth <= 1200) {
             this.toggleSidebar();
+        }
+    },
+
+    marcarNotificacoesPorCondominioComoLidas(condoName) {
+        console.log('📌 Marcando notificações como lidas para:', condoName);
+        
+        let notificacoes = JSON.parse(localStorage.getItem('porter_notificacoes') || '[]');
+        let modificado = false;
+        
+        notificacoes = notificacoes.map(notif => {
+            if (notif.condo === condoName && !notif.lida) {
+                modificado = true;
+                return { ...notif, lida: true };
+            }
+            return notif;
+        });
+        
+        if (modificado) {
+            localStorage.setItem('porter_notificacoes', JSON.stringify(notificacoes));
+            this.loadNotifications();
+            this.updateNotificationBadges();
+            this.atualizarBadgeCondominio(condoName);
+            console.log(`✅ Notificações de ${condoName} marcadas como lidas`);
         }
     },
 
@@ -1186,15 +1219,15 @@ const app = {
         
         this.showToast('Registro salvo com sucesso!', 'success');
         this.renderAll();
-        this.updateNotificationBadges();
     },
 
-    // FUNÇÃO PRINCIPAL DE NOTIFICAÇÃO - CORRIGIDA
     criarNotificacao(condo, tipo, desc) {
+        console.log('📢 Criando notificação para:', condo, tipo);
+        
         const notificacao = {
             id: Date.now(),
-            condo,
-            tipo,
+            condo: condo,
+            tipo: tipo,
             desc: desc.length > 100 ? desc.substring(0, 100) + '...' : desc,
             data: new Date().toLocaleDateString('pt-BR'),
             hora: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
@@ -1209,62 +1242,109 @@ const app = {
         if (notificacoes.length > 50) notificacoes.pop();
         localStorage.setItem('porter_notificacoes', JSON.stringify(notificacoes));
         
-        // SEMPRE mostrar toast para OS, independente do condomínio
         if (tipo === 'Ordem de Serviço') {
             this.showToast(
                 desc,
                 'info',
                 `🔧 NOVA OS - ${condo}`
             );
-            
-            if (typeof chatSystem !== 'undefined' && chatSystem.criarNotificacaoChat) {
-                chatSystem.criarNotificacaoChat(`Nova OS criada em ${condo}: ${desc.substring(0, 80)}...`);
-            }
         } else {
-            this.showCondoNotification(condo, desc, 'info');
+            this.showToast(
+                desc,
+                'info',
+                `${condo}`
+            );
         }
         
         this.loadNotifications();
         this.updateNotificationBadges();
+        this.atualizarBadgeCondominio(condo);
         
-        // Atualizar badge na sidebar sem ordem alfabética
-        this.atualizarBadgeSidebar(condo);
+        if (tipo === 'Ordem de Serviço' && typeof chatSystem !== 'undefined') {
+            chatSystem.criarNotificacaoChat(`Nova OS criada em ${condo}: ${desc.substring(0, 80)}...`);
+        }
     },
 
-    // Nova função para atualizar badge na sidebar sem ordem alfabética
-    atualizarBadgeSidebar(condoEspecifico = null) {
+    atualizarBadgeCondominio(condoNome) {
+        console.log('🔄 Atualizando badge do condomínio:', condoNome);
+        
         const notificacoes = JSON.parse(localStorage.getItem('porter_notificacoes') || '[]');
-        const naoLidasPorCondo = {};
+        const naoLidas = notificacoes.filter(n => !n.lida);
+        const countEsteCondo = naoLidas.filter(n => n.condo === condoNome).length;
         
-        // Contar notificações não lidas por condomínio
-        notificacoes.forEach(notif => {
-            if (!notif.lida) {
-                naoLidasPorCondo[notif.condo] = (naoLidasPorCondo[notif.condo] || 0) + 1;
-            }
-        });
+        const condoItem = document.querySelector(`.condo-item[data-condo="${condoNome}"]`);
         
-        // Atualizar badges na sidebar (mantém a ordem original do DOM)
-        document.querySelectorAll('.condo-item').forEach(item => {
-            const condoName = item.dataset.condo;
-            const badge = item.querySelector('.condo-badge');
-            const count = naoLidasPorCondo[condoName] || 0;
-            
-            if (count > 0) {
-                badge.textContent = count > 9 ? '9+' : count;
-                badge.classList.add('has-notification');
-                
-                // Se for um condomínio específico, dar destaque visual
-                if (condoEspecifico === condoName) {
+        if (condoItem) {
+            const badge = condoItem.querySelector('.condo-badge');
+            if (badge) {
+                if (countEsteCondo > 0) {
+                    badge.textContent = countEsteCondo > 9 ? '9+' : countEsteCondo;
+                    badge.classList.add('has-notification');
+                    badge.style.display = 'block';
+                    
                     badge.style.animation = 'pulse 0.5s ease-in-out';
                     setTimeout(() => {
                         badge.style.animation = '';
                     }, 1000);
+                    
+                    console.log(`✅ Badge atualizado para ${condoNome}: ${countEsteCondo} notificações`);
+                } else {
+                    badge.textContent = '0';
+                    badge.classList.remove('has-notification');
+                    badge.style.display = 'none';
                 }
+            }
+        } else {
+            console.warn(`⚠️ Condomínio não encontrado na sidebar: ${condoNome}`);
+        }
+    },
+
+    updateNotificationBadges() {
+        console.log('🔄 Atualizando todas as badges de notificação');
+        
+        const notificacoes = JSON.parse(localStorage.getItem('porter_notificacoes') || '[]');
+        const naoLidas = notificacoes.filter(n => !n.lida).length;
+        
+        const badge = document.getElementById('notification-count');
+        if (badge) {
+            if (naoLidas > 0) {
+                badge.textContent = naoLidas > 99 ? '99+' : naoLidas;
+                badge.style.display = 'block';
+                badge.style.backgroundColor = '#e74c3c';
+                badge.style.animation = 'pulse 2s infinite';
+            } else {
+                badge.textContent = '0';
+                badge.style.display = 'none';
+                badge.style.animation = '';
+            }
+        }
+        
+        const notificacoesNaoLidas = notificacoes.filter(n => !n.lida);
+        const contagemPorCondo = {};
+        
+        notificacoesNaoLidas.forEach(notif => {
+            contagemPorCondo[notif.condo] = (contagemPorCondo[notif.condo] || 0) + 1;
+        });
+        
+        console.log('📊 Contagem por condomínio:', contagemPorCondo);
+        
+        document.querySelectorAll('.condo-item').forEach(item => {
+            const condoName = item.dataset.condo;
+            const badge = item.querySelector('.condo-badge');
+            const count = contagemPorCondo[condoName] || 0;
+            
+            if (count > 0) {
+                badge.textContent = count > 9 ? '9+' : count;
+                badge.classList.add('has-notification');
+                badge.style.display = 'block';
             } else {
                 badge.textContent = '0';
                 badge.classList.remove('has-notification');
+                badge.style.display = 'none';
             }
         });
+        
+        this.updateTabCounts();
     },
 
     criarNotificacaoChat(texto) {
@@ -1383,27 +1463,6 @@ const app = {
         }
         
         document.getElementById('notifications-panel').classList.remove('show');
-    },
-
-    updateNotificationBadges() {
-        const notificacoes = JSON.parse(localStorage.getItem('porter_notificacoes') || '[]');
-        const naoLidas = notificacoes.filter(n => !n.lida).length;
-        
-        const badge = document.getElementById('notification-count');
-        if (badge) {
-            if (naoLidas > 0) {
-                badge.textContent = naoLidas > 99 ? '99+' : naoLidas;
-                badge.style.display = 'block';
-                badge.style.backgroundColor = '#e74c3c';
-                badge.style.animation = 'pulse 2s infinite';
-            } else {
-                badge.style.display = 'none';
-                badge.style.animation = '';
-            }
-        }
-        
-        this.atualizarBadgeSidebar();
-        this.updateTabCounts();
     },
 
     toggleNotifications() {
@@ -1615,7 +1674,6 @@ const app = {
         return osData;
     },
 
-    // FUNÇÃO PRINCIPAL DE ABRIR OS - COMPLETA
     abrirOSComEmail(event) {
         if (event) event.preventDefault();
         
@@ -1691,19 +1749,7 @@ const app = {
                 this.mostrarConfirmacaoOSFallback(novaOS);
             }
             
-            // GARANTIR QUE A NOTIFICAÇÃO APAREÇA
             this.criarNotificacao(condo, 'Ordem de Serviço', `Nova OS ${osId}: ${gravidade} - ${desc.substring(0, 50)}...`);
-            
-            // Forçar atualização do badge do sino
-            const badge = document.getElementById('notification-count');
-            if (badge) {
-                const notificacoes = JSON.parse(localStorage.getItem('porter_notificacoes') || '[]');
-                const naoLidas = notificacoes.filter(n => !n.lida).length;
-                badge.textContent = naoLidas > 99 ? '99+' : naoLidas;
-                badge.style.display = 'block';
-                badge.style.backgroundColor = '#e74c3c';
-                badge.style.animation = 'pulse 2s infinite';
-            }
             
             this.showToast('Ordem de Serviço aberta com sucesso!', 'success');
         }, 100);
