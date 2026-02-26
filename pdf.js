@@ -56,7 +56,11 @@ const pdfGenerator = {
         }
         
         if (dados.length === 0) {
-            app.showToast('Nenhum registro encontrado', 'warning');
+            if (typeof app !== 'undefined') {
+                app.showToast('Nenhum registro encontrado', 'warning');
+            } else {
+                alert('Nenhum registro encontrado');
+            }
             return;
         }
         
@@ -83,7 +87,7 @@ const pdfGenerator = {
         
         let y = 70;
         
-        dados.forEach((item, index) => {
+        dados.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).forEach((item, index) => {
             if (y > 270) {
                 doc.addPage();
                 y = 20;
@@ -142,7 +146,10 @@ const pdfGenerator = {
         doc.text('Porter - Ata Operacional 2026', 105, 290, { align: 'center' });
         
         doc.save(`relatorio-porter-${new Date().toISOString().slice(0, 10)}.pdf`);
-        app.closeReportModal();
-        app.showToast('Relatório gerado com sucesso!', 'success');
+        
+        if (typeof app !== 'undefined') {
+            app.closeReportModal();
+            app.showToast('Relatório gerado com sucesso!', 'success');
+        }
     }
 };
