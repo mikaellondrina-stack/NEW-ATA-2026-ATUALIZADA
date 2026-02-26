@@ -1,4 +1,3 @@
-// Aplicação principal
 const app = {
     currentUser: null,
     selectedMood: null,
@@ -16,10 +15,9 @@ const app = {
     filtrosPresenca: {},
 
     init() {
-        // 🔧 FIX 2: Restaurar sessão ao iniciar
+        this.initTheme();
         this.restaurarSessao();
         
-        // GARANTIR que começa na tela de login se não houver sessão
         if (!this.currentUser) {
             document.getElementById('login-screen').classList.remove('hidden');
             document.getElementById('main-content').classList.add('hidden');
@@ -27,7 +25,6 @@ const app = {
             this.showApp();
         }
 
-        // Limpar auto-preenchimento dos campos de login
         setTimeout(() => {
             document.getElementById('login-user').value = '';
             document.getElementById('login-pass').value = '';
@@ -42,7 +39,6 @@ const app = {
         this.setupOSPreview();
         this.setupResponsive();
 
-        // Configurar datas padrão
         const hoje = new Date();
         const umaSemanaAtras = new Date();
         umaSemanaAtras.setDate(umaSemanaAtras.getDate() - 7);
@@ -52,14 +48,74 @@ const app = {
         document.getElementById('filter-presenca-inicio').value = umaSemanaAtras.toISOString().split('T')[0];
         document.getElementById('filter-presenca-fim').value = hoje.toISOString().split('T')[0];
         document.getElementById('os-data').value = hoje.toISOString().split('T')[0];
-
-        // Preencher datas do relatório
         document.getElementById('report-data-inicio').value = umaSemanaAtras.toISOString().split('T')[0];
         document.getElementById('report-data-fim').value = hoje.toISOString().split('T')[0];
 
         this.carregarFiltrosSalvos();
+        this.setupClickOutsideHandlers();
+    },
 
-        // Configurar clique fora da lista de online
+    initTheme() {
+        const savedTheme = localStorage.getItem('porter_theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    },
+
+    toggleTheme() {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('porter_theme', newTheme);
+        
+        document.querySelectorAll('#theme-toggle i').forEach((icon, index) => {
+            icon.classList.toggle('active', 
+                (index === 0 && newTheme === 'light') || 
+                (index === 1 && newTheme === 'dark')
+            );
+        });
+    },
+
+    showToast(message, type = 'info', title = '') {
+        const container = document.getElementById('toast-container');
+        
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        
+        const icons = {
+            success: '✅',
+            error: '❌',
+            warning: '⚠️',
+            info: 'ℹ️'
+        };
+        
+        const titles = {
+            success: 'Sucesso',
+            error: 'Erro',
+            warning: 'Aviso',
+            info: 'Informação'
+        };
+        
+        toast.innerHTML = `
+            <div class="toast-icon">${icons[type]}</div>
+            <div class="toast-content">
+                <div class="toast-title">${title || titles[type]}</div>
+                <div class="toast-message">${message}</div>
+            </div>
+            <button class="toast-close" onclick="this.parentElement.remove()">&times;</button>
+        `;
+        
+        container.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.classList.add('fade-out');
+            setTimeout(() => toast.remove(), 300);
+        }, 5000);
+    },
+
+    showCondoNotification(condo, message, type = 'info') {
+        this.showToast(message, type, condo);
+    },
+
+    setupClickOutsideHandlers() {
         document.addEventListener('click', (e) => {
             const onlineList = document.getElementById('online-users-list');
             const onlineDropdown = document.getElementById('online-users');
@@ -70,7 +126,6 @@ const app = {
             }
         });
 
-        // Configurar clique fora das notificações
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.notification-bell') && !e.target.closest('.notifications-panel')) {
                 document.getElementById('notifications-panel').classList.remove('show');
@@ -78,42 +133,11 @@ const app = {
         });
     },
 
-    // 🔧 FIX 2: NOVA FUNÇÃO - Restaurar sessão ao iniciar
-    restaurarSessao() {
-        try {
-            // Tentar recuperar sessão do localStorage
-            const sessaoSalva = localStorage.getItem('porter_session');
-            if (sessaoSalva) {
-                const usuario = JSON.parse(sessaoSalva);
-                
-                // Verificar se a sessão não expirou (últimas 24 horas)
-                const ultimaAtividade = new Date(usuario.loginTimestamp || usuario.lastActivity);
-                const agora = new Date();
-                const horasDesdeLogin = (agora - ultimaAtividade) / (1000 * 60 * 60);
-                
-                if (horasDesdeLogin < 24) { // Sessão válida por 24 horas
-                    this.currentUser = usuario;
-                    console.log('✅ Sessão restaurada:', usuario.nome);
-                    return true;
-                } else {
-                    console.log('⚠️ Sessão expirada');
-                    localStorage.removeItem('porter_session');
-                    localStorage.removeItem('porter_last_session');
-                }
-            }
-        } catch (e) {
-            console.log('❌ Erro ao restaurar sessão:', e);
-        }
-        return false;
-    },
-
     setupEventListeners() {
-        // Enter no login
         document.getElementById('login-pass').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') this.login();
         });
 
-        // Enter no chat
         document.getElementById('chat-input')?.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
@@ -121,21 +145,14 @@ const app = {
             }
         });
 
-        // 🔧 FIX 1: chat individual - garantir que o evento está configurado
         const privateChatSelect = document.getElementById('private-chat-target');
         if (privateChatSelect) {
-            // Remover event listeners anteriores para evitar duplicação
-            privateChatSelect.replaceWith(privateChatSelect.cloneNode(true));
-            
-            // Recapturar o elemento
-            const newSelect = document.getElementById('private-chat-target');
-            newSelect.addEventListener('change', (e) => {
+            privateChatSelect.addEventListener('change', (e) => {
                 this.currentPrivateChatTarget = e.target.value;
                 this.loadPrivateChat();
             });
         }
 
-        // Enter no chat privado
         document.getElementById('chat-private-input')?.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
@@ -143,14 +160,12 @@ const app = {
             }
         });
 
-        // Salvar logoff quando a página for fechada
         window.addEventListener('beforeunload', () => {
             if (this.currentUser) {
-                this.salvarSessao(); // Apenas salvar sessão, não registrar logoff
+                this.salvarSessao();
             }
         });
 
-        // 🔧 FIX 3: botão online - corrigir evento de toggle
         const onlineDropdown = document.getElementById('online-users');
         if (onlineDropdown) {
             onlineDropdown.addEventListener('click', (e) => {
@@ -159,7 +174,6 @@ const app = {
             });
         }
 
-        // Configurar envio do formulário de OS
         const osForm = document.getElementById('os-form-email');
         if (osForm) {
             osForm.addEventListener('submit', (e) => {
@@ -167,7 +181,6 @@ const app = {
             });
         }
 
-        // 🔧 FIX 2: Recarregar usuários online ao voltar para a página
         window.addEventListener('pageshow', () => {
             if (this.currentUser) {
                 this.updateOnlineUsers();
@@ -202,212 +215,202 @@ const app = {
         }
     },
 
-    setupOnlineTracking() {
-        // 🔧 FIX 3: Atualizar status online a cada 10 segundos (mais frequente)
-        this.onlineInterval = setInterval(() => {
-            if (this.currentUser) {
-                this.updateOnlineUsers();
-            }
-        }, 10000);
-        // Inicializar imediatamente
-        this.updateOnlineUsers();
-    },
-
-    getMoodStatusTexto(mood) {
-        const statusMap = {
-            '😠': 'Zangado hoje',
-            '😔': 'Triste hoje',
-            '😐': 'Neutro hoje',
-            '🙂': 'Feliz hoje',
-            '😄': 'Radiante hoje'
-        };
-        return statusMap[mood] || 'Não avaliado';
-    },
-
-    // 🔧 FIX 3: botão online - função completamente reformulada
-    updateOnlineUsers() {
-        if (!this.currentUser) return;
-        
-        const agora = new Date();
-        
-        // 1. Atualizar a própria sessão primeiro
-        this.salvarSessao();
-        
-        // 2. Buscar usuários online do Firebase
-        let usuariosOnline = [];
-        
-        // Adicionar usuário atual primeiro
-        const moodAtual = this.getMoodAtual();
-        const statusMood = this.getMoodStatusTexto(moodAtual);
-        usuariosOnline.push({
-            ...this.currentUser,
-            lastActivity: agora.toISOString(),
-            mood: moodAtual,
-            moodStatus: statusMood,
-            isCurrentUser: true,
-            online: true
-        });
-        
-        // 3. Buscar outros usuários do Firebase
+    restaurarSessao() {
         try {
-            const onlineData = localStorage.getItem('porter_online_firebase');
-            if (onlineData) {
-                const data = JSON.parse(onlineData);
-                const dataTime = new Date(data.timestamp);
-                const diferencaSegundos = (agora - dataTime) / 1000;
+            const sessaoSalva = localStorage.getItem('porter_session');
+            if (sessaoSalva) {
+                const usuario = JSON.parse(sessaoSalva);
+                const ultimaAtividade = new Date(usuario.loginTimestamp || usuario.lastActivity);
+                const agora = new Date();
+                const horasDesdeLogin = (agora - ultimaAtividade) / (1000 * 60 * 60);
                 
-                if (diferencaSegundos < 10) { // Dados recentes do Firebase
-                    data.users.forEach(usuario => {
-                        // Pular usuário atual
-                        if (usuario.user === this.currentUser.user) return;
-                        
-                        usuariosOnline.push({
-                            nome: usuario.nome,
-                            user: usuario.user,
-                            role: usuario.role,
-                            lastActivity: usuario.lastActivity,
-                            mood: usuario.mood || '😐',
-                            moodStatus: this.getMoodStatusTexto(usuario.mood || '😐'),
-                            isCurrentUser: false,
-                            online: true,
-                            turno: usuario.turno || 'Diurno'
-                        });
-                    });
+                if (horasDesdeLogin < 24) {
+                    this.currentUser = usuario;
+                    return true;
+                } else {
+                    localStorage.removeItem('porter_session');
                 }
             }
         } catch (e) {
-            console.log('Erro ao buscar usuários online do Firebase:', e);
+            console.log('Erro ao restaurar sessão:', e);
         }
-        
-        this.onlineUsers = usuariosOnline;
-        
-        // 4. Atualizar contador no header
-        const onlineCount = document.getElementById('online-count');
-        if (onlineCount) {
-            if (this.onlineUsers.length === 1) {
-                onlineCount.textContent = '1 (apenas você)';
-                onlineCount.style.color = '#f39c12';
-            } else {
-                onlineCount.textContent = this.onlineUsers.length;
-                onlineCount.style.color = '#2ecc71';
-            }
-        }
-        
-        // 5. Se a lista estiver visível, atualizar
-        const onlineList = document.getElementById('online-users-list');
-        if (onlineList && onlineList.style.display === 'block') {
-            this.renderOnlineUsersList();
-        }
-        
-        console.log('👥 Usuários online atualizados:', this.onlineUsers.length);
+        return false;
     },
 
-    // 🔧 FIX 3: botão online - função para mostrar/ocultar lista
-    toggleOnlineUsers() {
-        const onlineList = document.getElementById('online-users-list');
-        if (onlineList.style.display === 'block') {
-            onlineList.style.display = 'none';
-        } else {
-            this.renderOnlineUsersList();
-            onlineList.style.display = 'block';
-            // Reposicionar se necessário
-            setTimeout(() => {
-                const rect = onlineList.getBoundingClientRect();
-                if (rect.bottom > window.innerHeight) {
-                    onlineList.style.bottom = '100%';
-                    onlineList.style.top = 'auto';
-                }
-            }, 10);
+    salvarSessao() {
+        if (!this.currentUser) return;
+        
+        const sessionData = {
+            ...this.currentUser,
+            lastActivity: new Date().toISOString(),
+            mood: this.getMoodAtual()
+        };
+        
+        localStorage.setItem('porter_session', JSON.stringify(sessionData));
+        
+        if (typeof firebaseHelper !== 'undefined' && firebaseHelper.sincronizarStatusOnlineComFirebase) {
+            firebaseHelper.sincronizarStatusOnlineComFirebase();
         }
     },
 
-    renderOnlineUsersList() {
-        const onlineList = document.getElementById('online-users-list');
-        onlineList.innerHTML = '';
+    login() {
+        const u = document.getElementById('login-user').value.trim();
+        const p = document.getElementById('login-pass').value;
+        const t = document.getElementById('login-turno').value;
         
-        if (this.onlineUsers.length === 0) {
-            onlineList.innerHTML = `
-                <div class="online-user-item">
-                    <div class="online-user-avatar">
-                        <i class="fas fa-user"></i>
-                    </div>
-                    <div class="online-user-info">
-                        <div class="online-user-name">Nenhum operador online</div>
-                        <div class="online-user-role">Apenas você está conectado</div>
-                    </div>
-                </div>
-            `;
+        if (!u || !p) {
+            this.showToast('Preencha usuário e senha', 'error');
             return;
         }
         
-        this.onlineUsers.forEach(user => {
-            const userItem = document.createElement('div');
-            userItem.className = 'online-user-item';
+        const user = DATA.funcionarios.find(f => f.user === u && f.pass === p);
+        
+        if (user) {
+            this.currentUser = {
+                ...user,
+                turno: t,
+                loginTime: new Date().toLocaleString('pt-BR'),
+                loginTimestamp: new Date().toISOString(),
+                loginDate: new Date().toLocaleDateString('pt-BR'),
+                loginHour: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})
+            };
             
-            // Determinar status de atividade
-            const ultimaAtividade = new Date(user.lastActivity);
-            const agora = new Date();
-            const diferencaMinutos = Math.floor((agora - ultimaAtividade) / (1000 * 60));
-            let statusTexto = '';
+            localStorage.setItem('porter_session', JSON.stringify(this.currentUser));
+            this.registrarPresenca('login');
+            this.showApp();
+            this.loadPrivateChatUsers();
+            this.showToast(`Bem-vindo, ${user.nome}!`, 'success');
+        } else {
+            const tecnico = DATA.tecnicos.find(t => {
+                const nomeTecnico = t.nome.split(' - ')[0].toLowerCase().replace(/\s+/g, '.');
+                return u === nomeTecnico && p === "Tecnico@2026";
+            });
             
-            if (user.isCurrentUser) {
-                statusTexto = 'Online agora';
-            } else if (diferencaMinutos < 1) {
-                statusTexto = 'Online agora';
-            } else if (diferencaMinutos < 5) {
-                statusTexto = `Online há ${diferencaMinutos} min`;
+            if (tecnico) {
+                this.currentUser = {
+                    nome: tecnico.nome,
+                    user: tecnico.nome.split(' - ')[0].toLowerCase().replace(/\s+/g, '.'),
+                    role: "TÉCNICO",
+                    turno: t,
+                    loginTime: new Date().toLocaleString('pt-BR'),
+                    loginTimestamp: new Date().toISOString(),
+                    loginDate: new Date().toLocaleDateString('pt-BR'),
+                    loginHour: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})
+                };
+                
+                localStorage.setItem('porter_session', JSON.stringify(this.currentUser));
+                this.registrarPresenca('login');
+                this.showApp();
+                this.loadPrivateChatUsers();
+                this.showToast(`Bem-vindo, ${tecnico.nome}!`, 'success');
             } else {
-                statusTexto = 'Online há +5 min';
+                this.showToast('Credenciais inválidas!', 'error');
             }
-            
-            userItem.innerHTML = `
-                <div class="online-user-avatar" style="background: ${this.getCorPorMood(user.mood)}">
-                    <i class="fas fa-user"></i>
-                </div>
-                <div class="online-user-info">
-                    <div class="online-user-name">
-                        ${user.nome.split(' ')[0]} ${user.isCurrentUser ? '(Você)' : ''}
-                        ${user.role === 'ADMIN' ? ' 👑' : ''}
-                        ${user.role === 'TÉCNICO' ? ' 🔧' : ''}
-                    </div>
-                    <div class="online-user-role">
-                        ${user.turno || 'Diurno'} | ${statusTexto}
-                    </div>
-                </div>
-                <div class="online-status" style="background: ${user.isCurrentUser || diferencaMinutos < 5 ? '#2ecc71' : '#f39c12'}"></div>
-            `;
-            onlineList.appendChild(userItem);
+        }
+    },
+
+    registrarPresenca(tipo) {
+        let presencas = JSON.parse(localStorage.getItem('porter_presencas') || '[]');
+        presencas.unshift({
+            nome: this.currentUser.nome,
+            turno: this.currentUser.turno,
+            data: new Date().toLocaleDateString('pt-BR'),
+            hora: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
+            timestamp: new Date().toISOString(),
+            dataISO: new Date().toISOString().split('T')[0],
+            tipo: tipo
         });
-    },
-
-    formatarTempoAtivo(dataAtividade) {
-        const agora = new Date();
-        const diferenca = agora - new Date(dataAtividade);
-        const minutos = Math.floor(diferenca / (1000 * 60));
         
-        if (minutos < 1) return 'Agora mesmo';
-        if (minutos === 1) return 'Há 1 minuto';
-        if (minutos < 60) return `Há ${minutos} minutos`;
+        if (presencas.length > 100) presencas = presencas.slice(0, 100);
+        localStorage.setItem('porter_presencas', JSON.stringify(presencas));
+    },
+
+    showApp() {
+        document.getElementById('login-screen').classList.add('hidden');
+        document.getElementById('main-content').classList.remove('hidden');
         
-        const horas = Math.floor(minutos / 60);
-        if (horas === 1) return 'Há 1 hora';
-        return `Há ${horas} horas`;
+        if (window.innerWidth > 1200) {
+            document.getElementById('sidebar').style.display = 'block';
+        }
+        
+        this.updateUserInfo();
+        this.carregarMoodOptions();
+        
+        const jaAvaliou = this.jaAvaliouHoje();
+        if (!jaAvaliou) {
+            document.getElementById('mood-check-container').classList.remove('hidden');
+        }
+        
+        this.renderAll();
+        this.updateNotificationBadges();
+        this.salvarSessao();
+        this.updateOnlineUsers();
+        
+        if (this.currentUser.role === 'ADMIN' || this.currentUser.role === 'TÉCNICO') {
+            document.getElementById('admin-controls').style.display = 'flex';
+        }
+        
+        this.loadChat();
+        this.chatInterval = setInterval(() => this.loadChat(), 5000);
+        
+        this.loadPrivateChatUsers();
+        this.privateChatInterval = setInterval(() => {
+            if (this.currentPrivateChatTarget) {
+                this.loadPrivateChat();
+            }
+        }, 5000);
+        
+        this.setupOnlineTracking();
+        this.registrarVisualizacaoChat();
+        
+        document.getElementById('os-funcionario').value = this.currentUser.nome;
+        document.getElementById('os-email').value = `${this.currentUser.user}@porter.com.br`;
     },
 
-    getCorPorMood(mood) {
-        const cores = {
-            '😠': '#ffeaa7',
-            '😔': '#fd79a8',
-            '😐': '#dfe6e9',
-            '🙂': '#a29bfe',
-            '😄': '#55efc4'
-        };
-        return cores[mood] || '#e8f4fc';
+    updateUserInfo() {
+        const userInfo = document.getElementById('user-info');
+        if (this.currentUser) {
+            const moodAtual = this.getMoodAtual();
+            const moodDisplay = this.currentUser.role === 'ADMIN' ? 
+                `<span style="font-size: 1.2rem; margin-right: 5px;">${moodAtual}</span>` : '';
+            
+            userInfo.innerHTML = `
+                <div class="user-info-name">
+                    ${moodDisplay}
+                    <strong>${this.currentUser.nome.split(' ')[0]}</strong>
+                    ${this.currentUser.role === 'TÉCNICO' ? '<span style="background: #f39c12; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; margin-left: 5px;">TÉCNICO</span>' : ''}
+                </div>
+                <div class="user-info-time">
+                    <i class="far fa-calendar"></i> ${this.currentUser.loginDate}
+                    <i class="far fa-clock"></i> ${this.currentUser.loginHour}
+                </div>
+                <div class="user-info-role">
+                    ${this.currentUser.turno} | ${this.currentUser.role}
+                </div>
+            `;
+        }
     },
 
-    toggleSidebar() {
-        const sidebar = document.getElementById('sidebar');
-        sidebar.classList.toggle('show');
+    logout() {
+        if (confirm('Deseja realmente sair do sistema?')) {
+            this.registrarLogoff();
+            
+            clearInterval(this.chatInterval);
+            clearInterval(this.privateChatInterval);
+            clearInterval(this.moodInterval);
+            clearInterval(this.onlineInterval);
+            
+            localStorage.removeItem('porter_session');
+            
+            this.currentUser = null;
+            
+            document.getElementById('main-content').classList.add('hidden');
+            document.getElementById('login-screen').classList.remove('hidden');
+            document.getElementById('login-user').value = '';
+            document.getElementById('login-pass').value = '';
+            
+            this.showToast('Logoff realizado com sucesso!', 'success');
+        }
     },
 
     registrarLogoff() {
@@ -430,45 +433,15 @@ const app = {
         this.lastLogoffTime = new Date().toISOString();
         localStorage.setItem('porter_last_logoff', this.lastLogoffTime);
         
-        // Limpar intervalos
-        if (this.chatInterval) {
-            clearInterval(this.chatInterval);
-            this.chatInterval = null;
-        }
-        
-        if (this.privateChatInterval) {
-            clearInterval(this.privateChatInterval);
-            this.privateChatInterval = null;
-        }
-        
-        if (this.moodInterval) {
-            clearInterval(this.moodInterval);
-            this.moodInterval = null;
-        }
-        
-        if (this.onlineInterval) {
-            clearInterval(this.onlineInterval);
-            this.onlineInterval = null;
-        }
-        
-        // 🔧 FIX 2: Remover sessão específica do usuário
-        localStorage.removeItem('porter_session');
-        localStorage.removeItem(`porter_session_${this.currentUser.user}`);
-        
-        // 🔧 FIX 3: Remover do registro de online no Firebase
         this.removeFromOnlineUsers();
     },
 
-    // 🔧 FIX 3: Nova função para remover usuário da lista de online
     removeFromOnlineUsers() {
         try {
-            // Marcar como offline no Firebase
             if (window.db && this.currentUser) {
                 window.db.collection('online_users').doc(this.currentUser.user).update({
                     online: false,
                     lastActivity: new Date().toISOString()
-                }).then(() => {
-                    console.log('✅ Usuário marcado como offline no Firebase');
                 }).catch(() => {});
             }
         } catch (e) {
@@ -476,25 +449,9 @@ const app = {
         }
     },
 
-    // 🔧 FIX 2: Função de salvar sessão melhorada
-    salvarSessao() {
-        if (!this.currentUser) return;
-        
-        const sessionData = {
-            ...this.currentUser,
-            lastActivity: new Date().toISOString(),
-            mood: this.getMoodAtual()
-        };
-        
-        // Salvar sessão principal
-        localStorage.setItem('porter_session', JSON.stringify(sessionData));
-        
-        // 🔧 FIX 3: Sincronizar status online com Firebase
-        if (typeof firebaseHelper !== 'undefined' && firebaseHelper.sincronizarStatusOnlineComFirebase) {
-            firebaseHelper.sincronizarStatusOnlineComFirebase();
-        }
-        
-        console.log('✅ Sessão salva para:', this.currentUser.nome);
+    toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        sidebar.classList.toggle('show');
     },
 
     loadCondos() {
@@ -625,7 +582,8 @@ const app = {
             dataISO: dataISO,
             hora: hoje.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
             turno: this.currentUser.turno,
-            timestamp: hoje.toISOString()
+            timestamp: hoje.toISOString(),
+            role: this.currentUser.role
         };
         
         if (indexExistente !== -1) {
@@ -647,11 +605,10 @@ const app = {
         
         document.getElementById('mood-submit-btn').disabled = true;
         
-        // Atualizar lista de online
         this.updateOnlineUsers();
-        
-        // Atualizar a área do usuário
         this.updateUserInfo();
+        
+        this.showToast('Humor registrado com sucesso!', 'success');
         
         setTimeout(() => {
             resultDiv.classList.add('hidden');
@@ -668,8 +625,7 @@ const app = {
         
         if (jaAvaliouHoje) {
             setTimeout(() => {
-                const moodContainer = document.getElementById('mood-check-container');
-                moodContainer.classList.add('hidden');
+                document.getElementById('mood-check-container').classList.add('hidden');
             }, 2000);
         }
     },
@@ -684,6 +640,14 @@ const app = {
         return moodHoje ? moodHoje.moodStatus.split(' ')[0] : '😐';
     },
 
+    jaAvaliouHoje() {
+        if (!this.currentUser) return true;
+        
+        const hojeISO = new Date().toISOString().split('T')[0];
+        const moods = JSON.parse(localStorage.getItem('porter_moods') || '[]');
+        return moods.some(m => m.user === this.currentUser.user && m.dataISO === hojeISO);
+    },
+
     updateCity() {
         const condoName = document.getElementById('ata-condo').value;
         const condo = DATA.condominios.find(c => c.n === condoName);
@@ -696,218 +660,166 @@ const app = {
         document.getElementById('os-cidade').value = condo ? condo.c : "";
     },
 
-    login() {
-        const u = document.getElementById('login-user').value.trim();
-        const p = document.getElementById('login-pass').value;
-        const t = document.getElementById('login-turno').value;
+    updateOnlineUsers() {
+        if (!this.currentUser) return;
         
-        const user = DATA.funcionarios.find(f => f.user === u && f.pass === p);
+        const agora = new Date();
         
-        if (user) {
-            this.currentUser = {
-                ...user,
-                turno: t,
-                loginTime: new Date().toLocaleString('pt-BR'),
-                loginTimestamp: new Date().toISOString(),
-                loginDate: new Date().toLocaleDateString('pt-BR'),
-                loginHour: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})
-            };
-            
-            localStorage.setItem('porter_session', JSON.stringify(this.currentUser));
-            
-            // Registrar login
-            let presencas = JSON.parse(localStorage.getItem('porter_presencas') || '[]');
-            presencas.unshift({
-                nome: user.nome,
-                turno: t,
-                data: new Date().toLocaleDateString('pt-BR'),
-                hora: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
-                timestamp: new Date().toISOString(),
-                dataISO: new Date().toISOString().split('T')[0],
-                tipo: 'login'
-            });
-            
-            if (presencas.length > 100) presencas = presencas.slice(0, 100);
-            localStorage.setItem('porter_presencas', JSON.stringify(presencas));
-            
-            this.showApp();
-            
-            // 🔧 FIX 1: Carregar usuários do chat privado
-            this.loadPrivateChatUsers();
-        } else {
-            // 🆕 VERIFICAR SE É TÉCNICO
-            const tecnico = DATA.tecnicos.find(t => {
-                const nomeTecnico = t.nome.split(' - ')[0].toLowerCase().replace(/\s+/g, '.');
-                return u === nomeTecnico && p === "Tecnico@2026";
-            });
-            
-            if (tecnico) {
-                this.currentUser = {
-                    nome: tecnico.nome,
-                    user: tecnico.nome.split(' - ')[0].toLowerCase().replace(/\s+/g, '.'),
-                    role: "TÉCNICO",
-                    turno: t,
-                    loginTime: new Date().toLocaleString('pt-BR'),
-                    loginTimestamp: new Date().toISOString(),
-                    loginDate: new Date().toLocaleDateString('pt-BR'),
-                    loginHour: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})
-                };
-                
-                localStorage.setItem('porter_session', JSON.stringify(this.currentUser));
-                
-                let presencas = JSON.parse(localStorage.getItem('porter_presencas') || '[]');
-                presencas.unshift({
-                    nome: tecnico.nome,
-                    turno: t,
-                    data: new Date().toLocaleDateString('pt-BR'),
-                    hora: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
-                    timestamp: new Date().toISOString(),
-                    dataISO: new Date().toISOString().split('T')[0],
-                    tipo: 'login'
-                });
-                
-                if (presencas.length > 100) presencas = presencas.slice(0, 100);
-                localStorage.setItem('porter_presencas', JSON.stringify(presencas));
-                
-                this.showApp();
-                
-                // 🔧 FIX 1: Carregar usuários do chat privado
-                this.loadPrivateChatUsers();
-            } else {
-                alert('Credenciais inválidas! Verifique usuário e senha.');
-            }
-        }
-    },
-
-    showApp() {
-        // Transição suave
-        document.getElementById('login-screen').classList.add('hidden');
-        document.getElementById('main-content').classList.remove('hidden');
-        
-        // MOSTRAR SIDEBAR APÓS LOGIN
-        if (window.innerWidth > 1200) {
-            document.getElementById('sidebar').style.display = 'block';
-        }
-        
-        this.updateUserInfo();
-        this.carregarMoodOptions();
-        
-        const jaAvaliou = this.jaAvaliouHoje();
-        if (!jaAvaliou) {
-            document.getElementById('mood-check-container').classList.remove('hidden');
-        }
-        
-        this.renderAll();
-        this.updateNotificationBadges();
         this.salvarSessao();
         
-        // 🔧 FIX 3: ATUALIZAR OPERADORES ONLINE IMEDIATAMENTE
-        this.updateOnlineUsers();
+        let usuariosOnline = [];
         
-        // Se for admin, mostrar controles
-        if (this.currentUser.role === 'ADMIN' || this.currentUser.role === 'TÉCNICO') {
-            document.getElementById('admin-controls').style.display = 'flex';
+        const moodAtual = this.getMoodAtual();
+        const statusMood = this.getMoodStatusTexto(moodAtual);
+        
+        usuariosOnline.push({
+            ...this.currentUser,
+            lastActivity: agora.toISOString(),
+            mood: moodAtual,
+            moodStatus: statusMood,
+            isCurrentUser: true,
+            online: true
+        });
+        
+        try {
+            const onlineData = localStorage.getItem('porter_online_firebase');
+            if (onlineData) {
+                const data = JSON.parse(onlineData);
+                const dataTime = new Date(data.timestamp);
+                const diferencaSegundos = (agora - dataTime) / 1000;
+                
+                if (diferencaSegundos < 10) {
+                    data.users.forEach(usuario => {
+                        if (usuario.user === this.currentUser.user) return;
+                        
+                        usuariosOnline.push({
+                            nome: usuario.nome,
+                            user: usuario.user,
+                            role: usuario.role,
+                            lastActivity: usuario.lastActivity,
+                            mood: usuario.mood || '😐',
+                            moodStatus: this.getMoodStatusTexto(usuario.mood || '😐'),
+                            isCurrentUser: false,
+                            online: true,
+                            turno: usuario.turno || 'Diurno'
+                        });
+                    });
+                }
+            }
+        } catch (e) {
+            console.log('Erro ao buscar usuários online:', e);
         }
         
-        // Iniciar chat
-        this.loadChat();
-        this.chatInterval = setInterval(() => this.loadChat(), 5000);
+        this.onlineUsers = usuariosOnline;
         
-        // 🔧 FIX 1: Iniciar chat privado com usuários carregados
-        this.loadPrivateChatUsers();
-        this.privateChatInterval = setInterval(() => {
-            if (this.currentPrivateChatTarget) {
-                this.loadPrivateChat();
+        const onlineCount = document.getElementById('online-count');
+        if (onlineCount) {
+            if (this.onlineUsers.length === 1) {
+                onlineCount.textContent = '1 (apenas você)';
+                onlineCount.style.color = '#f39c12';
+            } else {
+                onlineCount.textContent = this.onlineUsers.length;
+                onlineCount.style.color = '#2ecc71';
             }
-        }, 5000);
+        }
         
-        // 🔧 FIX 3: Iniciar tracking de online melhorado
-        this.setupOnlineTracking();
-        
-        // 🆕 Inicializar visto por
-        this.registrarVisualizacaoChat();
-        
-        // Auto-preenche campos do funcionário na OS se estiver logado
-        if (this.currentUser) {
-            document.getElementById('os-funcionario').value = this.currentUser.nome;
-            document.getElementById('os-email').value = `${this.currentUser.user}@porter.com.br`;
+        const onlineList = document.getElementById('online-users-list');
+        if (onlineList && onlineList.style.display === 'block') {
+            this.renderOnlineUsersList();
         }
     },
 
-    updateUserInfo() {
-        const userInfo = document.getElementById('user-info');
-        if (this.currentUser) {
-            const moodAtual = this.getMoodAtual();
-            userInfo.innerHTML = `
-                <div class="user-info-name">
-                    <span style="font-size: 1.2rem; margin-right: 5px;">${moodAtual}</span>
-                    <strong>${this.currentUser.nome.split(' ')[0]}</strong>
-                    ${this.currentUser.role === 'TÉCNICO' ? '<span style="background: #f39c12; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; margin-left: 5px;">TÉCNICO</span>' : ''}
-                </div>
-                <div class="user-info-time">
-                    <i class="far fa-calendar"></i> ${this.currentUser.loginDate}
-                    <i class="far fa-clock"></i> ${this.currentUser.loginHour}
-                </div>
-                <div class="user-info-role">
-                    ${this.currentUser.turno} | ${this.currentUser.role}
+    getMoodStatusTexto(mood) {
+        const statusMap = {
+            '😠': 'Zangado hoje',
+            '😔': 'Triste hoje',
+            '😐': 'Neutro hoje',
+            '🙂': 'Feliz hoje',
+            '😄': 'Radiante hoje'
+        };
+        return statusMap[mood] || 'Não avaliado';
+    },
+
+    toggleOnlineUsers() {
+        const onlineList = document.getElementById('online-users-list');
+        if (onlineList.style.display === 'block') {
+            onlineList.style.display = 'none';
+        } else {
+            this.renderOnlineUsersList();
+            onlineList.style.display = 'block';
+        }
+    },
+
+    renderOnlineUsersList() {
+        const onlineList = document.getElementById('online-users-list');
+        onlineList.innerHTML = '';
+        
+        if (this.onlineUsers.length === 0) {
+            onlineList.innerHTML = `
+                <div class="online-user-item">
+                    <div class="online-user-avatar"><i class="fas fa-user"></i></div>
+                    <div class="online-user-info">
+                        <div class="online-user-name">Nenhum operador online</div>
+                        <div class="online-user-role">Apenas você está conectado</div>
+                    </div>
                 </div>
             `;
+            return;
         }
-    },
-
-    jaAvaliouHoje() {
-        if (!this.currentUser) return true;
         
-        const hojeISO = new Date().toISOString().split('T')[0];
-        const moods = JSON.parse(localStorage.getItem('porter_moods') || '[]');
-        return moods.some(m => m.user === this.currentUser.user && m.dataISO === hojeISO);
+        this.onlineUsers.forEach(user => {
+            const userItem = document.createElement('div');
+            userItem.className = 'online-user-item';
+            
+            const ultimaAtividade = new Date(user.lastActivity);
+            const agora = new Date();
+            const diferencaMinutos = Math.floor((agora - ultimaAtividade) / (1000 * 60));
+            
+            let statusTexto = user.isCurrentUser ? 'Online agora' :
+                diferencaMinutos < 1 ? 'Online agora' :
+                diferencaMinutos < 5 ? `Online há ${diferencaMinutos} min` : 'Online há +5 min';
+            
+            const moodIcon = (user.isCurrentUser || this.currentUser.role === 'ADMIN') ? 
+                user.mood || '😐' : '';
+            
+            userItem.innerHTML = `
+                <div class="online-user-avatar" style="background: ${this.getCorPorMood(user.mood)}">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="online-user-info">
+                    <div class="online-user-name">
+                        ${moodIcon} ${user.nome.split(' ')[0]} ${user.isCurrentUser ? '(Você)' : ''}
+                        ${user.role === 'ADMIN' ? ' 👑' : ''}
+                        ${user.role === 'TÉCNICO' ? ' 🔧' : ''}
+                    </div>
+                    <div class="online-user-role">
+                        ${user.turno || 'Diurno'} | ${statusTexto}
+                    </div>
+                </div>
+                <div class="online-status" style="background: ${user.isCurrentUser || diferencaMinutos < 5 ? '#2ecc71' : '#f39c12'}"></div>
+            `;
+            onlineList.appendChild(userItem);
+        });
     },
 
-    logout() {
-        if (confirm('Deseja realmente sair do sistema?')) {
-            this.registrarLogoff();
-            
-            // Limpar intervalos primeiro
-            if (this.chatInterval) {
-                clearInterval(this.chatInterval);
-                this.chatInterval = null;
-            }
-            
-            if (this.privateChatInterval) {
-                clearInterval(this.privateChatInterval);
-                this.privateChatInterval = null;
-            }
-            
-            if (this.moodInterval) {
-                clearInterval(this.moodInterval);
-                this.moodInterval = null;
-            }
-            
-            if (this.onlineInterval) {
-                clearInterval(this.onlineInterval);
-                this.onlineInterval = null;
-            }
-            
-            // 🔧 FIX 2: Limpar todas as sessões relacionadas
-            localStorage.removeItem('porter_session');
+    getCorPorMood(mood) {
+        const cores = {
+            '😠': '#ffeaa7',
+            '😔': '#fd79a8',
+            '😐': '#dfe6e9',
+            '🙂': '#a29bfe',
+            '😄': '#55efc4'
+        };
+        return cores[mood] || '#e8f4fc';
+    },
+
+    setupOnlineTracking() {
+        this.onlineInterval = setInterval(() => {
             if (this.currentUser) {
-                localStorage.removeItem(`porter_session_${this.currentUser.user}`);
+                this.updateOnlineUsers();
             }
-            
-            this.currentUser = null;
-            
-            // Esconder aplicação
-            document.getElementById('main-content').classList.add('hidden');
-            
-            // Mostrar login com transição suave
-            document.getElementById('login-screen').classList.remove('hidden');
-            
-            // Resetar formulário de login
-            document.getElementById('login-user').value = '';
-            document.getElementById('login-pass').value = '';
-            
-            this.showMessage('Logoff realizado com sucesso!', 'success');
-        }
+        }, 10000);
+        this.updateOnlineUsers();
     },
 
     switchTab(tabId, btn) {
@@ -917,13 +829,11 @@ const app = {
         document.getElementById(tabId).classList.remove('hidden');
         btn.classList.add('active');
         
-        // Se for a aba de chat, carregar mensagens e marcar como visualizado
         if (tabId === 'tab-chat') {
             this.loadChat();
             this.marcarChatComoVisualizado();
         }
         
-        // 🔧 FIX 1: Se for a aba de chat privado, carregar usuários
         if (tabId === 'tab-chat-privado') {
             this.loadPrivateChatUsers();
         }
@@ -938,10 +848,7 @@ const app = {
         document.getElementById('tab-count-fixas').textContent = fixas.length;
         document.getElementById('tab-count-os').textContent = os.length;
         
-        // 🆕 Usar função atualizarBadgeChat
         this.atualizarBadgeChat();
-        
-        // 🔧 FIX 1: Atualizar badge do chat privado
         this.atualizarBadgeChatPrivado();
     },
 
@@ -984,7 +891,6 @@ const app = {
         const privateChats = JSON.parse(localStorage.getItem('porter_chat_privado') || '{}');
         let totalNaoVisualizadas = 0;
         
-        // Verificar todas as conversas privadas do usuário atual
         Object.keys(privateChats).forEach(chatId => {
             const [user1, user2] = chatId.split('_');
             if (user1 === this.currentUser.user || user2 === this.currentUser.user) {
@@ -1035,7 +941,6 @@ const app = {
             mood: this.getMoodAtual()
         };
         
-        // Limpar visualizações antigas (mais de 1 hora)
         Object.keys(visualizacoes).forEach(user => {
             if (agora - visualizacoes[user].timestamp > 60 * 60 * 1000) {
                 delete visualizacoes[user];
@@ -1043,21 +948,6 @@ const app = {
         });
         
         localStorage.setItem('porter_chat_views', JSON.stringify(visualizacoes));
-    },
-
-    obterVisualizacoesRecentes() {
-        const visualizacoes = JSON.parse(localStorage.getItem('porter_chat_views') || '{}');
-        const agora = Date.now();
-        const cincoMinutos = 5 * 60 * 1000;
-        
-        const visualizacoesRecentes = Object.entries(visualizacoes)
-            .filter(([user, data]) => agora - data.timestamp <= cincoMinutos)
-            .map(([user, data]) => ({
-                user,
-                ...data
-            }));
-        
-        return visualizacoesRecentes;
     },
 
     aplicarFiltrosAtas() {
@@ -1090,7 +980,7 @@ const app = {
         
         this.mostrarFiltrosAtivosAtas();
         this.renderAta();
-        this.showMessage('Filtros limpos!', 'success');
+        this.showToast('Filtros limpos!', 'success');
     },
 
     filtrarPorCondominio(condoName) {
@@ -1098,7 +988,6 @@ const app = {
         this.currentCondoFilter = condoName;
         this.aplicarFiltrosAtas();
         
-        // Destacar item na sidebar
         document.querySelectorAll('.condo-item').forEach(item => {
             item.classList.remove('active');
         });
@@ -1108,7 +997,6 @@ const app = {
             condoItem.classList.add('active');
         }
         
-        // Fechar sidebar em mobile
         if (window.innerWidth <= 1200) {
             this.toggleSidebar();
         }
@@ -1140,7 +1028,7 @@ const app = {
         localStorage.removeItem('porter_filtros_presenca');
         
         this.renderPresenca();
-        this.showMessage('Filtros limpos!', 'success');
+        this.showToast('Filtros limpos!', 'success');
     },
 
     carregarFiltrosSalvos() {
@@ -1174,11 +1062,9 @@ const app = {
         if (this.filtrosAtas.tipo) filtros.push(`Tipo: ${this.filtrosAtas.tipo}`);
         if (this.filtrosAtas.status) filtros.push(`Status: ${this.filtrosAtas.status}`);
         
-        if (filtros.length > 0) {
-            container.innerHTML = `<strong>Filtros ativos:</strong> ${filtros.join(' | ')}`;
-        } else {
-            container.innerHTML = 'Nenhum filtro ativo';
-        }
+        container.innerHTML = filtros.length > 0 ? 
+            `<strong>Filtros ativos:</strong> ${filtros.join(' | ')}` : 
+            'Nenhum filtro ativo';
     },
 
     formatarDataBR(dataISO) {
@@ -1193,7 +1079,7 @@ const app = {
         const tipo = document.getElementById('ata-tipo').value;
         
         if (!condo || !desc) {
-            alert('Preencha todos os campos obrigatórios! (Condomínio e Descrição)');
+            this.showToast('Preencha todos os campos obrigatórios!', 'error');
             return;
         }
         
@@ -1223,12 +1109,11 @@ const app = {
         
         this.criarNotificacao(condo, tipo, desc);
         
-        // Limpar formulário
         document.getElementById('ata-desc').value = "";
         document.getElementById('ata-condo').value = "";
         document.getElementById('ata-cidade').value = "";
         
-        this.showMessage('Registro salvo com sucesso!', 'success');
+        this.showToast('Registro salvo com sucesso!', 'success');
         this.renderAll();
         this.updateNotificationBadges();
     },
@@ -1250,6 +1135,8 @@ const app = {
         
         if (notificacoes.length > 50) notificacoes.pop();
         localStorage.setItem('porter_notificacoes', JSON.stringify(notificacoes));
+        
+        this.showCondoNotification(condo, desc, 'info');
         
         if (tipo === 'Ordem de Serviço') {
             this.criarNotificacaoChat(`Nova OS criada em ${condo}: ${desc.substring(0, 80)}...`);
@@ -1343,17 +1230,10 @@ const app = {
             if (notif.tipo === 'chat') icon = '💬';
             if (notif.tipo === 'Ordem de Serviço') icon = '🔧';
             
-            const acaoRapida = notif.tipo === 'chat_mensagem' ?
-                `<button class="btn btn-sm btn-success" style="margin-top: 8px; padding: 4px 10px; font-size: 0.8rem;"
-                 onclick="app.irParaChatAgora(event, ${notif.acao?.mensagemId})">
-                    <i class="fas fa-comment"></i> Ver no Chat
-                </button>` : '';
-            
             item.innerHTML = `
                 <div class="notification-condo">${icon} ${notif.condo}</div>
                 <div style="margin: 5px 0;">${notif.desc}</div>
                 <div class="notification-time">${notif.data} ${notif.hora}</div>
-                ${acaoRapida}
             `;
             
             list.appendChild(item);
@@ -1365,12 +1245,8 @@ const app = {
     processarNotificacao(notificacao) {
         this.marcarNotificacaoComoLida(notificacao.id);
         
-        if (notificacao.acao) {
-            switch(notificacao.acao.tipo) {
-                case 'ir_para_chat':
-                    this.irParaChat(notificacao.acao.mensagemId);
-                    break;
-            }
+        if (notificacao.acao && notificacao.acao.tipo === 'ir_para_chat') {
+            this.irParaChat(notificacao.acao.mensagemId);
         }
         
         document.getElementById('notifications-panel').classList.remove('show');
@@ -1380,11 +1256,6 @@ const app = {
         const chatTabBtn = document.querySelector('.chat-tab');
         if (chatTabBtn) {
             this.switchTab('tab-chat', chatTabBtn);
-        } else {
-            const chatTab = document.querySelector('.tab-btn.chat-tab');
-            if (chatTab) {
-                this.switchTab('tab-chat', chatTab);
-            }
         }
         
         this.loadChat();
@@ -1392,22 +1263,9 @@ const app = {
         
         if (mensagemId) {
             setTimeout(() => {
-                this.destacarMensagemChat(mensagemId);
+                utils.destacarMensagemChat(mensagemId);
             }, 500);
         }
-        
-        setTimeout(() => {
-            const chatInput = document.getElementById('chat-input');
-            if (chatInput) {
-                chatInput.focus();
-            }
-        }, 300);
-    },
-
-    irParaChatAgora(event, mensagemId) {
-        event.stopPropagation();
-        event.preventDefault();
-        this.irParaChat(mensagemId);
     },
 
     updateNotificationBadges() {
@@ -1473,6 +1331,7 @@ const app = {
     clearNotifications() {
         localStorage.removeItem('porter_notificacoes');
         this.loadNotifications();
+        this.showToast('Notificações limpas!', 'success');
     },
 
     adicionarComentario(ataId, texto) {
@@ -1496,11 +1355,10 @@ const app = {
             localStorage.setItem('porter_atas', JSON.stringify(atas));
             this.renderAta();
             this.renderFixas();
-            this.showMessage('Comentário adicionado!', 'success');
+            this.showToast('Comentário adicionado!', 'success');
         }
     },
 
-    // FIX: BOTÃO COMENTAR - FUNCIONANDO CORRETAMENTE
     abrirComentarios(ataId) {
         let atas = JSON.parse(localStorage.getItem('porter_atas') || '[]');
         const ata = atas.find(a => a.id === ataId);
@@ -1510,9 +1368,9 @@ const app = {
         const modalContent = document.getElementById('comments-modal-content');
         modalContent.innerHTML = `
             <h4><i class="fas fa-building"></i> ${ata.condo} - ${ata.data} ${ata.hora}</h4>
-            <div style="margin: 1rem 0; padding: 1rem; background: #f8f9fa; border-radius: 8px; border-left: 4px solid var(--accent);">
+            <div style="margin: 1rem 0; padding: 1rem; background: var(--hover-bg); border-radius: 8px; border-left: 4px solid var(--accent);">
                 <strong><i class="fas fa-align-left"></i> Descrição:</strong>
-                <p style="white-space: pre-wrap; margin-top: 8px; padding: 10px; background: white; border-radius: 6px;">${ata.desc}</p>
+                <p style="white-space: pre-wrap; margin-top: 8px; padding: 10px; background: var(--white); border-radius: 6px;">${ata.desc}</p>
             </div>
             <div class="comment-form">
                 <h5><i class="fas fa-edit"></i> Adicionar Comentário</h5>
@@ -1534,28 +1392,20 @@ const app = {
                     ata.comentarios.map(c => `
                         <div class="comment-item">
                             <div class="comment-header">
-                                <span class="comment-author">
-                                    <i class="fas fa-user"></i> ${c.autor}
-                                </span>
+                                <span class="comment-author"><i class="fas fa-user"></i> ${c.autor}</span>
                                 <span class="comment-time">${c.data} ${c.hora}</span>
                             </div>
                             <div class="comment-text">${c.texto}</div>
                         </div>
                     `).join('') :
-                    '<p style="text-align: center; color: var(--gray); padding: 2rem; background: #f8f9fa; border-radius: 8px;">Nenhum comentário ainda. Seja o primeiro a comentar!</p>'
+                    '<p style="text-align: center; color: var(--gray); padding: 2rem; background: var(--hover-bg); border-radius: 8px;">Nenhum comentário ainda.</p>'
                 }
             </div>
         `;
         
         document.getElementById('comments-modal').classList.add('show');
-        
-        setTimeout(() => {
-            const campoTexto = document.getElementById('novo-comentario-texto');
-            if (campoTexto) campoTexto.focus();
-        }, 300);
     },
 
-    // FIX: BOTÃO COMENTAR - ENVIO DIRETO SEM FECHAR MODAL
     adicionarComentarioModal(ataId) {
         const textoInput = document.getElementById('novo-comentario-texto');
         if (!textoInput) return;
@@ -1570,7 +1420,6 @@ const app = {
         this.adicionarComentario(ataId, texto);
         textoInput.value = '';
         
-        // Recarregar os comentários no modal sem fechar
         setTimeout(() => {
             this.abrirComentarios(ataId);
         }, 100);
@@ -1606,19 +1455,15 @@ const app = {
             card.innerHTML = `
                 <div class="ata-header">
                     <span><i class="far fa-calendar"></i> ${a.data} | <i class="far fa-clock"></i> ${a.hora} | <i class="fas fa-user-clock"></i> Turno: ${a.turno}</span>
-                    <span class="status-badge status-fixo">
-                        <i class="fas fa-thumbtack"></i> FIXA
-                    </span>
+                    <span class="status-badge status-fixo"><i class="fas fa-thumbtack"></i> FIXA</span>
                 </div>
                 <div class="ata-condo"><i class="fas fa-building"></i> ${a.condo} (${a.cidade})</div>
                 <div class="ata-type fixed"><i class="fas fa-tag"></i> ${a.tipo}</div>
                 <div style="white-space: pre-wrap; margin: 15px 0; padding: 15px; background: #fff3cd30; border-radius: 6px; line-height: 1.5;">
                     ${a.desc}
                 </div>
-                <div style="font-size: 0.85rem; color: #666; border-top: 1px solid #eee; padding-top: 10px; display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <i class="fas fa-user-edit"></i> Operador: ${a.operador}
-                    </div>
+                <div style="font-size: 0.85rem; color: var(--text-secondary); border-top: 1px solid var(--border-color); padding-top: 10px; display: flex; justify-content: space-between; align-items: center;">
+                    <div><i class="fas fa-user-edit"></i> Operador: ${a.operador}</div>
                     <div style="display: flex; gap: 10px;">
                         <button class="btn btn-info" onclick="app.abrirComentarios(${a.id})">
                             <i class="fas fa-comments"></i> Comentários (${a.comentarios ? a.comentarios.length : 0})
@@ -1626,8 +1471,7 @@ const app = {
                         ${podeExcluir ?
                             `<button class="btn btn-danger" onclick="app.deleteAta(${a.id})">
                                 <i class="fas fa-trash"></i> Excluir
-                            </button>` :
-                            '<span style="font-size: 0.8rem; color: var(--gray);"><i class="fas fa-lock"></i> Apenas autor/Admin</span>'
+                            </button>` : ''
                         }
                     </div>
                 </div>
@@ -1637,36 +1481,24 @@ const app = {
         });
     },
 
-    // 🔧 FIX 1: Função para salvar OS com Firebase
     saveOSComFirebase(osData) {
-        // 1. Salvar no localStorage (para backup e uso offline)
         let osList = JSON.parse(localStorage.getItem('porter_os') || '[]');
         osList.unshift(osData);
         
         if (osList.length > 100) osList = osList.slice(0, 100);
         localStorage.setItem('porter_os', JSON.stringify(osList));
         
-        // 2. Salvar no Firebase (para compartilhamento entre máquinas)
         if (typeof firebaseHelper !== 'undefined' && firebaseHelper.salvarOSNoFirebase) {
-            firebaseHelper.salvarOSNoFirebase(osData)
-                .then(sucesso => {
-                    if (sucesso) {
-                        console.log('✅ OS salva no Firebase com sucesso');
-                    } else {
-                        console.log('⚠️ OS salva apenas localmente (Firebase indisponível)');
-                    }
-                });
+            firebaseHelper.salvarOSNoFirebase(osData);
         }
         
+        this.showToast('OS salva com sucesso!', 'success');
         return osData;
     },
 
-    // 🆕 FUNÇÃO PRINCIPAL DE ENVIO DE OS COM E-MAIL (ATUALIZADA)
     abrirOSComEmail(event) {
-        // Prevenir envio padrão do formulário
         if (event) event.preventDefault();
         
-        // Validar campos obrigatórios
         const condo = document.getElementById('os-condo').value;
         const funcionario = document.getElementById('os-funcionario').value.trim();
         const email = document.getElementById('os-email').value.trim();
@@ -1675,29 +1507,24 @@ const app = {
         const desc = document.getElementById('os-desc').value.trim();
         
         if (!condo || !funcionario || !email || !setor || !gravidade || !desc) {
-            alert('Por favor, preencha todos os campos obrigatórios marcados com *');
+            this.showToast('Preencha todos os campos obrigatórios!', 'error');
             return;
         }
         
-        // Validar e-mail
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
-            alert('Por favor, insira um e-mail válido');
+            this.showToast('E-mail inválido!', 'error');
             document.getElementById('os-email').focus();
             return;
         }
         
-        // Gerar ID da OS
         const osId = 'OS-' + Date.now().toString().slice(-6);
         this.lastOSId = osId;
         
-        // Obter data e hora atual
         const agora = new Date();
-        const dataHora = agora.toLocaleString('pt-BR');
         const dataISO = agora.toISOString().split('T')[0];
         const hora = agora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'});
         
-        // Criar objeto da OS para salvar no sistema
         const novaOS = {
             id: Date.now(),
             osId: osId,
@@ -1715,59 +1542,46 @@ const app = {
             operador: this.currentUser ? this.currentUser.nome : funcionario,
             user: this.currentUser ? this.currentUser.user : 'anonimo',
             turno: this.currentUser ? this.currentUser.turno : 'Não informado',
-            status: 'Em branco', // 🆕 STATUS PADRÃO
-            statusOS: 'Em branco', // 🆕 STATUS ESPECÍFICO DA OS
+            status: 'Em branco',
+            statusOS: 'Em branco',
             timestamp: agora.toISOString(),
             prazoResposta: appEmail ? appEmail.calcularPrazoPorGravidade(gravidade) : '3 dias úteis',
             corGravidade: appEmail ? appEmail.getCorGravidade(gravidade) : '#666',
             enviadoPorEmail: true,
             dataEnvioEmail: agora.toISOString(),
-            tecnicoResponsavel: document.getElementById('os-tecnico').value || '' // 🆕 TÉCNICO RESPONSÁVEL
+            tecnicoResponsavel: document.getElementById('os-tecnico').value || ''
         };
         
-        // 🔧 FIX 1: Usar nova função para salvar com Firebase
         this.saveOSComFirebase(novaOS);
-        
-        // Atualizar contagem de OS
         this.updateTabCounts();
         
-        // Adicionar campos ocultos com informações adicionais
         if (typeof appEmail !== 'undefined' && appEmail.adicionarCamposOcultosForm) {
-            appEmail.adicionarCamposOcultosForm(osId, dataHora, novaOS.prazoResposta);
+            appEmail.adicionarCamposOcultosForm(osId, agora.toLocaleString('pt-BR'), novaOS.prazoResposta);
         }
         
-        // Mostrar mensagem de processamento
-        this.showMessage('Enviando Ordem de Serviço...', 'info');
+        this.showToast('Processando OS...', 'info');
         
-        // Submeter o formulário para o FormSubmit
         setTimeout(() => {
-            // Submeter formulário
             const form = document.getElementById('os-form-email');
             form.submit();
             
-            // Mostrar tela de confirmação
             if (typeof appEmail !== 'undefined' && appEmail.mostrarConfirmacaoOS) {
                 appEmail.mostrarConfirmacaoOS(novaOS);
             } else {
                 this.mostrarConfirmacaoOSFallback(novaOS);
             }
             
-            // Criar notificação
             this.criarNotificacao(condo, 'Ordem de Serviço', `Nova OS ${osId}: ${gravidade} - ${desc.substring(0, 50)}...`);
-            
-            this.showMessage('Ordem de Serviço aberta com sucesso!', 'success');
+            this.showToast('Ordem de Serviço aberta com sucesso!', 'success');
         }, 100);
     },
 
     mostrarConfirmacaoOSFallback(osData) {
-        // Ocultar formulário
         document.getElementById('os-form-container').classList.add('hidden');
         
-        // Mostrar tela de confirmação
         const confirmationScreen = document.getElementById('os-confirmation-screen');
         confirmationScreen.classList.remove('hidden');
         
-        // Preencher dados na tela de confirmação
         document.getElementById('os-confirmation-id').textContent = osData.osId;
         document.getElementById('os-confirmation-condo').textContent = osData.condo;
         document.getElementById('os-confirmation-gravidade').textContent = osData.gravidade;
@@ -1786,33 +1600,30 @@ const app = {
         this.renderOSList(filtradas, `Filtradas por gravidade: ${gravidade}`);
     },
 
-    // 🆕 FUNÇÃO PARA ATUALIZAR STATUS DA OS
     atualizarStatusOS(osId, novoStatus) {
         let osList = JSON.parse(localStorage.getItem('porter_os') || '[]');
         const index = osList.findIndex(os => os.id === osId);
         
         if (index !== -1) {
             osList[index].statusOS = novoStatus;
-            osList[index].status = novoStatus; // Mantém compatibilidade
+            osList[index].status = novoStatus;
             osList[index].dataAtualizacao = new Date().toISOString();
             osList[index].atualizadoPor = this.currentUser.nome;
             
             localStorage.setItem('porter_os', JSON.stringify(osList));
             
-            // 🔧 FIX 1: Atualizar também no Firebase
             if (typeof firebaseHelper !== 'undefined' && firebaseHelper.salvarOSNoFirebase) {
                 firebaseHelper.salvarOSNoFirebase(osList[index]);
             }
             
             this.renderOS();
-            this.showMessage('Status atualizado com sucesso!', 'success');
+            this.showToast('Status atualizado com sucesso!', 'success');
         }
     },
 
-    // 🆕 FUNÇÃO PARA EXCLUIR OS (APENAS TÉCNICO)
     excluirOS(osId) {
         if (this.currentUser.role !== 'TÉCNICO') {
-            alert('Apenas técnicos podem excluir Ordens de Serviço.');
+            this.showToast('Apenas técnicos podem excluir OS', 'error');
             return;
         }
         
@@ -1824,7 +1635,6 @@ const app = {
         const osIndex = osList.findIndex(os => os.id === osId);
         
         if (osIndex !== -1) {
-            // Registrar exclusão
             let exclusoes = JSON.parse(localStorage.getItem('porter_exclusoes_os') || '[]');
             exclusoes.unshift({
                 osId: osList[osIndex].osId,
@@ -1837,23 +1647,15 @@ const app = {
             
             localStorage.setItem('porter_exclusoes_os', JSON.stringify(exclusoes));
             
-            // Remover OS do localStorage
             osList.splice(osIndex, 1);
             localStorage.setItem('porter_os', JSON.stringify(osList));
             
-            // 🔧 FIX 1: Remover também do Firebase se possível
             if (window.db) {
-                window.db.collection('ordens_servico').doc(osId.toString()).delete()
-                    .then(() => {
-                        console.log('✅ OS removida do Firebase');
-                    })
-                    .catch(error => {
-                        console.error('❌ Erro ao remover OS do Firebase:', error);
-                    });
+                window.db.collection('ordens_servico').doc(osId.toString()).delete().catch(() => {});
             }
             
             this.renderOS();
-            this.showMessage('Ordem de Serviço excluída com sucesso!', 'success');
+            this.showToast('Ordem de Serviço excluída com sucesso!', 'success');
         }
     },
 
@@ -1864,8 +1666,7 @@ const app = {
             list.innerHTML = `
                 <div class="empty-state">
                     <i class="fas fa-tools"></i>
-                    <h3>${titulo ? titulo : 'Nenhuma Ordem de Serviço'}</h3>
-                    <p>${titulo ? 'Nenhuma OS encontrada com este filtro.' : 'Use o formulário acima para criar uma nova OS.'}</p>
+                    <h3>Nenhuma Ordem de Serviço</h3>
                 </div>
             `;
             return;
@@ -1880,7 +1681,6 @@ const app = {
                 (this.currentUser.role === 'OPERADOR' && os.statusOS === 'Técnico compareceu ao local')
             );
             
-            // 🆕 BOTÕES DE STATUS BASEADOS NO PERFIL
             const botoesStatus = this.gerarBotoesStatusOS(os, podeMudarStatus);
             
             const card = document.createElement('div');
@@ -1897,39 +1697,17 @@ const app = {
                     <i class="fas fa-business-time"></i> Prazo: ${os.prazoResposta || '3 dias úteis'}
                 </div>
                 ${os.tecnicoResponsavel ? `
-                    <div style="margin: 10px 0; padding: 10px; background: #fff3cd; border-radius: 6px;
-                        border-left: 4px solid #f39c12;">
-                        <i class="fas fa-user-cog"></i> <strong>Técnico responsável:</strong>
-                        ${os.tecnicoResponsavel}
+                    <div style="margin: 10px 0; padding: 10px; background: var(--warning)20; border-radius: 6px; border-left: 4px solid var(--warning);">
+                        <i class="fas fa-user-cog"></i> <strong>Técnico responsável:</strong> ${os.tecnicoResponsavel}
                     </div>
                 ` : ''}
-                <div style="margin: 10px 0; padding: 8px 15px; background: ${os.corGravidade}20;
-                    border-left: 4px solid ${os.corGravidade}; border-radius: 6px;">
-                    <strong><i class="fas fa-${appEmail ? appEmail.getIconeGravidade(os.gravidade) : 'circle'}"></i>
-                    GRAVIDADE: ${os.gravidade.toUpperCase()}</strong>
-                    <div style="font-size: 0.85rem; margin-top: 5px;">
-                        <i class="far fa-clock"></i> Prazo máximo: ${os.prazoResposta}
-                    </div>
-                </div>
                 ${os.funcionario ? `
-                    <div style="margin: 10px 0; padding: 10px; background: #e8f4fc; border-radius: 6px;
-                        border-left: 4px solid #3498db;">
-                        <i class="fas fa-user"></i> <strong>Solicitante:</strong>
-                        ${os.funcionario} (${os.setor || 'Não informado'})<br>
+                    <div style="margin: 10px 0; padding: 10px; background: var(--info)20; border-radius: 6px; border-left: 4px solid var(--info);">
+                        <i class="fas fa-user"></i> <strong>Solicitante:</strong> ${os.funcionario} (${os.setor || 'Não informado'})<br>
                         <i class="fas fa-envelope"></i> <strong>E-mail:</strong> ${os.email || 'Não informado'}
                     </div>
                 ` : ''}
-                ${os.enviadoPorEmail ? `
-                    <div style="margin: 10px 0; padding: 8px 15px; background: #d4edda; border-radius: 6px;
-                        border-left: 4px solid #27ae60;">
-                        <i class="fas fa-paper-plane"></i> <strong>Enviado por e-mail</strong>
-                        <div style="font-size: 0.85rem; margin-top: 5px;">
-                            <i class="far fa-clock"></i> ${new Date(os.dataEnvioEmail).toLocaleString('pt-BR')}
-                        </div>
-                    </div>
-                ` : ''}
-                <!-- 🆕 STATUS DA OS -->
-                <div style="margin: 15px 0; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                <div style="margin: 15px 0; padding: 15px; background: var(--hover-bg); border-radius: 8px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                         <strong><i class="fas fa-flag"></i> Status da OS:</strong>
                         <span class="os-status-badge ${this.getClasseStatusOS(os.statusOS)}">
@@ -1937,29 +1715,27 @@ const app = {
                         </span>
                     </div>
                     ${os.atualizadoPor ? `
-                        <div style="font-size: 0.85rem; color: #666;">
+                        <div style="font-size: 0.85rem; color: var(--text-secondary);">
                             <i class="fas fa-user-edit"></i> Atualizado por: ${os.atualizadoPor}
                             ${os.dataAtualizacao ? ` em ${new Date(os.dataAtualizacao).toLocaleString('pt-BR')}` : ''}
                         </div>
                     ` : ''}
-                    <!-- 🆕 BOTÕES DE AÇÃO -->
                     <div style="margin-top: 10px; display: flex; flex-wrap: wrap; gap: 5px;">
                         ${botoesStatus}
                     </div>
                 </div>
-                <div style="white-space: pre-wrap; margin: 15px 0; padding: 15px; background: #d6eaf820; border-radius: 6px; line-height: 1.5;">
+                <div style="white-space: pre-wrap; margin: 15px 0; padding: 15px; background: var(--hover-bg); border-radius: 6px;">
                     ${os.desc}
                 </div>
-                <div style="font-size: 0.85rem; color: #666; border-top: 1px solid #eee; padding-top: 10px; display: flex; justify-content: space-between; align-items: center;">
+                <div style="font-size: 0.85rem; color: var(--text-secondary); border-top: 1px solid var(--border-color); padding-top: 10px; display: flex; justify-content: space-between;">
                     <div>
                         <i class="fas fa-user-edit"></i> Operador: ${os.operador}
                         ${os.osId ? `<br><i class="fas fa-hashtag"></i> OS: ${os.osId}` : ''}
                     </div>
                     ${podeExcluir ?
-                        `<button class="btn btn-danger" onclick="app.excluirOS(${os.id})" title="Apenas técnicos podem excluir">
+                        `<button class="btn btn-danger" onclick="app.excluirOS(${os.id})">
                             <i class="fas fa-trash"></i> Excluir
-                        </button>` :
-                        ''
+                        </button>` : ''
                     }
                 </div>
             `;
@@ -1968,7 +1744,6 @@ const app = {
         });
     },
 
-    // 🆕 FUNÇÃO PARA GERAR BOTÕES DE STATUS
     gerarBotoesStatusOS(os, podeMudarStatus) {
         if (!podeMudarStatus) return '';
         
@@ -1977,23 +1752,21 @@ const app = {
             { value: 'Técnico resolveu remotamente', label: '🖥️ Remotamente', class: 'tec-only', icon: 'fa-desktop' },
             { value: 'Em espera', label: '⏳ Em espera', class: 'tec-only', icon: 'fa-clock' },
             { value: 'Técnico compareceu ao local', label: '📍 Compareceu', class: 'all', icon: 'fa-map-marker-alt' },
-            { value: 'Manutenção por conta do condomínio - em espera', label: '🏢 Condomínio', class: 'tec-only', icon: 'fa-building' },
+            { value: 'Manutenção por conta do condomínio', label: '🏢 Condomínio', class: 'tec-only', icon: 'fa-building' },
             { value: 'Em branco', label: '📄 Em branco', class: 'tec-only', icon: 'fa-file' }
         ];
         
         let botoes = '';
         
         statusOptions.forEach(status => {
-            // Verificar se o usuário tem permissão
             const podeUsar = status.class === 'all' || 
                            (status.class === 'tec-only' && this.currentUser.role === 'TÉCNICO');
             
             if (podeUsar) {
-                const ativo = os.statusOS === status.value ? 'active' : '';
                 botoes += `
-                    <button class="status-action-btn ${status.class} ${ativo}" 
+                    <button class="status-action-btn" 
                             onclick="app.atualizarStatusOS(${os.id}, '${status.value}')"
-                            title="${status.value}">
+                            style="background: ${os.statusOS === status.value ? 'var(--accent)' : 'var(--info)'}; color: white;">
                         <i class="fas ${status.icon}"></i> ${status.label}
                     </button>
                 `;
@@ -2003,14 +1776,13 @@ const app = {
         return botoes;
     },
 
-    // 🆕 FUNÇÕES AUXILIARES PARA STATUS
     getClasseStatusOS(status) {
         const classes = {
             'Resolvida': 'os-status-resolvida',
             'Técnico resolveu remotamente': 'os-status-remotamente',
             'Em espera': 'os-status-espera',
             'Técnico compareceu ao local': 'os-status-compareceu',
-            'Manutenção por conta do condomínio - em espera': 'os-status-condominio',
+            'Manutenção por conta do condomínio': 'os-status-condominio',
             'Em branco': 'os-status-branco'
         };
         return classes[status] || 'os-status-branco';
@@ -2022,15 +1794,13 @@ const app = {
             'Técnico resolveu remotamente': '🖥️',
             'Em espera': '⏳',
             'Técnico compareceu ao local': '📍',
-            'Manutenção por conta do condomínio - em espera': '🏢',
+            'Manutenção por conta do condomínio': '🏢',
             'Em branco': '📄'
         };
         return icones[status] || '📄';
     },
 
-    // 🔧 FIX 1: Função para renderizar OS buscando do Firebase
     renderOS() {
-        // Primeiro tentar carregar do Firebase, depois do localStorage como fallback
         const osList = JSON.parse(localStorage.getItem('porter_os') || '[]');
         this.renderOSList(osList);
     },
@@ -2040,7 +1810,7 @@ const app = {
         const os = osList.find(o => o.id === id);
         
         if (!os) {
-            alert('Ordem de Serviço não encontrada.');
+            this.showToast('Ordem de Serviço não encontrada.', 'error');
             return;
         }
         
@@ -2049,7 +1819,7 @@ const app = {
         const ehTecnico = this.currentUser.role === 'TÉCNICO';
         
         if (!ehAdmin && !ehAutor && !ehTecnico) {
-            alert('Apenas o autor, técnicos ou administradores podem excluir esta Ordem de Serviço.');
+            this.showToast('Sem permissão para excluir.', 'error');
             return;
         }
         
@@ -2057,7 +1827,7 @@ const app = {
             osList = osList.filter(os => os.id !== id);
             localStorage.setItem('porter_os', JSON.stringify(osList));
             this.renderOS();
-            this.showMessage('Ordem de Serviço excluída!', 'success');
+            this.showToast('Ordem de Serviço excluída!', 'success');
         }
     },
 
@@ -2066,15 +1836,16 @@ const app = {
         const ata = atas.find(a => a.id === id);
         
         if (!ata) {
-            alert('Registro não encontrado.');
+            this.showToast('Registro não encontrado.', 'error');
             return;
         }
         
         const ehAutor = ata.user === this.currentUser.user;
         const ehAdmin = this.currentUser.role === 'ADMIN';
-    const ehTecnico = this.currentUser.role === 'TÉCNICO';
+        const ehTecnico = this.currentUser.role === 'TÉCNICO';
+        
         if (!ehAdmin && !ehAutor && !ehTecnico) {
-            alert('Apenas o autor, técnicos ou administradores podem excluir este registro.');
+            this.showToast('Sem permissão para excluir.', 'error');
             return;
         }
         
@@ -2096,7 +1867,7 @@ const app = {
             localStorage.setItem('porter_atas', JSON.stringify(atas));
             
             this.renderAll();
-            this.showMessage('Registro excluído com sucesso!', 'success');
+            this.showToast('Registro excluído com sucesso!', 'success');
         }
     },
 
@@ -2117,7 +1888,6 @@ const app = {
             sessions.some(s => s.user === f.user &&
                 (new Date() - new Date(s.lastActivity)) < 300000));
         
-        // 🆕 ADICIONAR TÉCNICOS LOGADOS
         const tecnicosLogados = DATA.tecnicos.filter(t => {
             const tecUser = t.nome.split(' - ')[0].toLowerCase().replace(/\s+/g, '.');
             return sessions.some(s => s.user === tecUser &&
@@ -2135,10 +1905,10 @@ const app = {
             <div style="margin: 1rem 0; max-height: 200px; overflow-y: auto;">
                 ${todosLogados.length > 0 ?
                     todosLogados.map(op => `
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid var(--border-color);">
                             <div>
                                 <strong>${op.nome}</strong>
-                                <div style="font-size: 0.8rem; color: #666;">${op.role} ${op.role === 'TÉCNICO' ? '🔧' : ''}</div>
+                                <div style="font-size: 0.8rem; color: var(--text-secondary);">${op.role}</div>
                             </div>
                             <button class="btn btn-danger btn-sm" onclick="app.forceLogoff('${op.user}')">
                                 <i class="fas fa-sign-out-alt"></i> Deslogar
@@ -2152,16 +1922,11 @@ const app = {
             <div style="margin: 1rem 0; max-height: 200px; overflow-y: auto;">
                 ${this.renderHistoricoRemocoes()}
             </div>
-            <!-- 🆕 HISTÓRICO DE EXCLUSÕES DE OS -->
             <h4 style="margin-top: 2rem;"><i class="fas fa-trash"></i> Histórico de Exclusões de OS</h4>
             <div style="margin: 1rem 0; max-height: 200px; overflow-y: auto;">
                 ${this.renderHistoricoExclusoesOS()}
             </div>
-            <h4 style="margin-top: 2rem;"><i class="fas fa-envelope"></i> Histórico de Envios de E-mail</h4>
-            <div style="margin: 1rem 0; max-height: 200px; overflow-y: auto;">
-                ${this.renderHistoricoEmails()}
-            </div>
-            <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #eee;">
+            <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
                 <button class="btn btn-warning" onclick="app.exportBackup()">
                     <i class="fas fa-download"></i> Exportar Backup
                 </button>
@@ -2174,7 +1939,6 @@ const app = {
         document.getElementById('admin-modal').classList.add('show');
     },
 
-    // 🆕 FUNÇÃO PARA RENDERIZAR HISTÓRICO DE EXCLUSÕES DE OS
     renderHistoricoExclusoesOS() {
         const exclusoes = JSON.parse(localStorage.getItem('porter_exclusoes_os') || '[]');
         
@@ -2183,9 +1947,9 @@ const app = {
         }
         
         return exclusoes.slice(0, 10).map(e => `
-            <div style="padding: 8px; border-bottom: 1px solid #f0f0f0; font-size: 0.85rem; background: #f8d7da;">
+            <div style="padding: 8px; border-bottom: 1px solid var(--border-color); font-size: 0.85rem;">
                 <div><strong>OS ${e.osId}</strong> - ${e.condo || 'N/A'}</div>
-                <div style="color: #666;">Excluído por: ${e.excluidoPor} | ${e.data} ${e.hora}</div>
+                <div style="color: var(--text-secondary);">Excluído por: ${e.excluidoPor} | ${e.data} ${e.hora}</div>
             </div>
         `).join('');
     },
@@ -2202,33 +1966,9 @@ const app = {
         }
         
         return remocoes.slice(0, 10).map(r => `
-            <div style="padding: 8px; border-bottom: 1px solid #f0f0f0; font-size: 0.85rem;">
+            <div style="padding: 8px; border-bottom: 1px solid var(--border-color); font-size: 0.85rem;">
                 <div><strong>${r.tipo}</strong> - ${r.dados.condo || 'N/A'}</div>
-                <div style="color: #666;">Removido por: ${r.removidoPor} | ${r.data} ${r.hora}</div>
-            </div>
-        `).join('');
-    },
-
-    renderHistoricoEmails() {
-        const historico = JSON.parse(localStorage.getItem('porter_os_emails') || '[]');
-        
-        if (historico.length === 0) {
-            return '<p style="text-align: center; color: #888; padding: 1rem;">Nenhum envio de e-mail registrado</p>';
-        }
-        
-        return historico.slice(0, 10).map(r => `
-            <div style="padding: 8px; border-bottom: 1px solid #f0f0f0; font-size: 0.85rem;
-                background: ${r.sucesso ? '#d4edda' : '#f8d7da'}">
-                <div>
-                    <strong>${r.condo}</strong> - ${r.gravidade}
-                    <span style="float: right; color: ${r.sucesso ? '#155724' : '#721c24'}">
-                        <i class="fas fa-${r.sucesso ? 'check-circle' : 'times-circle'}"></i>
-                    </span>
-                </div>
-                <div style="color: #666;">
-                    ${r.destinatarios.length} destinatário(s) | ${r.data}
-                </div>
-                ${r.erro ? `<div style="color: #dc3545; font-size: 0.8em;">Erro: ${r.erro}</div>` : ''}
+                <div style="color: var(--text-secondary);">Removido por: ${r.removidoPor} | ${r.data} ${r.hora}</div>
             </div>
         `).join('');
     },
@@ -2237,7 +1977,6 @@ const app = {
         if (confirm(`Tem certeza que deseja deslogar este usuário?`)) {
             let usuario = DATA.funcionarios.find(f => f.user === user);
             if (!usuario) {
-                // Verificar se é um técnico
                 usuario = DATA.tecnicos.find(t => 
                     t.nome.split(' - ')[0].toLowerCase().replace(/\s+/g, '.') === user
                 );
@@ -2266,7 +2005,7 @@ const app = {
             }
             
             localStorage.removeItem('porter_last_session');
-            this.showMessage('Usuário deslogado com sucesso!', 'success');
+            this.showToast('Usuário deslogado com sucesso!', 'success');
             this.openAdminPanel();
         }
     },
@@ -2282,15 +2021,12 @@ const app = {
             chat: JSON.parse(localStorage.getItem('porter_chat') || '[]'),
             chat_privado: JSON.parse(localStorage.getItem('porter_chat_privado') || '{}'),
             remocoes: JSON.parse(localStorage.getItem('porter_remocoes') || '[]'),
-            os_emails: JSON.parse(localStorage.getItem('porter_os_emails') || '[]'),
-            exclusoes_os: JSON.parse(localStorage.getItem('porter_exclusoes_os') || '[]'),
             exportDate: new Date().toISOString(),
             exportBy: this.currentUser.nome
         };
         
         const dataStr = JSON.stringify(backup, null, 2);
         const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-        
         const exportFileDefaultName = `backup-porter-${new Date().toISOString().slice(0, 10)}.json`;
         
         const linkElement = document.createElement('a');
@@ -2298,47 +2034,19 @@ const app = {
         linkElement.setAttribute('download', exportFileDefaultName);
         linkElement.click();
         
-        this.showMessage('Backup exportado com sucesso!', 'success');
+        this.showToast('Backup exportado com sucesso!', 'success');
     },
 
     clearAllData() {
         if (confirm('ATENÇÃO: Esta ação irá APAGAR TODOS os dados do sistema. Tem certeza?')) {
-            const dadosParaManter = {
-                condominios: DATA.condominios,
-                funcionarios: DATA.funcionarios,
-                tecnicos: DATA.tecnicos
-            };
-            
             localStorage.clear();
             
-            localStorage.setItem('porter_condominios', JSON.stringify(dadosParaManter.condominios));
-            localStorage.setItem('porter_funcionarios', JSON.stringify(dadosParaManter.funcionarios));
-            localStorage.setItem('porter_tecnicos', JSON.stringify(dadosParaManter.tecnicos));
+            localStorage.setItem('porter_condominios', JSON.stringify(DATA.condominios));
+            localStorage.setItem('porter_funcionarios', JSON.stringify(DATA.funcionarios));
+            localStorage.setItem('porter_tecnicos', JSON.stringify(DATA.tecnicos));
             
             location.reload();
         }
-    },
-
-    showMessage(text, type) {
-        const message = document.createElement('div');
-        message.innerHTML = `
-            <div style="
-                position: fixed; top: 20px; right: 20px;
-                padding: 1rem 1.5rem; border-radius: 8px;
-                background: ${type === 'success' ? '#27ae60' : '#e74c3c'};
-                color: white; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-                display: flex; align-items: center; gap: 10px; animation: fadeIn 0.3s;
-            ">
-                <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
-                ${text}
-            </div>
-        `;
-        
-        document.body.appendChild(message);
-        
-        setTimeout(() => {
-            message.remove();
-        }, 3000);
     },
 
     renderAll() {
@@ -2393,7 +2101,6 @@ const app = {
                 <div class="no-results">
                     <i class="fas fa-search"></i>
                     <h3>Nenhum registro encontrado</h3>
-                    <p>${totalAtas === 0 ? 'Comece criando seu primeiro registro.' : 'Nenhum registro corresponde aos filtros aplicados.'}</p>
                 </div>
             `;
             return;
@@ -2415,22 +2122,19 @@ const app = {
                 </div>
                 <div class="ata-condo"><i class="fas fa-building"></i> ${a.condo} (${a.cidade})</div>
                 <div class="ata-type"><i class="fas fa-tag"></i> ${a.tipo}</div>
-                <div style="white-space: pre-wrap; margin: 15px 0; padding: 15px; background: #f8f9fa; border-radius: 6px; line-height: 1.5;">
+                <div style="white-space: pre-wrap; margin: 15px 0; padding: 15px; background: var(--hover-bg); border-radius: 6px;">
                     ${a.desc}
                 </div>
-                <div style="font-size: 0.85rem; color: #666; border-top: 1px solid #eee; padding-top: 10px; display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <i class="fas fa-user-edit"></i> Operador: ${a.operador}
-                    </div>
+                <div style="font-size: 0.85rem; color: var(--text-secondary); border-top: 1px solid var(--border-color); padding-top: 10px; display: flex; justify-content: space-between;">
+                    <div><i class="fas fa-user-edit"></i> Operador: ${a.operador}</div>
                     <div style="display: flex; gap: 10px;">
                         <button class="btn btn-info" onclick="app.abrirComentarios(${a.id})">
                             <i class="fas fa-comments"></i> Comentários (${a.comentarios ? a.comentarios.length : 0})
                         </button>
                         ${podeExcluir ?
-                            `<button class="btn btn-danger" onclick="app.deleteAta(${a.id})" title="Apenas autor, técnico ou admin pode excluir">
+                            `<button class="btn btn-danger" onclick="app.deleteAta(${a.id})">
                                 <i class="fas fa-trash"></i> Excluir
-                            </button>` :
-                            ''
+                            </button>` : ''
                         }
                     </div>
                 </div>
@@ -2442,7 +2146,6 @@ const app = {
         this.mostrarFiltrosAtivosAtas();
     },
 
-    // 🔧 FIX 1: Função para carregar usuários do chat privado (melhorada)
     loadPrivateChatUsers() {
         if (!this.currentUser) return;
         
@@ -2451,7 +2154,6 @@ const app = {
         
         select.innerHTML = '<option value="">Selecione um operador...</option>';
         
-        // 🔧 FIX 2: Buscar usuários online do Firebase
         const onlineData = localStorage.getItem('porter_online_firebase');
         let usuariosDisponiveis = [];
         
@@ -2462,11 +2164,9 @@ const app = {
                 const agora = new Date();
                 const diferencaSegundos = (agora - dataTime) / 1000;
                 
-                if (diferencaSegundos < 10) { // Dados recentes do Firebase
+                if (diferencaSegundos < 10) {
                     data.users.forEach(usuario => {
-                        // Pular usuário atual
                         if (usuario.user === app.currentUser.user) return;
-                        
                         usuariosDisponiveis.push({
                             nome: usuario.nome,
                             user: usuario.user,
@@ -2480,9 +2180,7 @@ const app = {
             }
         }
         
-        // 🔧 FIX 1: Se não tiver dados do Firebase, usar dados locais como fallback
         if (usuariosDisponiveis.length === 0) {
-            // Adicionar funcionários (exceto o usuário atual)
             DATA.funcionarios.forEach(f => {
                 if (f.user !== app.currentUser.user) {
                     usuariosDisponiveis.push({
@@ -2494,7 +2192,6 @@ const app = {
                 }
             });
             
-            // Adicionar técnicos (exceto o usuário atual)
             DATA.tecnicos.forEach(t => {
                 const tecUser = t.nome.split(' - ')[0].toLowerCase().replace(/\s+/g, '.');
                 if (tecUser !== app.currentUser.user) {
@@ -2508,40 +2205,26 @@ const app = {
             });
         }
         
-        // Ordenar por nome
         usuariosDisponiveis.sort((a, b) => a.nome.localeCompare(b.nome));
         
-        // Adicionar opções ao select
         usuariosDisponiveis.forEach(usuario => {
             const option = document.createElement('option');
             option.value = usuario.user;
             
-            // Formatar texto da opção
             let texto = usuario.nome;
-            if (usuario.role === 'ADMIN') {
-                texto += ' 👑';
-            } else if (usuario.role === 'TÉCNICO') {
-                texto += ' 🔧';
-            }
-            
-            // 🔧 FIX 1: Indicar status online
-            if (usuario.online) {
-                texto += ' 🟢';
-            } else {
-                texto += ' ⚫';
-            }
+            if (usuario.role === 'ADMIN') texto += ' 👑';
+            if (usuario.role === 'TÉCNICO') texto += ' 🔧';
+            if (usuario.online) texto += ' 🟢';
+            else texto += ' ⚫';
             
             option.textContent = texto;
             select.appendChild(option);
         });
-        
-        console.log('✅ Chat privado: ' + usuariosDisponiveis.length + ' usuários carregados');
     },
 
     loadPrivateChat() {
         if (!app.currentUser || !app.currentPrivateChatTarget) return;
         
-        // Chama a função do sistema de chat
         if (typeof chatSystem !== 'undefined' && chatSystem.loadPrivateChat) {
             chatSystem.loadPrivateChat();
         }
@@ -2549,27 +2232,24 @@ const app = {
 
     sendPrivateChatMessage() {
         if (!app.currentUser || !app.currentPrivateChatTarget) {
-            alert('Selecione um destinatário primeiro.');
+            this.showToast('Selecione um destinatário primeiro.', 'warning');
             return;
         }
         
-        // Chama a função do sistema de chat
         if (typeof chatSystem !== 'undefined' && chatSystem.sendPrivateChatMessage) {
             chatSystem.sendPrivateChatMessage();
         }
     },
 
-    // 🔧 FIX 1: Função para carregar chat
     loadChat() {
         if (typeof chatSystem !== 'undefined' && chatSystem.loadChat) {
             chatSystem.loadChat();
         }
     },
 
-    // 🔧 FIX 1: Função para enviar mensagem no chat
     sendChatMessage() {
         if (!app.currentUser) {
-            alert('Você precisa estar logado para enviar mensagens.');
+            this.showToast('Você precisa estar logado para enviar mensagens.', 'warning');
             return;
         }
         
@@ -2578,20 +2258,17 @@ const app = {
         }
     },
 
-    // FIX: HISTÓRICO DE LOGIN/LOGOFF - MOSTRAR JUNTOS
     renderPresenca() {
         const list = document.getElementById('presenca-lista');
         let presencas = JSON.parse(localStorage.getItem('porter_presencas') || '[]');
         let logoffs = JSON.parse(localStorage.getItem('porter_logoffs') || '[]');
         
-        // Combinar logins e logoffs
         let historicoCombinado = [];
         
         presencas.forEach(login => {
             const loginDate = login.dataISO || login.data;
             const loginTime = new Date(login.timestamp).getTime();
             
-            // Procurar logoff correspondente
             const logoffCorrespondente = logoffs.find(logoff => 
                 logoff.user === login.user && 
                 (logoff.dataISO || logoff.data) === loginDate &&
@@ -2609,7 +2286,6 @@ const app = {
             });
         });
         
-        // Adicionar logoffs sem login correspondente (se houver)
         logoffs.forEach(logoff => {
             const jaExiste = historicoCombinado.some(item => 
                 item.nome === logoff.nome && 
@@ -2636,7 +2312,6 @@ const app = {
             return new Date(timeB) - new Date(timeA);
         });
         
-        // Aplicar filtros
         if (this.filtrosPresenca.operador) {
             historicoCombinado = historicoCombinado.filter(p => p.nome === this.filtrosPresenca.operador);
         }
@@ -2658,9 +2333,9 @@ const app = {
         if (historicoCombinado.length === 0) {
             list.innerHTML = `
                 <tr>
-                    <td colspan="5" style="text-align: center; padding: 3rem; color: #888;">
-                        <i class="fas fa-history" style="font-size: 2rem; display: block; margin-bottom: 1rem; color: #ddd;"></i>
-                        Nenhum registro de histórico encontrado
+                    <td colspan="5" style="text-align: center; padding: 3rem; color: var(--gray);">
+                        <i class="fas fa-history" style="font-size: 2rem; display: block; margin-bottom: 1rem;"></i>
+                        Nenhum registro encontrado
                     </td>
                 </tr>
             `;
@@ -2670,10 +2345,10 @@ const app = {
         list.innerHTML = historicoCombinado.map(p => `
             <tr>
                 <td><i class="fas fa-user-circle"></i> ${p.nome}</td>
-                <td><span style="padding: 4px 10px; background: ${p.turno === 'Diurno' ? '#fff3cd' : '#e8f4fc'}; border-radius: 4px;">${p.turno}</span></td>
+                <td><span style="padding: 4px 10px; background: ${p.turno === 'Diurno' ? 'var(--warning)20' : 'var(--info)20'}; border-radius: 4px;">${p.turno}</span></td>
                 <td>${p.data}</td>
-                <td><i class="fas fa-sign-in-alt" style="color: #27ae60;"></i> ${p.horaLogin}</td>
-                <td><i class="fas fa-sign-out-alt" style="color: #e74c3c;"></i> ${p.horaLogoff}</td>
+                <td><i class="fas fa-sign-in-alt" style="color: var(--success);"></i> ${p.horaLogin}</td>
+                <td><i class="fas fa-sign-out-alt" style="color: var(--danger);"></i> ${p.horaLogoff}</td>
             </tr>
         `).join('');
     }
