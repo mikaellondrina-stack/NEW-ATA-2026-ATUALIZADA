@@ -40,7 +40,7 @@ const appEmail = {
                 texto: '🚨 EMERGÊNCIA',
                 icone: 'fa-bell',
                 cor: '#8b0000',
-                prazo: 'Prazo: 4 horas'
+                prazo: 'Prazo: 4 horas - ATENÇÃO MÁXIMA'
             }
         };
         
@@ -116,33 +116,42 @@ const appEmail = {
     },
 
     mostrarConfirmacaoOS(osData) {
-        document.getElementById('os-form-container').classList.add('hidden');
-        
+        const formContainer = document.getElementById('os-form-container');
         const confirmationScreen = document.getElementById('os-confirmation-screen');
-        confirmationScreen.classList.remove('hidden');
         
-        document.getElementById('os-confirmation-id').textContent = osData.osId;
-        document.getElementById('os-confirmation-condo').textContent = osData.condo;
-        document.getElementById('os-confirmation-gravidade').textContent = osData.gravidade;
-        document.getElementById('os-confirmation-funcionario').textContent = osData.funcionario;
-        document.getElementById('os-confirmation-email').textContent = osData.email;
-        document.getElementById('os-confirmation-data').textContent = `${osData.data} ${osData.hora}`;
+        if (formContainer) formContainer.classList.add('hidden');
+        if (confirmationScreen) {
+            confirmationScreen.classList.remove('hidden');
+            
+            document.getElementById('os-confirmation-id').textContent = osData.osId;
+            document.getElementById('os-confirmation-condo').textContent = osData.condo;
+            document.getElementById('os-confirmation-gravidade').textContent = osData.gravidade;
+            document.getElementById('os-confirmation-funcionario').textContent = osData.funcionario;
+            document.getElementById('os-confirmation-email').textContent = osData.email;
+            document.getElementById('os-confirmation-data').textContent = `${osData.data} ${osData.hora}`;
+        }
         
         this.registrarEnvioDetalhadoOS(osData);
     },
 
     voltarParaFormOS() {
-        document.getElementById('os-form-container').classList.remove('hidden');
-        document.getElementById('os-confirmation-screen').classList.add('hidden');
-        document.getElementById('os-form-email').reset();
+        const formContainer = document.getElementById('os-form-container');
+        const confirmationScreen = document.getElementById('os-confirmation-screen');
+        const form = document.getElementById('os-form-email');
+        
+        if (formContainer) formContainer.classList.remove('hidden');
+        if (confirmationScreen) confirmationScreen.classList.add('hidden');
+        if (form) form.reset();
         
         if (typeof app !== 'undefined' && app.updateCityOS) {
             app.updateCityOS();
         }
         
         if (typeof app !== 'undefined' && app.currentUser) {
-            document.getElementById('os-funcionario').value = app.currentUser.nome;
-            document.getElementById('os-email').value = `${app.currentUser.user}@porter.com.br`;
+            const osFuncionario = document.getElementById('os-funcionario');
+            const osEmail = document.getElementById('os-email');
+            if (osFuncionario) osFuncionario.value = app.currentUser.nome;
+            if (osEmail) osEmail.value = `${app.currentUser.user}@porter.com.br`;
         }
     },
 
@@ -226,7 +235,7 @@ E-mail automático - Não responda
                 <div style="padding: 20px; border-bottom: 1px solid var(--border-color);">
                     <h3 style="margin: 0; display: flex; justify-content: space-between; align-items: center; color: var(--text-primary);">
                         ${titulo}
-                        <button onclick="utils.fecharModalEmail()" style="background: none; border: none;
+                        <button onclick="appEmail.fecharModalEmail()" style="background: none; border: none;
                         font-size: 1.5rem; cursor: pointer; color: var(--gray);">&times;</button>
                     </h3>
                 </div>
@@ -244,11 +253,13 @@ E-mail automático - Não responda
 
     copiarConteudoEmail() {
         const modal = document.getElementById('modal-email-detalhes');
-        const conteudo = modal?.querySelector('pre, .conteudo-email')?.innerText || '';
+        const conteudo = modal?.querySelector('pre, .conteudo-email, div[style*="white-space: pre-wrap"]')?.innerText || '';
         
         if (conteudo) {
             navigator.clipboard.writeText(conteudo)
-                .then(() => app.showToast('Conteúdo copiado!', 'success'))
+                .then(() => {
+                    if (typeof app !== 'undefined') app.showToast('Conteúdo copiado!', 'success');
+                })
                 .catch(() => {
                     const textarea = document.createElement('textarea');
                     textarea.value = conteudo;
@@ -256,7 +267,7 @@ E-mail automático - Não responda
                     textarea.select();
                     document.execCommand('copy');
                     document.body.removeChild(textarea);
-                    app.showToast('Conteúdo copiado!', 'success');
+                    if (typeof app !== 'undefined') app.showToast('Conteúdo copiado!', 'success');
                 });
         }
     },
@@ -266,7 +277,7 @@ E-mail automático - Não responda
         const corpo = encodeURIComponent(`Prezado,\n\nSegue Ordem de Serviço do condomínio ${condo}.\n\nAtenciosamente,\nSistema Porter`);
         
         window.open(`mailto:${emails}?subject=${assunto}&body=${corpo}`, '_blank');
-        app.showToast('Cliente de e-mail aberto!', 'info');
+        if (typeof app !== 'undefined') app.showToast('Cliente de e-mail aberto!', 'info');
     },
 
     verDetalhesEmailOS(osId) {
@@ -279,7 +290,7 @@ E-mail automático - Não responda
         if (!os) return;
         
         const corpoEmail = this.gerarCorpoEmailOS(os);
-        const emails = os.emails || ['londrina.tecnica1@porter.com.br', 'londrina.tecnicaplantao@porter.com.br'];
+        const emails = ['londrina.tecnica1@porter.com.br', 'londrina.tecnicaplantao@porter.com.br'];
         
         const modalContent = `
             <div style="padding: 20px;">
@@ -295,7 +306,7 @@ E-mail automático - Não responda
                     <div style="background: var(--info)20; padding: 15px; border-radius: 8px;">
                         <h4><i class="fas fa-users"></i> Destinatários</h4>
                         <div style="max-height: 100px; overflow-y: auto;">
-                            ${emails.map(email => `<div>📧 ${email}</div>`).join('')}
+                            ${emails.map(email => `<div style="padding: 3px 0;">📧 ${email}</div>`).join('')}
                         </div>
                     </div>
                 </div>
@@ -314,7 +325,7 @@ E-mail automático - Não responda
                     <button class="btn btn-success" onclick="appEmail.abrirClienteEmail('${os.condo}', '${emails.join(',')}')">
                         <i class="fas fa-envelope-open"></i> Abrir Cliente
                     </button>
-                    <button class="btn btn-clear" onclick="utils.fecharModalEmail()">
+                    <button class="btn btn-clear" onclick="appEmail.fecharModalEmail()">
                         Fechar
                     </button>
                 </div>
