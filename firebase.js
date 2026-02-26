@@ -1,4 +1,3 @@
-// Configuração do Firebase
 const firebaseConfig = {
     apiKey: "AIzaSyDma392hveHDF6NShluBGbmGc3FYxc7ogA",
     authDomain: "porter-ata-2026-v2.firebaseapp.com",
@@ -8,7 +7,6 @@ const firebaseConfig = {
     appId: "1:474353492973:web:a0409eeabf13cb201ffde4"
 };
 
-// Inicializar Firebase
 if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
@@ -132,7 +130,6 @@ const firebaseHelper = {
     }
 };
 
-// Inicializar Firebase
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
         firebaseHelper.inicializarFirebase();
@@ -140,5 +137,3 @@ if (document.readyState === 'loading') {
 } else {
     firebaseHelper.inicializarFirebase();
 }
-
-window.firebaseHelper = firebaseHelper;
