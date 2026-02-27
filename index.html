@@ -636,27 +636,6 @@
                 themeToggle.addEventListener('click', () => {
                     if (app && typeof app.toggleTheme === 'function') {
                         app.toggleTheme();
-                        // Listener para Informações Fixas
-const saveInfoFixaBtn = document.querySelector('#info-fixa-modal .btn-primary');
-if (saveInfoFixaBtn) {
-    saveInfoFixaBtn.addEventListener('click', () => {
-        setTimeout(() => {
-            const condominio = document.getElementById('info-fixa-condominio')?.value;
-            const descricao = document.getElementById('info-fixa-descricao')?.value;
-            
-            if (condominio && descricao) {
-                this.criarNotificacao(condominio, 'Informação Fixa', descricao);
-                
-                // NOVA LINHA: Enviar para dashboard
-                if (typeof DashboardAPI !== 'undefined') {
-                    DashboardAPI.enviarInfo(condominio, descricao, this.currentUser?.nome || 'Operador', 'info-fixa');
-                }
-                
-                this.moverCondominioParaTopo(condominio);
-            }
-        }, 100);
-    });
-}
                     }
                 });
             }
