@@ -14,30 +14,41 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
     
     <script>
-        // Configuração do Firebase - Inicialização ANTES dos outros scripts
-        const firebaseConfig = {
-            apiKey: "AIzaSyCqYN7aqNo_HXVHRSTY6b9qRDMSlPCrMNg",
-            authDomain: "ataporter-8a06a.firebaseapp.com",
-            projectId: "ataporter-8a06a",
-            storageBucket: "ataporter-8a06a.firebasestorage.app",
-            messagingSenderId: "1046205675591",
-            appId: "1:1046205675591:web:4731578a5d102c563e1962"
-        };
+        // Configuração do Firebase
+        (function() {
+            try {
+                const firebaseConfig = {
+                    apiKey: "AIzaSyCqYN7aqNo_HXVHRSTY6b9qRDMSlPCrMNg",
+                    authDomain: "ataporter-8a06a.firebaseapp.com",
+                    projectId: "ataporter-8a06a",
+                    storageBucket: "ataporter-8a06a.firebasestorage.app",
+                    messagingSenderId: "1046205675591",
+                    appId: "1:1046205675591:web:4731578a5d102c563e1962"
+                };
 
-        // Inicializa o Firebase
-        firebase.initializeApp(firebaseConfig);
-        
-        // Inicializa serviços
-        const db = firebase.firestore();
-        const auth = firebase.auth();
-        const rtdb = firebase.database();
-        
-        // Disponibiliza globalmente
-        window.db = db;
-        window.auth = auth;
-        window.rtdb = rtdb;
-        
-        console.log('Firebase inicializado com sucesso!');
+                // Verifica se já foi inicializado
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(firebaseConfig);
+                    console.log('🔥 Firebase inicializado com sucesso!');
+                } else {
+                    console.log('⚠️ Firebase já estava inicializado');
+                }
+                
+                // Inicializa serviços
+                window.db = firebase.firestore();
+                window.auth = firebase.auth();
+                window.rtdb = firebase.database();
+                
+                // Configura Firestore para não dar erro de persistência
+                window.db.settings({
+                    cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED
+                });
+                
+                console.log('✅ Serviços Firebase disponíveis globalmente');
+            } catch (error) {
+                console.error('❌ Erro ao inicializar Firebase:', error);
+            }
+        })();
     </script>
 </head>
 <body>
@@ -624,7 +635,7 @@
     </div>
 
     <!-- SCRIPTS -->
-    <!-- Firebase já foi carregado no head -->
+    <!-- Firebase já foi carregado e inicializado no head -->
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -639,7 +650,9 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Sistema iniciando...');
             console.log('Firebase disponível:', typeof firebase !== 'undefined');
+            console.log('db disponível:', typeof window.db !== 'undefined');
             
             if (typeof app !== 'undefined' && app.init) {
                 app.init();
