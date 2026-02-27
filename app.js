@@ -129,16 +129,14 @@ const app = {
     },
 
     // ==============================================
-    // FUNÇÕES DE NOTIFICAÇÃO CORRIGIDAS
+    // FUNÇÕES DE NOTIFICAÇÃO (MANTIDAS IGUAIS)
     // ==============================================
 
     criarNotificacao(condo, tipo, desc) {
         console.log('🔔 CRIANDO NOTIFICAÇÃO PARA:', condo, tipo);
         
-        // Buscar notificações existentes
         let notificacoes = JSON.parse(localStorage.getItem('porter_notificacoes') || '[]');
         
-        // Criar nova notificação
         const novaNotificacao = {
             id: Date.now(),
             condo: condo,
@@ -150,32 +148,26 @@ const app = {
             lida: false
         };
         
-        // Adicionar à lista (no INÍCIO para subir para primeira posição)
         notificacoes.unshift(novaNotificacao);
         
-        // Limitar a 50 notificações
         if (notificacoes.length > 50) {
             notificacoes = notificacoes.slice(0, 50);
         }
         
-        // Salvar no localStorage
         localStorage.setItem('porter_notificacoes', JSON.stringify(notificacoes));
         
-        // Atualizar badges
         this.atualizarBadgeSino();
         this.atualizarBadgeCondominio(condo);
         
-        // Mostrar toast com ícone específico para OS
         if (tipo.includes('Ordem de Serviço')) {
             this.showToast(desc, 'info', `🔧 NOVA OS - ${condo}`);
         } else {
             this.showToast(desc, 'info', condo);
         }
         
-        // Recarregar o painel de notificações para mostrar a nova no topo
         this.loadNotifications();
         
-        console.log('✅ NOTIFICAÇÃO CRIADA NA PRIMEIRA POSIÇÃO');
+        console.log('✅ NOTIFICAÇÃO CRIADA COM SUCESSO');
         return novaNotificacao;
     },
 
@@ -194,20 +186,17 @@ const app = {
             let badge = condoItem.querySelector('.condo-badge');
             
             if (countEsteCondo > 0) {
-                // Criar badge se não existir
                 if (!badge) {
                     badge = document.createElement('span');
                     badge.className = 'condo-badge';
                     condoItem.appendChild(badge);
                 }
                 
-                // Atualizar conteúdo
                 badge.textContent = countEsteCondo > 9 ? '9+' : countEsteCondo;
                 badge.classList.add('has-notification');
                 badge.style.display = 'block';
                 badge.style.backgroundColor = '#e74c3c';
                 
-                // Aplicar animação pulse
                 badge.style.animation = 'none';
                 badge.offsetHeight;
                 badge.style.animation = 'pulse 0.5s ease-in-out';
@@ -217,7 +206,6 @@ const app = {
                 
                 console.log(`✅ Badge de ${condoNome} atualizado para ${countEsteCondo}`);
             } else {
-                // Remover badge se existir e não houver notificações
                 if (badge) {
                     badge.remove();
                 }
@@ -238,7 +226,6 @@ const app = {
                 badge.style.display = 'block';
                 badge.style.backgroundColor = '#e74c3c';
                 
-                // Aplicar animação pulse
                 badge.style.animation = 'none';
                 badge.offsetHeight;
                 badge.style.animation = 'pulse 0.5s ease-in-out';
@@ -246,7 +233,6 @@ const app = {
                     badge.style.animation = '';
                 }, 500);
                 
-                // Adicionar classe ao sino
                 const notificationIcon = document.querySelector('.notification-bell');
                 if (notificationIcon) {
                     notificationIcon.classList.add('has-notification');
@@ -267,16 +253,13 @@ const app = {
         const notificacoes = JSON.parse(localStorage.getItem('porter_notificacoes') || '[]');
         const naoLidas = notificacoes.filter(n => !n.lida);
         
-        // Atualizar badge do sino
         this.atualizarBadgeSino();
         
-        // Calcular contagem por condomínio
         const contagem = {};
         naoLidas.forEach(n => {
             contagem[n.condo] = (contagem[n.condo] || 0) + 1;
         });
         
-        // Atualizar badges de todos os condomínios
         document.querySelectorAll('.condo-item').forEach(item => {
             const condoName = item.dataset.condo;
             const count = contagem[condoName] || 0;
@@ -322,12 +305,11 @@ const app = {
             return;
         }
         
-        // Mostrar notificações na ordem (mais recentes primeiro, já que usamos unshift)
         notificacoes.slice(0, 20).forEach(notif => {
             const item = document.createElement('div');
             item.className = `notification-item ${notif.lida ? '' : 'unread'}`;
             if (!notif.lida) {
-                item.classList.add('nova-notificacao'); // Classe para destaque
+                item.classList.add('nova-notificacao');
             }
             item.dataset.id = notif.id;
             item.onclick = (e) => {
@@ -340,7 +322,6 @@ const app = {
             if (notif.tipo.includes('Informação Fixa')) icon = '📌';
             if (notif.tipo.includes('Ordem de Serviço')) icon = '🔧';
             
-            // Adicionar classe de destaque para OS
             const destaqueClass = notif.tipo.includes('Ordem de Serviço') ? 'notificacao-os' : '';
             
             item.innerHTML = `
@@ -368,7 +349,6 @@ const app = {
         
         panel.classList.toggle('show');
         
-        // Se está abrindo, marcar todas como lidas
         if (!estaAberto) {
             this.marcarTodasNotificacoesComoLidas();
         }
@@ -455,8 +435,34 @@ const app = {
     },
 
     // ==============================================
-    // FUNÇÕES EXISTENTES (MANTIDAS IGUAIS)
+    // NOVA FUNÇÃO: Move condomínio para o topo da lista
     // ==============================================
+    moverCondominioParaTopo(nomeCondominio) {
+        if (!nomeCondominio) return;
+        
+        console.log('🔼 Movendo condomínio para o topo:', nomeCondominio);
+        
+        const condoList = document.getElementById('condo-list');
+        if (!condoList) return;
+        
+        const itens = Array.from(condoList.children);
+        
+        const indexAtual = itens.findIndex(item => item.dataset.condo === nomeCondominio);
+        
+        if (indexAtual === -1 || indexAtual === 0) return;
+        
+        const elementoParaMover = itens[indexAtual];
+        
+        elementoParaMover.remove();
+        
+        condoList.insertBefore(elementoParaMover, condoList.firstChild);
+        
+        if (elementoParaMover.classList.contains('active')) {
+            elementoParaMover.classList.add('active');
+        }
+        
+        console.log('✅ Condomínio movido para o topo com sucesso');
+    },
 
     setupClickOutsideHandlers() {
         document.addEventListener('click', (e) => {
@@ -544,7 +550,6 @@ const app = {
             themeToggle.addEventListener('click', () => this.toggleTheme());
         }
 
-        // Listener para Informações Fixas
         const saveInfoFixaBtn = document.querySelector('#info-fixa-modal .btn-primary');
         if (saveInfoFixaBtn) {
             saveInfoFixaBtn.addEventListener('click', () => {
@@ -554,6 +559,8 @@ const app = {
                     
                     if (condominio && descricao) {
                         this.criarNotificacao(condominio, 'Informação Fixa', descricao);
+                        // NOVA CHAMADA: Move condomínio para o topo
+                        this.moverCondominioParaTopo(condominio);
                     }
                 }, 100);
             });
@@ -1473,7 +1480,7 @@ const app = {
     },
 
     // ==============================================
-    // FUNÇÃO SAVEATA CORRIGIDA (já existente)
+    // FUNÇÃO SAVEATA (COM NOVA CHAMADA ADICIONADA)
     // ==============================================
 
     saveAta() {
@@ -1510,8 +1517,10 @@ const app = {
         if (atas.length > 200) atas = atas.slice(0, 200);
         localStorage.setItem('porter_atas', JSON.stringify(atas));
         
-        // CRIAR NOTIFICAÇÃO PARA ATA
         this.criarNotificacao(condo, tipo, desc);
+        
+        // NOVA CHAMADA: Move condomínio para o topo
+        this.moverCondominioParaTopo(condo);
         
         document.getElementById('ata-desc').value = "";
         document.getElementById('ata-condo').value = "";
@@ -1522,7 +1531,7 @@ const app = {
     },
 
     // ==============================================
-    // FUNÇÃO ABRIROSCODEMAIL CORRIGIDA - A MAIS IMPORTANTE!
+    // FUNÇÃO ABRIROSCODEMAIL (COM NOVA CHAMADA ADICIONADA)
     // ==============================================
 
     abrirOSComEmail(event) {
@@ -1600,10 +1609,10 @@ const app = {
                 this.mostrarConfirmacaoOSFallback(novaOS);
             }
             
-            // ============================================
-            // NOTIFICAÇÃO DA OS - LINHA CRÍTICA!
-            // ============================================
             this.criarNotificacao(condo, 'Ordem de Serviço', `Nova OS ${osId}: ${gravidade} - ${desc.substring(0, 50)}...`);
+            
+            // NOVA CHAMADA: Move condomínio para o topo
+            this.moverCondominioParaTopo(condo);
             
             this.showToast('Ordem de Serviço aberta com sucesso!', 'success');
         }, 100);
@@ -2536,7 +2545,6 @@ const app = {
         `).join('');
     },
 
-    // Função auxiliar para comentários (pode não existir no seu código)
     adicionarComentario(ataId, texto) {
         let atas = JSON.parse(localStorage.getItem('porter_atas') || '[]');
         const index = atas.findIndex(a => a.id === ataId);
