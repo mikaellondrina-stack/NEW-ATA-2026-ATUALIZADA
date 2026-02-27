@@ -1,4 +1,3 @@
-// Dados estáticos do sistema
 const DATA = {
     funcionarios: [
         { nome: "LAÍSSA PEREIRA DOS SANTOS XAVIER", user: "laissa.xavier", pass: "Porter@2026", role: "OPERADOR" },
@@ -34,6 +33,7 @@ const DATA = {
         { nome: "LUCAS DANIEL", user: "lucas.daniel", pass: "Porter@2026", role: "OPERADOR" },
         { nome: "ADMINISTRADOR PORTER", user: "admin.porter", pass: "Admin@2026", role: "ADMIN" }
     ],
+    
     condominios: [
         { n: "ALAMEDA PINHEIROS", c: "Londrina" }, { n: "ALGARVE", c: "Londrina" }, { n: "AMADEUS", c: "Londrina" },
         { n: "AMARILIS", c: "Londrina" }, { n: "AMERICA", c: "Londrina" }, { n: "ANITA GARIBALDI", c: "Londrina" },
@@ -71,6 +71,7 @@ const DATA = {
         { n: "VISCONDE DE BARBACENA", c: "Londrina" }, { n: "VITTACE BOULEVARD", c: "Londrina" },
         { n: "VIVALDI BOULEVARD", c: "Londrina" }, { n: "VIVENDA DOS PESCADORES", c: "Maringá" }
     ],
+
     tecnicos: [
         { nome: "EVERTON ALAN - TÉCNICO PORTER", categoria: "TÉCNICOS LONDRINA" },
         { nome: "MARCIO JOSE DE BARROS - TEC PORTER", categoria: "TÉCNICOS LONDRINA" },
@@ -82,6 +83,3 @@ const DATA = {
         { nome: "ITALO - TÉCNICO PORTER", categoria: "TÉCNICOS MARINGÁ" }
     ]
 };
-
-// Tornar DATA global
-window.DATA = DATA;
