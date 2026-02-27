@@ -1,22 +1,15 @@
-// Configuração do Firebase - NOVO PROJETO
-const firebaseConfig = {
-    apiKey: "AIzaSyCqYN7aqNo_HXVHRSTY6b9qRDMSlPCrMNg",
-    authDomain: "ataporter-8a06a.firebaseapp.com",
-    projectId: "ataporter-8a06a",
-    storageBucket: "ataporter-8a06a.firebasestorage.app",
-    messagingSenderId: "1046205675591",
-    appId: "1:1046205675591:web:4731578a5d102c563e1962"
-};
+// NÃO redeclarar firebaseConfig! Usar a que já foi inicializada no HTML
 
-// Inicializa o Firebase apenas se ainda não foi inicializado
+// Verificar se o Firebase já foi inicializado
 if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-    console.log('🔥 Firebase inicializado com novo projeto:', firebaseConfig.projectId);
+    console.error('❌ Firebase não foi inicializado no HTML!');
+} else {
+    console.log('✅ Firebase já inicializado, usando instância existente');
 }
 
-// Disponibiliza globalmente
-window.db = firebase.firestore();
-window.auth = firebase.auth();
+// Disponibiliza globalmente (caso não estejam disponíveis)
+window.db = window.db || firebase.firestore();
+window.auth = window.auth || firebase.auth();
 
 const firebaseHelper = {
     salvarOSNoFirebase(os) {
@@ -118,11 +111,11 @@ const firebaseHelper = {
 
     inicializarFirebase() {
         if (!window.db) {
-            console.log('⚠️ Firebase não inicializado');
+            console.log('⚠️ Firebase não disponível');
             return;
         }
         
-        console.log('✅ Firebase Helper inicializado com projeto:', firebaseConfig.projectId);
+        console.log('✅ Firebase Helper inicializado');
         
         this.configurarOSFirebase();
         this.configurarMonitoramentoOnlineFirebase();
