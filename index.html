@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -11,62 +12,6 @@
     <!-- Toast Container -->
     <div id="toast-container" class="toast-container"></div>
 
-<!-- TELA DE LOGIN -->
-<section id="login-screen">
-    <div class="login-container">
-        <div class="login-logo">
-            <div class="login-logo-img"></div>
-            <h1>Ata Operacional Porter</h1>
-            <p>Sistema de Registro de Ocorrências - 2026</p>
-        </div>
-        <div class="form-group input-icon">
-            <i class="fas fa-user"></i>
-            <input type="text" id="login-user" placeholder="nome.sobrenome" autocomplete="off">
-        </div>
-        <div class="form-group input-icon">
-            <i class="fas fa-lock"></i>
-            <input type="password" id="login-pass" placeholder="********" autocomplete="off">
-        </div>
-        <div class="form-group input-icon">
-            <i class="fas fa-clock"></i>
-            <select id="login-turno">
-                <option value="Diurno">Diurno</option>
-                <option value="Noturno">Noturno</option>
-            </select>
-        </div>
-        <button class="btn btn-primary" id="login-button">
-            <i class="fas fa-sign-in-alt"></i> ACESSAR SISTEMA
-        </button>
-        <div style="margin-top: 1.5rem; text-align: center; font-size: 0.8rem; color: #7f8c8d;">
-            <i class="fas fa-info-circle"></i> Use suas credenciais fornecidas pela Porter
-        </div>
-    </div>
-</section>
-
-<!-- SIDEBAR -->
-<div id="sidebar">
-    <div class="sidebar-header">
-        <h3><i class="fas fa-building"></i> CONDOMÍNIOS</h3>
-        <button class="sidebar-toggle" onclick="app.toggleSidebar()">
-            <i class="fas fa-times"></i>
-        </button>
-    </div>
-    <div class="condo-list" id="condo-list"></div>
-</div>
-
-<!-- CONTEÚDO PRINCIPAL -->
-<div id="main-content" class="hidden">
-    <header>
-        <div class="header-left">
-            <button class="mobile-toggle" onclick="app.toggleSidebar()">
-                <i class="fas fa-bars"></i>
-            </button>
-            <div class="header-logo">
-                <div class="logo-porter"></div>
-                <div class="header-logo-text">
-                    <strong>ATA OPERACIONAL PORTER</strong>
-                    <div>Sistema de Registro de Ocorrências - 2026</div>
-                </div>
     <!-- TELA DE LOGIN -->
     <section id="login-screen">
         <div class="login-container">
@@ -75,55 +20,14 @@
                 <h1>Ata Operacional Porter</h1>
                 <p>Sistema de Registro de Ocorrências - 2026</p>
             </div>
-        </div>
-        
-        <div id="user-info"></div>
-        
-        <div style="display: flex; align-items: center; gap: 15px;">
-            <!-- BOTÃO TEMA -->
-            <button class="theme-toggle" id="theme-toggle-btn" onclick="themeSystem.toggleTheme()">
-                <i class="fas fa-moon"></i>
-            </button>
-            
-            <!-- OPERADORES ONLINE -->
-            <div id="online-users" class="online-users-dropdown">
-                <i class="fas fa-users" style="color: white;"></i>
-                <span style="font-size: 0.9rem;">
-                    <span id="online-count">0</span> online
-                </span>
-                <i class="fas fa-chevron-down" style="font-size: 0.8rem;"></i>
-                <div id="online-users-list" class="online-users-list"></div>
             <div class="form-group input-icon">
                 <i class="fas fa-user"></i>
                 <input type="text" id="login-user" placeholder="nome.sobrenome" autocomplete="off">
             </div>
-            
-            <!-- NOTIFICAÇÕES -->
-            <div class="notification-bell" onclick="app.toggleNotifications()">
-                <i class="fas fa-bell"></i>
-                <span class="notification-badge" id="notification-count" style="display: none;">0</span>
-                <div class="notifications-panel" id="notifications-panel">
-                    <div class="notification-header">
-                        <strong><i class="fas fa-bell"></i> Notificações</strong>
-                        <button class="btn btn-clear btn-sm" onclick="app.clearNotifications()">Limpar</button>
-                    </div>
-                    <div id="notifications-list"></div>
-                </div>
             <div class="form-group input-icon">
                 <i class="fas fa-lock"></i>
                 <input type="password" id="login-pass" placeholder="********" autocomplete="off">
             </div>
-            
-            <!-- BOTÃO RELATÓRIO -->
-            <button class="btn btn-success" onclick="app.openReportModal()">
-                <i class="fas fa-file-pdf"></i> Relatório
-            </button>
-            
-            <!-- BOTÃO ADMIN -->
-            <div id="admin-controls" class="admin-controls" style="display: none;">
-                <button class="btn btn-warning" onclick="app.openAdminPanel()">
-                    <i class="fas fa-user-shield"></i> Admin
-                </button>
             <div class="form-group input-icon">
                 <i class="fas fa-clock"></i>
                 <select id="login-turno">
@@ -131,10 +35,6 @@
                     <option value="Noturno">Noturno</option>
                 </select>
             </div>
-            
-            <!-- BOTÃO SAIR -->
-            <button class="btn btn-accent" onclick="app.logout()">
-                <i class="fas fa-sign-out-alt"></i> Sair
             <button class="btn btn-primary" id="login-button">
                 <i class="fas fa-sign-in-alt"></i> ACESSAR SISTEMA
             </button>
@@ -142,33 +42,8 @@
                 <i class="fas fa-info-circle"></i> Use suas credenciais fornecidas pela Porter
             </div>
         </div>
-    </header>
     </section>
 
-    <div class="tabs">
-        <button class="tab-btn active" onclick="app.switchTab('tab-ata', this)">
-            <i class="fas fa-file-alt"></i> ATA DE OCORRÊNCIAS
-            <span class="tab-badge" id="tab-count-ata">0</span>
-        </button>
-        <button class="tab-btn" onclick="app.switchTab('tab-fixas', this)">
-            <i class="fas fa-thumbtack"></i> INFORMAÇÕES FIXAS
-            <span class="tab-badge" id="tab-count-fixas">0</span>
-        </button>
-        <button class="tab-btn" onclick="app.switchTab('tab-os', this)">
-            <i class="fas fa-tools"></i> ORDEM DE SERVIÇO
-            <span class="tab-badge" id="tab-count-os">0</span>
-        </button>
-        <button class="tab-btn chat-tab" onclick="app.switchTab('tab-chat', this)">
-            <i class="fas fa-comments"></i> CHAT GERAL
-            <span class="chat-badge" id="chat-badge">0</span>
-        </button>
-        <button class="tab-btn" onclick="app.switchTab('tab-chat-privado', this)">
-            <i class="fas fa-user-secret"></i> CHAT PRIVADO
-            <span class="chat-badge" id="chat-private-badge">0</span>
-        </button>
-        <button class="tab-btn" onclick="app.switchTab('tab-presenca', this)">
-            <i class="fas fa-users"></i> HISTÓRICO
-        </button>
     <!-- SIDEBAR -->
     <div id="sidebar">
         <div class="sidebar-header">
@@ -180,22 +55,6 @@
         <div class="condo-list" id="condo-list"></div>
     </div>
 
-    <div class="container">
-        <!-- AVALIAÇÃO DE HUMOR -->
-        <div id="mood-check-container" class="mood-check-container hidden">
-            <div class="mood-title">
-                <i class="fas fa-heart"></i> Como você está se sentindo hoje?
-            </div>
-            <div class="mood-subtitle">
-                Selecione a expressão que melhor representa seu estado emocional atual
-            </div>
-            <div class="mood-options" id="mood-options"></div>
-            <div class="mood-status" id="mood-status">
-                <i class="fas fa-mouse-pointer"></i> Clique em uma expressão para selecionar
-            </div>
-            <div class="mood-submit">
-                <button class="btn btn-primary" onclick="app.enviarMood()" id="mood-submit-btn" disabled>
-                    <i class="fas fa-paper-plane"></i> Enviar Meu Sentimento
     <!-- CONTEÚDO PRINCIPAL -->
     <div id="main-content" class="hidden">
         <header>
@@ -203,56 +62,6 @@
                 <button class="mobile-toggle" onclick="app.toggleSidebar()">
                     <i class="fas fa-bars"></i>
                 </button>
-            </div>
-            <div id="mood-result" class="mood-result hidden"></div>
-        </div>
-
-        <!-- ABA ATA -->
-        <div id="tab-ata" class="tab-content">
-            <!-- Filtros -->
-            <div class="filters-container">
-                <div class="filters-title">
-                    <i class="fas fa-filter"></i> Filtrar Registros
-                </div>
-                <div class="grid-3">
-                    <div class="form-group">
-                        <label><i class="fas fa-building"></i> Condomínio</label>
-                        <select id="filter-condo">
-                            <option value="">Todos os condomínios</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label><i class="fas fa-calendar"></i> Data Inicial</label>
-                        <input type="date" id="filter-data-inicio">
-                    </div>
-                    <div class="form-group">
-                        <label><i class="fas fa-calendar"></i> Data Final</label>
-                        <input type="date" id="filter-data-fim">
-                    </div>
-                    <div class="form-group">
-                        <label><i class="fas fa-tag"></i> Tipo</label>
-                        <select id="filter-tipo">
-                            <option value="">Todos os tipos</option>
-                            <option value="Informação">📝 Informação</option>
-                            <option value="Ocorrência">⚠️ Ocorrência</option>
-                            <option value="Incidente">🚨 Incidente</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label><i class="fas fa-tasks"></i> Status</label>
-                        <select id="filter-status">
-                            <option value="">Todos os status</option>
-                            <option value="Em andamento">🔄 Em andamento</option>
-                            <option value="Finalizado">✅ Finalizado</option>
-                        </select>
-                    </div>
-                    <div class="filter-actions">
-                        <button class="btn btn-filter" onclick="app.aplicarFiltrosAtas()">
-                            <i class="fas fa-search"></i> Filtrar
-                        </button>
-                        <button class="btn btn-clear" onclick="app.limparFiltrosAtas()">
-                            <i class="fas fa-times"></i> Limpar
-                        </button>
                 <div class="header-logo">
                     <div class="logo-porter"></div>
                     <div class="header-logo-text">
@@ -260,9 +69,7 @@
                         <div>Sistema de Registro de Ocorrências - 2026</div>
                     </div>
                 </div>
-                <div id="filtros-ativos-ata" class="filter-info"></div>
             </div>
-            <div id="resultados-info-ata" style="margin-bottom: 1rem;"></div>
             
             <div id="user-info"></div>
             
@@ -273,20 +80,6 @@
                     <i class="fas fa-moon"></i>
                 </div>
 
-            <!-- Formulário -->
-            <div class="form-card fade-in">
-                <h2><i class="fas fa-plus-circle"></i> Novo Registro de Ocorrência</h2>
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label><i class="fas fa-building"></i> Condomínio *</label>
-                        <select id="ata-condo" onchange="app.updateCity()" required>
-                            <option value="">Selecione um condomínio...</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label><i class="fas fa-city"></i> Cidade</label>
-                        <input type="text" id="ata-cidade" readonly>
-                    </div>
                 <!-- OPERADORES ONLINE -->
                 <div id="online-users" class="online-users-dropdown">
                     <i class="fas fa-users"></i>
@@ -296,22 +89,6 @@
                     <i class="fas fa-chevron-down" style="font-size: 0.8rem;"></i>
                     <div id="online-users-list" class="online-users-list"></div>
                 </div>
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label><i class="fas fa-tag"></i> Tipo de Registro *</label>
-                        <select id="ata-tipo" required>
-                            <option value="Informação">📝 Informação</option>
-                            <option value="Ocorrência">⚠️ Ocorrência</option>
-                            <option value="Incidente">🚨 Incidente</option>
-                            <option value="Informações Fixas">📌 Informações Fixas</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label><i class="fas fa-tasks"></i> Status</label>
-                        <select id="ata-status">
-                            <option value="Em andamento">🔄 Em andamento</option>
-                            <option value="Finalizado">✅ Finalizado</option>
-                        </select>
 
                 <!-- Notificações -->
                 <div class="notification-bell" onclick="app.toggleNotifications()">
@@ -325,9 +102,6 @@
                         <div id="notifications-list"></div>
                     </div>
                 </div>
-                <div class="form-group">
-                    <label><i class="fas fa-align-left"></i> Descrição dos Fatos *</label>
-                    <textarea id="ata-desc" rows="5" placeholder="Descreva detalhadamente os fatos ocorridos..." required></textarea>
 
                 <!-- Botão Relatório -->
                 <button class="btn btn-success" onclick="app.openReportModal()">
@@ -340,8 +114,6 @@
                         <i class="fas fa-user-shield"></i> Admin
                     </button>
                 </div>
-                <button type="button" class="btn btn-primary" onclick="app.saveAta()">
-                    <i class="fas fa-save"></i> SALVAR REGISTRO
 
                 <!-- Botão Sair -->
                 <button class="btn btn-accent" onclick="app.logout()">
@@ -350,7 +122,6 @@
             </div>
         </header>
 
-            <div id="ata-lista"></div>
         <div class="tabs">
             <button class="tab-btn active" onclick="app.switchTab('tab-ata', this)">
                 <i class="fas fa-file-alt"></i> ATA DE OCORRÊNCIAS
@@ -377,47 +148,15 @@
             </button>
         </div>
 
-        <!-- ABA FIXAS -->
-        <div id="tab-fixas" class="tab-content hidden">
-            <div class="fixed-info-container">
-                <div class="fixed-info-header">
-                    <i class="fas fa-thumbtack"></i>
-                    <h3>Informações Fixas dos Condomínios</h3>
         <div class="container">
             <!-- Componente de Humor -->
             <div id="mood-check-container" class="mood-check-container hidden">
                 <div class="mood-title">
                     <i class="fas fa-heart"></i> Como você está se sentindo hoje?
                 </div>
-                <p style="color: #856404; margin-bottom: 1rem;">
-                    <i class="fas fa-info-circle"></i> Estas são informações importantes que permanecem visíveis para todos os operadores.
-                </p>
-            </div>
-            <div id="fixas-lista"></div>
-        </div>
-
-        <!-- ABA OS -->
-        <div id="tab-os" class="tab-content hidden">
-            <!-- Confirmação OS -->
-            <div id="os-confirmation-screen" class="os-confirmation hidden">
-                <i class="fas fa-check-circle"></i>
-                <h2>Ordem de Serviço Aberta com Sucesso!</h2>
-                <p style="font-size: 1.1rem; color: #7f8c8d; margin-bottom: 2rem;">
-                    A sua ordem de serviço foi registrada e enviada por e-mail.
-                </p>
-                <div class="details">
-                    <div style="margin-bottom: 10px;"><strong>📋 Número da OS:</strong> <span id="os-confirmation-id"></span></div>
-                    <div style="margin-bottom: 10px;"><strong>🏢 Condomínio:</strong> <span id="os-confirmation-condo"></span></div>
-                    <div style="margin-bottom: 10px;"><strong>⚠️ Gravidade:</strong> <span id="os-confirmation-gravidade"></span></div>
-                    <div style="margin-bottom: 10px;"><strong>👤 Funcionário:</strong> <span id="os-confirmation-funcionario"></span></div>
-                    <div style="margin-bottom: 10px;"><strong>📧 E-mail:</strong> <span id="os-confirmation-email"></span></div>
-                    <div style="margin-bottom: 10px;"><strong>📅 Data/Hora:</strong> <span id="os-confirmation-data"></span></div>
                 <div class="mood-subtitle">
                     Selecione a expressão que melhor representa seu estado emocional atual
                 </div>
-                <div class="back-to-os">
-                    <button class="btn btn-primary" onclick="appEmail.voltarParaFormOS()">
-                        <i class="fas fa-plus-circle"></i> Abrir Nova OS
                 <div class="mood-options" id="mood-options"></div>
                 <div class="mood-status" id="mood-status">
                     <i class="fas fa-mouse-pointer"></i> Clique em uma expressão para selecionar
@@ -430,28 +169,6 @@
                 <div id="mood-result" class="mood-result hidden"></div>
             </div>
 
-            <!-- Formulário OS -->
-            <div id="os-form-container">
-                <div class="form-card os-form fade-in">
-                    <h2><i class="fas fa-tools"></i> Nova Ordem de Serviço</h2>
-                    <form id="os-form-email" action="https://formsubmit.co/londrina.operacional@porter.com.br" method="POST">
-                        <input type="hidden" name="_cc" value="londrina.tecnicaplantao@porter.com.br,londrina.tenicaplantao1@porter.com.br,londrina.tecnica1@porter.com.br">
-                        <input type="hidden" name="_subject" value="[NOVA O.S] - Sistema Porter">
-                        <input type="hidden" name="_template" value="table">
-                        <input type="hidden" name="_captcha" value="false">
-                        <input type="hidden" name="_next" value="#os-confirmation-screen">
-                        
-                        <div class="grid-2">
-                            <div class="form-group">
-                                <label><i class="fas fa-building"></i> Condomínio *</label>
-                                <select id="os-condo" name="condominio" onchange="app.updateCityOS()" required>
-                                    <option value="">Selecione um condomínio...</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label><i class="fas fa-city"></i> Cidade</label>
-                                <input type="text" id="os-cidade" name="cidade" readonly>
-                            </div>
             <!-- ABA: ATA -->
             <div id="tab-ata" class="tab-content">
                 <div class="filters-container">
@@ -465,63 +182,15 @@
                                 <option value="">Todos os condomínios</option>
                             </select>
                         </div>
-                        <div class="grid-2">
-                            <div class="form-group">
-                                <label><i class="fas fa-user"></i> Nome do Funcionário *</label>
-                                <input type="text" id="os-funcionario" name="funcionario" placeholder="Seu nome completo" required>
-                            </div>
-                            <div class="form-group">
-                                <label><i class="fas fa-envelope"></i> E-mail *</label>
-                                <input type="email" id="os-email" name="email" placeholder="seu.email@porter.com.br" required>
-                            </div>
                         <div class="form-group">
                             <label><i class="fas fa-calendar"></i> Data Inicial</label>
                             <input type="date" id="filter-data-inicio">
                         </div>
-                        <div class="grid-2">
-                            <div class="form-group">
-                                <label><i class="fas fa-sitemap"></i> Setor *</label>
-                                <select id="os-setor" name="setor" required>
-                                    <option value="">Selecione...</option>
-                                    <option value="Operação">Operação</option>
-                                    <option value="Administrativo">Administrativo</option>
-                                    <option value="Técnico">Técnico</option>
-                                    <option value="RH">Recursos Humanos</option>
-                                    <option value="Financeiro">Financeiro</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label><i class="fas fa-exclamation-triangle"></i> Gravidade *</label>
-                                <select id="os-gravidade" name="gravidade" required>
-                                    <option value="Baixa">🟢 Baixa</option>
-                                    <option value="Média" selected>🟡 Média</option>
-                                    <option value="Alta">🔴 Alta</option>
-                                    <option value="Emergência">🚨 Emergência</option>
-                                </select>
-                            </div>
                         <div class="form-group">
                             <label><i class="fas fa-calendar"></i> Data Final</label>
                             <input type="date" id="filter-data-fim">
                         </div>
-                        
                         <div class="form-group">
-                            <label><i class="fas fa-user-cog"></i> Técnico responsável</label>
-                            <select id="os-tecnico" name="tecnico_responsavel">
-                                <option value="">Selecione um técnico (opcional)</option>
-                                <optgroup label="TÉCNICOS LONDRINA">
-                                    <option value="EVERTON ALAN">EVERTON ALAN</option>
-                                    <option value="MARCIO JOSE DE BARROS">MARCIO JOSE DE BARROS</option>
-                                    <option value="VALDEIR COITO">VALDEIR COITO</option>
-                                </optgroup>
-                                <optgroup label="AUXILIARES">
-                                    <option value="WELINGTON SANTOS">WELINGTON SANTOS</option>
-                                    <option value="CLEBERSON SILVA">CLEBERSON SILVA</option>
-                                    <option value="EMANOEL THOMAZ">EMANOEL THOMAZ</option>
-                                </optgroup>
-                                <optgroup label="TÉCNICOS MARINGÁ">
-                                    <option value="VINICIUS MENDES">VINICIUS MENDES</option>
-                                    <option value="ITALO">ITALO</option>
-                                </optgroup>
                             <label><i class="fas fa-tag"></i> Tipo</label>
                             <select id="filter-tipo">
                                 <option value="">Todos os tipos</option>
@@ -530,10 +199,7 @@
                                 <option value="Incidente">🚨 Incidente</option>
                             </select>
                         </div>
-                        
                         <div class="form-group">
-                            <label><i class="fas fa-align-left"></i> Descrição *</label>
-                            <textarea id="os-desc" name="descricao" rows="5" placeholder="Descreva detalhadamente o problema..." required></textarea>
                             <label><i class="fas fa-tasks"></i> Status</label>
                             <select id="filter-status">
                                 <option value="">Todos os status</option>
@@ -541,10 +207,6 @@
                                 <option value="Finalizado">✅ Finalizado</option>
                             </select>
                         </div>
-                        
-                        <div class="form-group">
-                            <label><i class="fas fa-calendar"></i> Data Preferencial</label>
-                            <input type="date" id="os-data" name="data_preferencial">
                         <div class="filter-actions">
                             <button class="btn btn-filter" onclick="app.aplicarFiltrosAtas()">
                                 <i class="fas fa-search"></i> Filtrar
@@ -553,31 +215,12 @@
                                 <i class="fas fa-times"></i> Limpar
                             </button>
                         </div>
-                        
-                        <button type="submit" class="btn btn-info" onclick="app.abrirOSComEmail(event)">
-                            <i class="fas fa-paper-plane"></i> ABRIR ORDEM DE SERVIÇO
-                        </button>
-                    </form>
                     </div>
                     <div id="filtros-ativos-ata" class="filter-info"></div>
                 </div>
 
-                <!-- Lista OS -->
-                <div style="margin: 2rem 0 1rem 0;">
-                    <h3><i class="fas fa-list"></i> Ordens de Serviço Recentes</h3>
-                </div>
-                <div id="os-lista"></div>
-            </div>
-        </div>
                 <div id="resultados-info-ata" style="margin-bottom: 1rem;"></div>
 
-        <!-- ABA CHAT GERAL -->
-        <div id="tab-chat" class="tab-content hidden">
-            <div class="chat-container">
-                <div class="chat-header">
-                    <div>
-                        <strong><i class="fas fa-comments"></i> Chat Geral</strong>
-                        <div style="font-size: 0.85rem; opacity: 0.9;">Comunicação rápida entre a equipe</div>
                 <div class="form-card fade-in">
                     <h2><i class="fas fa-plus-circle"></i> Novo Registro de Ocorrência</h2>
                     <div class="grid-2">
@@ -592,10 +235,6 @@
                             <input type="text" id="ata-cidade" readonly>
                         </div>
                     </div>
-                    <div class="chat-admin-controls" id="chat-admin-controls" style="display: none;">
-                        <button class="chat-clear-btn" onclick="chatSystem.clearChat()">
-                            <i class="fas fa-trash"></i> Limpar Chat
-                        </button>
                     <div class="grid-2">
                         <div class="form-group">
                             <label><i class="fas fa-tag"></i> Tipo de Registro</label>
@@ -614,12 +253,6 @@
                             </select>
                         </div>
                     </div>
-                </div>
-                <div class="chat-messages" id="chat-messages"></div>
-                <div class="chat-input-area">
-                    <textarea class="chat-input" id="chat-input" placeholder="Digite sua mensagem..." rows="2"></textarea>
-                    <button class="btn btn-info" onclick="chatSystem.sendChatMessage()" id="chat-send-btn">
-                        <i class="fas fa-paper-plane"></i> Enviar
                     <div class="form-group">
                         <label><i class="fas fa-align-left"></i> Descrição dos Fatos</label>
                         <textarea id="ata-desc" rows="5" placeholder="Descreva detalhadamente os fatos ocorridos..."></textarea>
@@ -631,15 +264,7 @@
 
                 <div id="ata-lista"></div>
             </div>
-        </div>
 
-        <!-- ABA CHAT PRIVADO -->
-        <div id="tab-chat-privado" class="tab-content hidden">
-            <div class="chat-container">
-                <div class="chat-header" style="background: linear-gradient(135deg, #3498db, #2980b9);">
-                    <div>
-                        <strong><i class="fas fa-user-secret"></i> Chat Privado</strong>
-                        <div style="font-size: 0.85rem; opacity: 0.9;">Conversa privada entre operadores</div>
             <!-- ABA: INFORMAÇÕES FIXAS -->
             <div id="tab-fixas" class="tab-content hidden">
                 <div class="fixed-info-container">
@@ -651,13 +276,6 @@
                         <i class="fas fa-info-circle"></i> Estas são informações importantes que permanecem visíveis para todos os operadores.
                     </p>
                 </div>
-                
-                <div style="padding: 1rem;">
-                    <div class="form-group">
-                        <label><i class="fas fa-user-friends"></i> Conversar com:</label>
-                        <select id="private-chat-target" onchange="chatSystem.loadPrivateChat()">
-                            <option value="">Selecione um operador...</option>
-                        </select>
                 <div id="fixas-lista"></div>
             </div>
 
@@ -687,14 +305,6 @@
                         </button>
                     </div>
                 </div>
-                
-                <div class="chat-messages" id="chat-private-messages" style="height: 300px;"></div>
-                
-                <div class="chat-input-area">
-                    <textarea class="chat-input" id="chat-private-input" placeholder="Digite sua mensagem privada..." rows="2" disabled></textarea>
-                    <button class="btn btn-info" onclick="chatSystem.sendPrivateChatMessage()" id="chat-private-send-btn" disabled>
-                        <i class="fas fa-paper-plane"></i> Enviar
-                    </button>
 
                 <div id="os-form-container">
                     <div class="form-card os-form fade-in">
@@ -800,20 +410,7 @@
                     <div id="os-lista"></div>
                 </div>
             </div>
-        </div>
 
-        <!-- ABA HISTÓRICO -->
-        <div id="tab-presenca" class="tab-content hidden">
-            <div class="filters-container">
-                <div class="filters-title">
-                    <i class="fas fa-filter"></i> Filtrar Histórico
-                </div>
-                <div class="grid-3">
-                    <div class="form-group">
-                        <label><i class="fas fa-user"></i> Operador</label>
-                        <select id="filter-presenca-operador">
-                            <option value="">Todos os operadores</option>
-                        </select>
             <!-- ABA: CHAT GERAL -->
             <div id="tab-chat" class="tab-content hidden">
                 <div class="chat-container">
@@ -828,9 +425,6 @@
                             </button>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label><i class="fas fa-calendar"></i> Data Inicial</label>
-                        <input type="date" id="filter-presenca-inicio">
                     <div class="chat-messages" id="chat-messages"></div>
                     <div class="chat-input-area">
                         <textarea class="chat-input" id="chat-input" placeholder="Digite sua mensagem..." rows="2"></textarea>
@@ -838,9 +432,6 @@
                             <i class="fas fa-paper-plane"></i> Enviar
                         </button>
                     </div>
-                    <div class="form-group">
-                        <label><i class="fas fa-calendar"></i> Data Final</label>
-                        <input type="date" id="filter-presenca-fim">
                 </div>
             </div>
 
@@ -853,13 +444,6 @@
                             <div style="font-size: 0.85rem; opacity: 0.9;">Conversa privada entre operadores</div>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label><i class="fas fa-clock"></i> Turno</label>
-                        <select id="filter-presenca-turno">
-                            <option value="">Todos</option>
-                            <option value="Diurno">🌞 Diurno</option>
-                            <option value="Noturno">🌙 Noturno</option>
-                        </select>
                     
                     <div class="private-chat-selector">
                         <div class="form-group">
@@ -869,12 +453,6 @@
                             </select>
                         </div>
                     </div>
-                    <div class="filter-actions">
-                        <button class="btn btn-filter" onclick="app.aplicarFiltrosPresenca()">
-                            <i class="fas fa-search"></i> Filtrar
-                        </button>
-                        <button class="btn btn-clear" onclick="app.limparFiltrosPresenca()">
-                            <i class="fas fa-times"></i> Limpar
                     
                     <div class="chat-messages chat-private-messages" id="chat-private-messages"></div>
                     
@@ -886,21 +464,6 @@
                     </div>
                 </div>
             </div>
-            
-            <h3 style="margin: 2rem 0 1rem 0;"><i class="fas fa-history"></i> Histórico de Acesso</h3>
-            <div style="overflow-x: auto;">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Operador</th>
-                            <th>Turno</th>
-                            <th>Data</th>
-                            <th>Login</th>
-                            <th>Logoff</th>
-                        </tr>
-                    </thead>
-                    <tbody id="presenca-lista"></tbody>
-                </table>
 
             <!-- ABA: HISTÓRICO -->
             <div id="tab-presenca" class="tab-content hidden">
@@ -960,22 +523,7 @@
             </div>
         </div>
     </div>
-</div>
 
-<!-- MODAL RELATÓRIO -->
-<div class="modal" id="report-modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3><i class="fas fa-file-pdf"></i> Gerar Relatório PDF</h3>
-            <button class="modal-close" onclick="app.closeReportModal()">&times;</button>
-        </div>
-        <div class="form-group">
-            <label>Condomínio</label>
-            <select id="report-condo">
-                <option value="">Todos</option>
-            </select>
-        </div>
-        <div class="grid-2">
     <!-- MODAIS -->
     <div class="modal" id="report-modal">
         <div class="modal-content">
@@ -984,8 +532,6 @@
                 <button class="modal-close" onclick="app.closeReportModal()">&times;</button>
             </div>
             <div class="form-group">
-                <label>Data Inicial</label>
-                <input type="date" id="report-data-inicio">
                 <label><i class="fas fa-building"></i> Condomínio</label>
                 <select id="report-condo">
                     <option value="">Todos os condomínios</option>
@@ -1002,8 +548,6 @@
                 </div>
             </div>
             <div class="form-group">
-                <label>Data Final</label>
-                <input type="date" id="report-data-fim">
                 <label><i class="fas fa-tag"></i> Tipo de Conteúdo</label>
                 <select id="report-tipo">
                     <option value="atas">📋 Ocorrências</option>
@@ -1025,30 +569,8 @@
                 <button class="btn btn-clear" onclick="app.closeReportModal()">Cancelar</button>
             </div>
         </div>
-        <div class="form-group">
-            <label>Tipo</label>
-            <select id="report-tipo">
-                <option value="atas">📋 Ocorrências</option>
-                <option value="fixas">📌 Informações Fixas</option>
-                <option value="os">🔧 Ordens de Serviço</option>
-                <option value="all">📊 Todos</option>
-            </select>
-        </div>
-        <div style="display: flex; gap: 10px; margin-top: 1.5rem;">
-            <button class="btn btn-primary" onclick="pdfGenerator.generatePDF()">
-                <i class="fas fa-download"></i> Gerar PDF
-            </button>
-            <button class="btn btn-clear" onclick="app.closeReportModal()">Cancelar</button>
-        </div>
     </div>
-</div>
 
-<!-- MODAL COMENTÁRIOS -->
-<div class="modal" id="comments-modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3><i class="fas fa-comments"></i> Comentários</h3>
-            <button class="modal-close" onclick="app.closeCommentsModal()">&times;</button>
     <div class="modal" id="comments-modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -1057,16 +579,8 @@
             </div>
             <div id="comments-modal-content"></div>
         </div>
-        <div id="comments-modal-content"></div>
     </div>
-</div>
 
-<!-- MODAL ADMIN -->
-<div class="modal" id="admin-modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3><i class="fas fa-user-shield"></i> Controle Administrativo</h3>
-            <button class="modal-close" onclick="app.closeAdminModal()">&times;</button>
     <div class="modal" id="admin-modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -1075,15 +589,8 @@
             </div>
             <div id="admin-modal-content"></div>
         </div>
-        <div id="admin-modal-content"></div>
     </div>
-</div>
 
-<!-- SCRIPTS -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <!-- SCRIPTS -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -1092,15 +599,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-<!-- ARQUIVOS DO SISTEMA (ORDEM CORRETA) -->
-<script src="data.js"></script>
-<script src="firebase.js"></script>
-<script src="theme.js"></script>
-<script src="app.js"></script>
-<script src="app-email.js"></script>
-<script src="chat.js"></script>
-<script src="pdf.js"></script>
-<script src="utils.js"></script>
     <script src="data.js"></script>
     <script src="firebase.js"></script>
     <script src="app.js"></script>
@@ -1109,41 +607,11 @@
     <script src="pdf.js"></script>
     <script src="utils.js"></script>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 Inicializando sistema...');
-    
-    // Inicializar app
-    if (window.app && typeof app.init === 'function') {
-        app.init();
-    }
-    
-    // Inicializar tema
-    if (window.themeSystem && typeof themeSystem.init === 'function') {
-        themeSystem.init();
-    }
-    
-    // Configurar botão de login
-    const loginButton = document.getElementById('login-button');
-    if (loginButton) {
-        loginButton.addEventListener('click', function(e) {
-            e.preventDefault();
-            if (window.app && typeof app.login === 'function') {
-                app.login();
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             if (typeof app !== 'undefined' && app.init) {
                 app.init();
             }
-        });
-    }
-    
-    // Enter no campo de senha
-    const loginPass = document.getElementById('login-pass');
-    if (loginPass) {
-        loginPass.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter' && window.app && typeof app.login === 'function') {
-                app.login();
 
             const loginButton = document.getElementById('login-button');
             if (loginButton) {
@@ -1173,11 +641,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             }
         });
-    }
-    
-    console.log('✅ Sistema inicializado com sucesso!');
-});
-</script>
     </script>
 </body>
 </html>
