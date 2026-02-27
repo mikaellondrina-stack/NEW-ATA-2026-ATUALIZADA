@@ -46,13 +46,14 @@ const firebaseHelper = {
                     data: osList
                 }));
                 
+                console.log('📋 OS recebidas do Firebase:', osList.length);
             }, error => {
                 console.error('❌ Erro listener OS:', error);
             });
     },
 
     sincronizarStatusOnlineComFirebase() {
-        if (!window.db || !app || !app.currentUser) return;
+        if (!window.db || typeof app === 'undefined' || !app.currentUser) return;
         
         const statusOnline = {
             user: app.currentUser.user,
@@ -101,7 +102,7 @@ const firebaseHelper = {
                     users: usuariosOnlineFirebase
                 }));
                 
-                if (app.currentUser && app.updateOnlineUsers) {
+                if (typeof app !== 'undefined' && app.currentUser && app.updateOnlineUsers) {
                     app.updateOnlineUsers();
                 }
                 
@@ -123,7 +124,7 @@ const firebaseHelper = {
         this.configurarMonitoramentoOnlineFirebase();
         
         setInterval(() => {
-            if (app && app.currentUser) {
+            if (typeof app !== 'undefined' && app.currentUser) {
                 this.sincronizarStatusOnlineComFirebase();
             }
         }, 10000);
