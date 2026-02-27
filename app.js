@@ -90,10 +90,6 @@ const app = {
         }
     },
 
-    // ==============================================
-    // FUNÇÕES DE NOTIFICAÇÃO CORRIGIDAS
-    // ==============================================
-
     showToast(message, type = 'info', title = '') {
         const container = document.getElementById('toast-container');
         if (!container) return;
@@ -132,7 +128,10 @@ const app = {
         }, 5000);
     },
 
-    // NOVA FUNÇÃO: Criar notificação
+    // ==============================================
+    // FUNÇÕES DE NOTIFICAÇÃO CORRIGIDAS
+    // ==============================================
+
     criarNotificacao(condo, tipo, desc) {
         console.log('🔔 CRIANDO NOTIFICAÇÃO PARA:', condo, tipo);
         
@@ -151,7 +150,7 @@ const app = {
             lida: false
         };
         
-        // Adicionar à lista (no início)
+        // Adicionar à lista (no INÍCIO para subir para primeira posição)
         notificacoes.unshift(novaNotificacao);
         
         // Limitar a 50 notificações
@@ -173,14 +172,13 @@ const app = {
             this.showToast(desc, 'info', condo);
         }
         
-        // Atualizar painel de notificações se estiver aberto
+        // Recarregar o painel de notificações para mostrar a nova no topo
         this.loadNotifications();
         
-        console.log('✅ NOTIFICAÇÃO CRIADA COM SUCESSO');
+        console.log('✅ NOTIFICAÇÃO CRIADA NA PRIMEIRA POSIÇÃO');
         return novaNotificacao;
     },
 
-    // NOVA FUNÇÃO: Atualizar badge de um condomínio específico
     atualizarBadgeCondominio(condoNome) {
         console.log('🔄 Atualizando badge do condomínio:', condoNome);
         
@@ -210,6 +208,8 @@ const app = {
                 badge.style.backgroundColor = '#e74c3c';
                 
                 // Aplicar animação pulse
+                badge.style.animation = 'none';
+                badge.offsetHeight;
                 badge.style.animation = 'pulse 0.5s ease-in-out';
                 setTimeout(() => {
                     if (badge) badge.style.animation = '';
@@ -227,7 +227,6 @@ const app = {
         }
     },
 
-    // NOVA FUNÇÃO: Atualizar badge do sino
     atualizarBadgeSino() {
         const notificacoes = JSON.parse(localStorage.getItem('porter_notificacoes') || '[]');
         const naoLidas = notificacoes.filter(n => !n.lida).length;
@@ -240,6 +239,8 @@ const app = {
                 badge.style.backgroundColor = '#e74c3c';
                 
                 // Aplicar animação pulse
+                badge.style.animation = 'none';
+                badge.offsetHeight;
                 badge.style.animation = 'pulse 0.5s ease-in-out';
                 setTimeout(() => {
                     badge.style.animation = '';
@@ -262,7 +263,6 @@ const app = {
         }
     },
 
-    // NOVA FUNÇÃO: Atualizar todos os badges
     updateNotificationBadges() {
         const notificacoes = JSON.parse(localStorage.getItem('porter_notificacoes') || '[]');
         const naoLidas = notificacoes.filter(n => !n.lida);
@@ -322,9 +322,13 @@ const app = {
             return;
         }
         
+        // Mostrar notificações na ordem (mais recentes primeiro, já que usamos unshift)
         notificacoes.slice(0, 20).forEach(notif => {
             const item = document.createElement('div');
             item.className = `notification-item ${notif.lida ? '' : 'unread'}`;
+            if (!notif.lida) {
+                item.classList.add('nova-notificacao'); // Classe para destaque
+            }
             item.dataset.id = notif.id;
             item.onclick = (e) => {
                 e.stopPropagation();
@@ -336,8 +340,11 @@ const app = {
             if (notif.tipo.includes('Informação Fixa')) icon = '📌';
             if (notif.tipo.includes('Ordem de Serviço')) icon = '🔧';
             
+            // Adicionar classe de destaque para OS
+            const destaqueClass = notif.tipo.includes('Ordem de Serviço') ? 'notificacao-os' : '';
+            
             item.innerHTML = `
-                <div class="notification-condo">${icon} ${notif.condo}</div>
+                <div class="notification-condo ${destaqueClass}">${icon} ${notif.condo}</div>
                 <div style="margin: 5px 0;">${notif.desc}</div>
                 <div class="notification-time">${notif.data} ${notif.hora}</div>
                 ${!notif.lida ? '<span class="notification-badge">Nova</span>' : ''}
@@ -359,11 +366,12 @@ const app = {
         
         const estaAberto = panel.classList.contains('show');
         
+        panel.classList.toggle('show');
+        
+        // Se está abrindo, marcar todas como lidas
         if (!estaAberto) {
             this.marcarTodasNotificacoesComoLidas();
         }
-        
-        panel.classList.toggle('show');
     },
 
     marcarTodasNotificacoesComoLidas() {
@@ -382,7 +390,6 @@ const app = {
             localStorage.setItem('porter_notificacoes', JSON.stringify(notificacoes));
             this.loadNotifications();
             this.updateNotificationBadges();
-            this.showToast('Todas as notificações foram marcadas como lidas', 'success');
         }
     },
 
@@ -448,7 +455,7 @@ const app = {
     },
 
     // ==============================================
-    // FUNÇÕES EXISTENTES (mantidas intactas)
+    // FUNÇÕES EXISTENTES (MANTIDAS IGUAIS)
     // ==============================================
 
     setupClickOutsideHandlers() {
@@ -537,7 +544,7 @@ const app = {
             themeToggle.addEventListener('click', () => this.toggleTheme());
         }
 
-        // Adicionar listener para Informações Fixas
+        // Listener para Informações Fixas
         const saveInfoFixaBtn = document.querySelector('#info-fixa-modal .btn-primary');
         if (saveInfoFixaBtn) {
             saveInfoFixaBtn.addEventListener('click', () => {
@@ -1466,7 +1473,7 @@ const app = {
     },
 
     // ==============================================
-    // FUNÇÃO SAVEATA CORRIGIDA COM NOTIFICAÇÃO
+    // FUNÇÃO SAVEATA CORRIGIDA (já existente)
     // ==============================================
 
     saveAta() {
@@ -1515,7 +1522,7 @@ const app = {
     },
 
     // ==============================================
-    // FUNÇÃO ABRIROSCODEMAIL CORRIGIDA COM NOTIFICAÇÃO
+    // FUNÇÃO ABRIROSCODEMAIL CORRIGIDA - A MAIS IMPORTANTE!
     // ==============================================
 
     abrirOSComEmail(event) {
@@ -1593,7 +1600,9 @@ const app = {
                 this.mostrarConfirmacaoOSFallback(novaOS);
             }
             
-            // CRIAR NOTIFICAÇÃO PARA OS
+            // ============================================
+            // NOTIFICAÇÃO DA OS - LINHA CRÍTICA!
+            // ============================================
             this.criarNotificacao(condo, 'Ordem de Serviço', `Nova OS ${osId}: ${gravidade} - ${desc.substring(0, 50)}...`);
             
             this.showToast('Ordem de Serviço aberta com sucesso!', 'success');
@@ -2525,6 +2534,29 @@ const app = {
                 <td><i class="fas fa-sign-out-alt" style="color: var(--danger);"></i> ${p.horaLogoff}</td>
             </tr>
         `).join('');
+    },
+
+    // Função auxiliar para comentários (pode não existir no seu código)
+    adicionarComentario(ataId, texto) {
+        let atas = JSON.parse(localStorage.getItem('porter_atas') || '[]');
+        const index = atas.findIndex(a => a.id === ataId);
+        
+        if (index !== -1) {
+            if (!atas[index].comentarios) {
+                atas[index].comentarios = [];
+            }
+            
+            atas[index].comentarios.push({
+                autor: this.currentUser.nome,
+                texto: texto,
+                data: new Date().toLocaleDateString('pt-BR'),
+                hora: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
+                timestamp: new Date().toISOString()
+            });
+            
+            localStorage.setItem('porter_atas', JSON.stringify(atas));
+            this.showToast('Comentário adicionado!', 'success');
+        }
     }
 };
 
