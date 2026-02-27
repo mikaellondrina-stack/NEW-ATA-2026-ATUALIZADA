@@ -1491,6 +1491,9 @@ const app = {
         if (!condo || !desc) {
             this.showToast('Preencha todos os campos obrigatórios!', 'error');
             return;
+if (typeof DashboardAPI !== 'undefined') {
+    DashboardAPI.enviarInfo(condo, desc, app?.currentUser?.nome || 'Operador', 'ata');
+}
         }
         
         const novaAta = {
