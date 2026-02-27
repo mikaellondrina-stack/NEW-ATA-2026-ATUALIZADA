@@ -1,16 +1,20 @@
+// Configuração do Firebase - NOVO PROJETO
 const firebaseConfig = {
-    apiKey: "AIzaSyDma392hveHDF6NShluBGbmGc3FYxc7ogA",
-    authDomain: "porter-ata-2026-v2.firebaseapp.com",
-    projectId: "porter-ata-2026-v2",
-    storageBucket: "porter-ata-2026-v2.firebasestorage.app",
-    messagingSenderId: "474353492973",
-    appId: "1:474353492973:web:a0409eeabf13cb201ffde4"
+    apiKey: "AIzaSyCqYN7aqNo_HXVHRSTY6b9qRDMSlPCrMNg",
+    authDomain: "ataporter-8a06a.firebaseapp.com",
+    projectId: "ataporter-8a06a",
+    storageBucket: "ataporter-8a06a.firebasestorage.app",
+    messagingSenderId: "1046205675591",
+    appId: "1:1046205675591:web:4731578a5d102c563e1962"
 };
 
+// Inicializa o Firebase apenas se ainda não foi inicializado
 if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
+    console.log('🔥 Firebase inicializado com novo projeto:', firebaseConfig.projectId);
 }
 
+// Disponibiliza globalmente
 window.db = firebase.firestore();
 window.auth = firebase.auth();
 
@@ -59,7 +63,7 @@ const firebaseHelper = {
             user: app.currentUser.user,
             nome: app.currentUser.nome,
             role: app.currentUser.role,
-            mood: app.getMoodAtual(),
+            mood: app.getMoodAtual ? app.getMoodAtual() : null,
             lastActivity: new Date().toISOString(),
             online: true,
             turno: app.currentUser.turno || 'Diurno'
@@ -118,7 +122,7 @@ const firebaseHelper = {
             return;
         }
         
-        console.log('✅ Firebase inicializado');
+        console.log('✅ Firebase Helper inicializado com projeto:', firebaseConfig.projectId);
         
         this.configurarOSFirebase();
         this.configurarMonitoramentoOnlineFirebase();
@@ -131,6 +135,7 @@ const firebaseHelper = {
     }
 };
 
+// Inicializa quando o documento estiver pronto
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
         firebaseHelper.inicializarFirebase();
